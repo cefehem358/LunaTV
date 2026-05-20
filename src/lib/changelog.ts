@@ -19,14 +19,12 @@ export const changelog: ChangelogEntry[] = [
       '修复动漫番剧/剧场版切换时卡片消失问题 - 修正getDoubanRecommends的category和format参数',
     ],
   },
-{
+  {
     version: '1.0.9',
     date: '2026-05-20',
     added: [],
     changed: [],
-    fixed: [
-      '为继续观看卡片新增片源资讯标签 - 显示影片来源资讯',
-    ],
+    fixed: ['为继续观看卡片新增片源资讯标签 - 显示影片来源资讯'],
   },
   {
     version: '1.0.6',

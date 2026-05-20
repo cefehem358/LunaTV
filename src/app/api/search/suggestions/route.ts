@@ -27,7 +27,11 @@ export async function GET(request: NextRequest) {
     }
 
     // 生成建議
-    const suggestions = await generateSuggestions(config, query, authInfo.username);
+    const suggestions = await generateSuggestions(
+      config,
+      query,
+      authInfo.username
+    );
 
     // 從配置中獲取緩存時間，如果沒有配置則使用默認值300秒（5分鐘）
     const cacheTime = config.SiteConfig.SiteInterfaceCacheTime || 300;
@@ -49,7 +53,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function generateSuggestions(config: AdminConfig, query: string, username: string): Promise<
+async function generateSuggestions(
+  config: AdminConfig,
+  query: string,
+  username: string
+): Promise<
   Array<{
     text: string;
     type: 'exact' | 'related' | 'suggestion';
@@ -69,7 +77,13 @@ async function generateSuggestions(config: AdminConfig, query: string, username:
     realKeywords = Array.from(
       new Set(
         results
-          .filter((r: any) => config.SiteConfig.DisableYellowFilter || !yellowWords.some((word: string) => (r.type_name || '').includes(word)))
+          .filter(
+            (r: any) =>
+              config.SiteConfig.DisableYellowFilter ||
+              !yellowWords.some((word: string) =>
+                (r.type_name || '').includes(word)
+              )
+          )
           .map((r: any) => r.title)
           .filter(Boolean)
           .flatMap((title: string) => title.split(/[ -:：·、-]/))

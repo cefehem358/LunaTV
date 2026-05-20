@@ -68,15 +68,11 @@ const replaceTextInFile = (filePath) => {
   }
 };
 
-const dirs = [
-  'src/app',
-  'src/components',
-  'src/hooks',
-];
+const dirs = ['src/app', 'src/components', 'src/hooks'];
 
 const processDir = (dir) => {
   const files = fs.readdirSync(dir);
-  files.forEach(file => {
+  files.forEach((file) => {
     const fullPath = path.join(dir, file);
     const stat = fs.statSync(fullPath);
     if (stat.isDirectory()) {
@@ -87,7 +83,7 @@ const processDir = (dir) => {
   });
 };
 
-dirs.forEach(dir => {
+dirs.forEach((dir) => {
   if (fs.existsSync(dir)) {
     processDir(dir);
   }

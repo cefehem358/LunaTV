@@ -323,7 +323,8 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
   if (!adminConfig.SiteConfig) {
     adminConfig.SiteConfig = {
       SiteName: 'LunaTV',
-      Announcement: '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。',
+      Announcement:
+        '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。',
       SearchDownstreamMaxPage: 5,
       SiteInterfaceCacheTime: 7200,
       DoubanProxyType: 'cmliussss-cdn-tencent',
@@ -335,7 +336,10 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
       EnableWebLive: false,
     };
   }
-  if (!adminConfig.SiteConfig.SiteName || adminConfig.SiteConfig.SiteName === 'MoonTV') {
+  if (
+    !adminConfig.SiteConfig.SiteName ||
+    adminConfig.SiteConfig.SiteName === 'MoonTV'
+  ) {
     adminConfig.SiteConfig.SiteName = 'LunaTV';
   }
 

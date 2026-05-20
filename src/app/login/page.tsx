@@ -21,8 +21,9 @@ function VersionDisplay() {
       try {
         const status = await checkForUpdates();
         setUpdateStatus(status);
-    } catch (_) { /* do nothing */
-    } finally {
+      } catch (_) {
+        /* do nothing */
+      } finally {
         setIsChecking(false);
       }
     };
@@ -136,10 +137,14 @@ function LoginPageClient() {
 
       {/* 掃描線效果 */}
       <div className='absolute inset-0 opacity-[0.03] pointer-events-none'>
-        <div className='w-full h-full' style={{
-          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, white 2px, white 3px)',
-          backgroundSize: '100% 3px'
-        }} />
+        <div
+          className='w-full h-full'
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(0deg, transparent, transparent 2px, white 2px, white 3px)',
+            backgroundSize: '100% 3px',
+          }}
+        />
       </div>
 
       <div className='absolute top-4 right-4 z-20'>
@@ -167,7 +172,10 @@ function LoginPageClient() {
           <form onSubmit={handleSubmit} className='space-y-5'>
             {shouldAskUsername && (
               <div>
-                <label htmlFor='username' className='block text-xs font-medium text-zinc-500 mb-2 tracking-wide uppercase'>
+                <label
+                  htmlFor='username'
+                  className='block text-xs font-medium text-zinc-500 mb-2 tracking-wide uppercase'
+                >
                   用戶名
                 </label>
                 <input
@@ -183,7 +191,10 @@ function LoginPageClient() {
             )}
 
             <div>
-              <label htmlFor='password' className='block text-xs font-medium text-zinc-500 mb-2 tracking-wide uppercase'>
+              <label
+                htmlFor='password'
+                className='block text-xs font-medium text-zinc-500 mb-2 tracking-wide uppercase'
+              >
                 訪問密碼
               </label>
               <input
@@ -207,7 +218,9 @@ function LoginPageClient() {
 
             <button
               type='submit'
-              disabled={!password || loading || (shouldAskUsername && !username)}
+              disabled={
+                !password || loading || (shouldAskUsername && !username)
+              }
               className='relative w-full rounded-xl bg-gradient-to-r from-[#e50914] to-red-600 py-3.5 text-base font-bold text-white shadow-lg shadow-red-500/25 transition-all duration-200 hover:shadow-red-500/40 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 disabled:shadow-none overflow-hidden group'
             >
               <span className='relative z-10 tracking-wider'>
@@ -232,11 +245,13 @@ function LoginPageClient() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className='min-h-screen bg-black flex items-center justify-center'>
-        <div className='w-8 h-8 border-[3px] border-[#e50914] border-t-transparent rounded-full animate-spin' />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className='min-h-screen bg-black flex items-center justify-center'>
+          <div className='w-8 h-8 border-[3px] border-[#e50914] border-t-transparent rounded-full animate-spin' />
+        </div>
+      }
+    >
       <LoginPageClient />
     </Suspense>
   );

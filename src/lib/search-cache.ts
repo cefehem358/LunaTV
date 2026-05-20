@@ -9,7 +9,8 @@ export interface CachedPageEntry {
   pageCount?: number;
 }
 
-const SEARCH_CACHE_TTL_MS = (Number(process.env.SEARCH_CACHE_TTL_MINUTES) || 120) * 60 * 1000;
+const SEARCH_CACHE_TTL_MS =
+  (Number(process.env.SEARCH_CACHE_TTL_MINUTES) || 120) * 60 * 1000;
 const CACHE_CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 const MAX_CACHE_SIZE = 500;
 const SEARCH_CACHE: Map<string, CachedPageEntry> = new Map();
@@ -17,7 +18,11 @@ const SEARCH_CACHE: Map<string, CachedPageEntry> = new Map();
 let cleanupTimer: NodeJS.Timeout | null = null;
 let lastCleanupTime = 0;
 
-function makeSearchCacheKey(sourceKey: string, query: string, page: number): string {
+function makeSearchCacheKey(
+  sourceKey: string,
+  query: string,
+  page: number
+): string {
   return `${sourceKey}::${query.trim()}::${page}`;
 }
 
@@ -68,7 +73,11 @@ function ensureAutoCleanupStarted(): void {
   }
 }
 
-function performCacheCleanup(): { expired: number; total: number; sizeLimited: number } {
+function performCacheCleanup(): {
+  expired: number;
+  total: number;
+  sizeLimited: number;
+} {
   const now = Date.now();
   const keysToDelete: string[] = [];
   let sizeLimitedDeleted = 0;
@@ -80,7 +89,7 @@ function performCacheCleanup(): { expired: number; total: number; sizeLimited: n
   });
 
   const expiredCount = keysToDelete.length;
-  keysToDelete.forEach(key => SEARCH_CACHE.delete(key));
+  keysToDelete.forEach((key) => SEARCH_CACHE.delete(key));
 
   if (SEARCH_CACHE.size > MAX_CACHE_SIZE) {
     const entries = Array.from(SEARCH_CACHE.entries());
@@ -98,7 +107,7 @@ function performCacheCleanup(): { expired: number; total: number; sizeLimited: n
   return {
     expired: expiredCount,
     total: SEARCH_CACHE.size,
-    sizeLimited: sizeLimitedDeleted
+    sizeLimited: sizeLimitedDeleted,
   };
 }
 

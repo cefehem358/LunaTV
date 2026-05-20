@@ -437,7 +437,9 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
             <div className='flex-1 flex items-center justify-center'>
               <div className='flex flex-col items-center gap-3'>
                 <div className='w-8 h-8 border-[3px] border-[#e50914] border-t-transparent rounded-full animate-spin' />
-                <span className='text-zinc-500 text-sm tracking-wide'>正在搜索可用片源...</span>
+                <span className='text-zinc-500 text-sm tracking-wide'>
+                  正在搜索可用片源...
+                </span>
               </div>
             </div>
           )}
@@ -448,7 +450,9 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                 <div className='w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center'>
                   <span className='text-red-500 text-2xl'>!</span>
                 </div>
-                <p className='text-red-400 text-sm leading-relaxed'>{sourceSearchError}</p>
+                <p className='text-red-400 text-sm leading-relaxed'>
+                  {sourceSearchError}
+                </p>
               </div>
             </div>
           )}
@@ -459,8 +463,18 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
               <div className='flex-1 flex items-center justify-center'>
                 <div className='text-center'>
                   <div className='w-20 h-20 mx-auto mb-4 rounded-2xl bg-zinc-800/50 flex items-center justify-center'>
-                    <svg className='w-8 h-8 text-zinc-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='1.5' d='M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' />
+                    <svg
+                      className='w-8 h-8 text-zinc-600'
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth='1.5'
+                        d='M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z'
+                      />
                     </svg>
                   </div>
                   <p className='text-zinc-500 text-sm'>暫無其他可用片源</p>
@@ -544,7 +558,9 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                                     className={`px-2 py-0.5 rounded text-xs font-bold ${
                                       ['4K', '2K'].includes(videoInfo.quality)
                                         ? 'bg-purple-500/20 text-purple-400 ring-1 ring-purple-500/30'
-                                        : ['1080p', '720p'].includes(videoInfo.quality)
+                                        : ['1080p', '720p'].includes(
+                                            videoInfo.quality
+                                          )
                                         ? 'bg-green-500/20 text-green-400 ring-1 ring-green-500/30'
                                         : 'bg-yellow-500/20 text-yellow-400 ring-1 ring-yellow-500/30'
                                     }`}
@@ -580,8 +596,18 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                         {/* 非當前源顯示箭頭提示 */}
                         {!isCurrentSource && (
                           <div className='absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
-                            <svg className='w-5 h-5 text-zinc-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M9 5l7 7-7 7' />
+                            <svg
+                              className='w-5 h-5 text-zinc-500'
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth='2'
+                                d='M9 5l7 7-7 7'
+                              />
                             </svg>
                           </div>
                         )}

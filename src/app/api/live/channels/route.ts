@@ -21,12 +21,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: channelData.channels
+      data: channelData.channels,
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: '獲取頻道信息失敗' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '獲取頻道信息失敗' }, { status: 500 });
   }
 }

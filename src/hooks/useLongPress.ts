@@ -68,7 +68,7 @@ export const useLongPress = ({
 
       const distance = Math.sqrt(
         Math.pow(clientX - startPosition.current.x, 2) +
-        Math.pow(clientY - startPosition.current.y, 2)
+          Math.pow(clientY - startPosition.current.y, 2)
       );
 
       // 如果移動距離超過閾值，取消長按
@@ -87,7 +87,8 @@ export const useLongPress = ({
     // 1. 如果是長按，不觸發點擊
     // 2. 如果不是長按且觸摸開始時是按鈕，不觸發點擊
     // 3. 否則觸發點擊
-    const shouldClick = !isLongPress.current && !wasButton.current && onClick && isActive.current;
+    const shouldClick =
+      !isLongPress.current && !wasButton.current && onClick && isActive.current;
 
     if (shouldClick) {
       onClick();
@@ -135,8 +136,6 @@ export const useLongPress = ({
     },
     [handleEnd]
   );
-
-
 
   return {
     onTouchStart,

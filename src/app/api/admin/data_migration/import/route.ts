@@ -32,7 +32,10 @@ export async function POST(req: NextRequest) {
 
     // 检查用户权限（只有站长可以导入数据）
     if (authInfo.username !== process.env.USERNAME) {
-      return NextResponse.json({ error: '權限不足，只有站長可以導入數據' }, { status: 401 });
+      return NextResponse.json(
+        { error: '權限不足，只有站長可以導入數據' },
+        { status: 401 }
+      );
     }
 
     // 解析表单数据
@@ -56,7 +59,10 @@ export async function POST(req: NextRequest) {
     try {
       decryptedData = SimpleCrypto.decrypt(encryptedData, password);
     } catch (error) {
-      return NextResponse.json({ error: '解密失敗，請檢查密碼是否正確' }, { status: 400 });
+      return NextResponse.json(
+        { error: '解密失敗，請檢查密碼是否正確' },
+        { status: 400 }
+      );
     }
 
     // 解压缩数据
@@ -73,7 +79,11 @@ export async function POST(req: NextRequest) {
     }
 
     // 驗證數據格式
-    if (!importData.data || !importData.data.adminConfig || !importData.data.userData) {
+    if (
+      !importData.data ||
+      !importData.data.adminConfig ||
+      !importData.data.userData
+    ) {
       return NextResponse.json({ error: '备份文件格式无效' }, { status: 400 });
     }
 
@@ -111,7 +121,8 @@ export async function POST(req: NextRequest) {
 
       // 導入搜索歷史
       if (user.searchHistory && Array.isArray(user.searchHistory)) {
-        for (const keyword of user.searchHistory.reverse()) { // 反轉以保持順序
+        for (const keyword of user.searchHistory.reverse()) {
+          // 反轉以保持順序
           await db.addSearchHistory(username, keyword);
         }
       }
@@ -131,9 +142,11 @@ export async function POST(req: NextRequest) {
       message: '數據導入成功',
       importedUsers: Object.keys(userData).length,
       timestamp: importData.timestamp,
-      serverVersion: typeof importData.serverVersion === 'string' ? importData.serverVersion : '未知版本'
+      serverVersion:
+        typeof importData.serverVersion === 'string'
+          ? importData.serverVersion
+          : '未知版本',
     });
-
   } catch (error) {
     console.error('數據導入失敗:', error);
     return NextResponse.json(

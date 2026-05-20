@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
@@ -35,7 +35,9 @@ import { getDoubanCategories } from '@/lib/douban.client';
 import { DoubanItem } from '@/lib/types';
 import { processImageUrl } from '@/lib/utils';
 
+import MobileBottomNav from '@/components/MobileBottomNav';
 import { useSite } from '@/components/SiteProvider';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { UserMenu } from '@/components/UserMenu';
 import VideoCard from '@/components/VideoCard';
 
@@ -53,11 +55,21 @@ export default function NetflixHome({
   playRecords?: (PlayRecord & { key: string })[];
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tab = searchParams?.get('tab');
   const { siteName, announcement } = useSite();
   const [searchQuery, setSearchQuery] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeNav, setActiveNav] = useState<'home' | 'favorites'>('home');
   const [showAnnouncement, setShowAnnouncement] = useState(false);
+
+  useEffect(() => {
+    if (tab === 'favorites') {
+      setActiveNav('favorites');
+    } else {
+      setActiveNav('home');
+    }
+  }, [tab]);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -97,7 +109,7 @@ export default function NetflixHome({
   return (
     <div className='min-h-screen bg-[#040404] text-white'>
       {/* ========== A. 固定側邊導覽列 ========== */}
-      <aside className='fixed top-0 left-0 h-screen w-64 bg-[#08080a] z-50 flex flex-col border-r border-white/5'>
+      <aside className='hidden md:flex fixed top-0 left-0 h-screen w-64 bg-[#08080a] z-50 flex flex-col border-r border-white/5'>
         {/* Logo */}
         <div className='p-6'>
           <h1 className='text-3xl font-black text-[#e50914] font-[Impact] tracking-wider'>
@@ -112,7 +124,10 @@ export default function NetflixHome({
           </p>
           <NavButton
             active={activeNav === 'home'}
-            onClick={() => setActiveNav('home')}
+            onClick={() => {
+              setActiveNav('home');
+              router.replace('/');
+            }}
             icon={<Home className='w-5 h-5' />}
             label='首頁'
           />
@@ -146,7 +161,10 @@ export default function NetflixHome({
           </p>
           <NavButton
             active={activeNav === 'favorites'}
-            onClick={() => setActiveNav('favorites')}
+            onClick={() => {
+              setActiveNav('favorites');
+              router.replace('/?tab=favorites');
+            }}
             icon={<BookMarked className='w-5 h-5' />}
             label='收藏夾'
           />
@@ -154,10 +172,10 @@ export default function NetflixHome({
       </aside>
 
       {/* ========== 主內容區域 ========== */}
-      <div className='pl-64'>
+      <div className='pl-0 md:pl-64'>
         {/* ========== B. 頂部毛玻璃搜尋列 ========== */}
         <header
-          className={`sticky top-0 z-40 h-20 flex items-center justify-between px-8 transition-all duration-300 ${
+          className={`sticky top-0 z-40 h-16 md:h-20 flex items-center justify-between px-4 md:px-8 transition-all duration-300 ${
             isScrolled
               ? 'bg-[#040404]/60 backdrop-blur-xl border-b border-white/5'
               : 'bg-transparent'
@@ -171,17 +189,23 @@ export default function NetflixHome({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder='搜尋電影、電視劇、動漫...'
-                className='w-96 h-11 pl-12 pr-4 bg-zinc-900/80 rounded-xl text-white placeholder-zinc-500 border border-transparent focus:border-[#e50914] focus:outline-none transition-all duration-200'
+                className='w-full md:w-96 h-11 pl-12 pr-4 bg-zinc-900/80 rounded-xl text-white placeholder-zinc-500 border border-transparent focus:border-[#e50914] focus:outline-none transition-all duration-200'
               />
             </div>
           </form>
-          <div className='flex items-center gap-6'>
+          <div className='flex items-center gap-3 md:gap-6 ml-4 md:ml-0'>
+            <ThemeToggle />
             <UserMenu />
           </div>
         </header>
 
         {/* ========== 主頁內容 ========== */}
-        <main className='px-6 pb-12'>
+        <main
+          className='px-4 md:px-6'
+          style={{
+            paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))',
+          }}
+        >
           {activeNav === 'home' ? (
             <>
               {/* 繼續觀看 */}
@@ -386,6 +410,12 @@ export default function NetflixHome({
           </div>
         </div>
       )}
+      {/* 移動端底部導航 */}
+      <div className='md:hidden'>
+        <MobileBottomNav
+          activePath={activeNav === 'favorites' ? '/?tab=favorites' : '/'}
+        />
+      </div>
     </div>
   );
 }
