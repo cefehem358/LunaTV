@@ -702,16 +702,61 @@ function PlayPageClient() {
               normalizedVideoTitle.includes(normalizedResultTitle);
           }
 
-          return (
-            titlesMatch &&
-            (videoYearRef.current
-              ? result.year.toLowerCase() === videoYearRef.current.toLowerCase()
-              : true) &&
-            (searchType
-              ? (searchType === 'tv' && result.episodes.length > 1) ||
-                (searchType === 'movie' && result.episodes.length === 1)
-              : true)
-          );
+          // 比較年份 (放寬匹配，如年份相差不超過1年)
+          let yearsMatch = true;
+          if (videoYearRef.current && result.year) {
+            const vYear = videoYearRef.current.replace(/\D/g, '');
+            const rYear = result.year.replace(/\D/g, '');
+            if (vYear && rYear && rYear !== '0') {
+              const vNum = parseInt(vYear, 10);
+              const rNum = parseInt(rYear, 10);
+              if (!isNaN(vNum) && !isNaN(rNum)) {
+                yearsMatch = Math.abs(vNum - rNum) <= 1;
+              }
+            }
+          }
+
+          // 類型匹配
+          let typeMatch = true;
+          if (searchType) {
+            const typeName = (result.type_name || '').toLowerCase();
+            const className = (result.class || '').toLowerCase();
+            if (searchType === 'tv') {
+              typeMatch =
+                typeName.includes('剧') ||
+                typeName.includes('季') ||
+                typeName.includes('综艺') ||
+                typeName.includes('动漫') ||
+                className.includes('剧') ||
+                className.includes('季') ||
+                className.includes('综艺') ||
+                className.includes('动漫') ||
+                result.episodes.length > 1;
+            } else if (searchType === 'movie') {
+              const isMovieKeyword =
+                typeName.includes('电影') ||
+                typeName.includes('片') ||
+                typeName.includes('影') ||
+                className.includes('电影') ||
+                className.includes('片') ||
+                className.includes('影');
+              const isTvKeyword =
+                typeName.includes('剧') ||
+                typeName.includes('季') ||
+                className.includes('剧') ||
+                className.includes('季');
+
+              if (isMovieKeyword && !isTvKeyword) {
+                typeMatch = true;
+              } else if (isTvKeyword) {
+                typeMatch = false;
+              } else {
+                typeMatch = result.episodes.length === 1;
+              }
+            }
+          }
+
+          return titlesMatch && yearsMatch && typeMatch;
         });
         setAvailableSources(results);
         return results;

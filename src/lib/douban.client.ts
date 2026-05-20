@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any,no-console,no-case-declarations */
-
+import { toSimplified } from './douban';
 import { DoubanItem, DoubanResult } from './types';
-
 interface DoubanCategoriesParams {
   kind: 'tv' | 'movie';
   category: string;
@@ -69,8 +68,8 @@ async function fetchWithTimeout(
     proxyUrl === 'https://cors-anywhere.com/'
       ? `${proxyUrl}${url}`
       : proxyUrl
-        ? `${proxyUrl}${encodeURIComponent(url)}`
-        : url;
+      ? `${proxyUrl}${encodeURIComponent(url)}`
+      : url;
 
   const fetchOptions: RequestInit = {
     signal: controller.signal,
@@ -94,12 +93,12 @@ async function fetchWithTimeout(
 
 function getDoubanProxyConfig(): {
   proxyType:
-  | 'direct'
-  | 'cors-proxy-zwei'
-  | 'cmliussss-cdn-tencent'
-  | 'cmliussss-cdn-ali'
-  | 'cors-anywhere'
-  | 'custom';
+    | 'direct'
+    | 'cors-proxy-zwei'
+    | 'cmliussss-cdn-tencent'
+    | 'cmliussss-cdn-ali'
+    | 'cors-anywhere'
+    | 'custom';
   proxyUrl: string;
 } {
   const doubanProxyType =
@@ -143,12 +142,20 @@ export async function fetchDoubanCategories(
   if (pageStart < 0) {
     throw new Error('pageStart 不能小于 0');
   }
+  const simCategory = toSimplified(category);
+  const simType = toSimplified(type);
 
   const target = useTencentCDN
-    ? `https://m.douban.cmliussss.net/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${category}&type=${type}`
+    ? `https://m.douban.cmliussss.net/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${encodeURIComponent(
+        simCategory
+      )}&type=${encodeURIComponent(simType)}`
     : useAliCDN
-      ? `https://m.douban.cmliussss.com/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${category}&type=${type}`
-      : `https://m.douban.com/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${category}&type=${type}`;
+    ? `https://m.douban.cmliussss.com/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${encodeURIComponent(
+        simCategory
+      )}&type=${encodeURIComponent(simType)}`
+    : `https://m.douban.com/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${encodeURIComponent(
+        simCategory
+      )}&type=${encodeURIComponent(simType)}`;
 
   try {
     const response = await fetchWithTimeout(
@@ -276,11 +283,19 @@ export async function fetchDoubanList(
     throw new Error('pageStart 不能小于 0');
   }
 
+  const simTag = toSimplified(tag);
+
   const target = useTencentCDN
-    ? `https://movie.douban.cmliussss.net/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`
+    ? `https://movie.douban.cmliussss.net/j/search_subjects?type=${type}&tag=${encodeURIComponent(
+        simTag
+      )}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`
     : useAliCDN
-      ? `https://movie.douban.cmliussss.com/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`
-      : `https://movie.douban.com/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`;
+    ? `https://movie.douban.cmliussss.com/j/search_subjects?type=${type}&tag=${encodeURIComponent(
+        simTag
+      )}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`
+    : `https://movie.douban.com/j/search_subjects?type=${type}&tag=${encodeURIComponent(
+        simTag
+      )}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`;
 
   try {
     const response = await fetchWithTimeout(
@@ -381,21 +396,33 @@ async function fetchDoubanRecommends(
   let { category, format, region, year, platform, sort, label } = params;
   if (category === 'all') {
     category = '';
+  } else {
+    category = toSimplified(category || '');
   }
   if (format === 'all') {
     format = '';
+  } else {
+    format = toSimplified(format || '');
   }
   if (label === 'all') {
     label = '';
+  } else {
+    label = toSimplified(label || '');
   }
   if (region === 'all') {
     region = '';
+  } else {
+    region = toSimplified(region || '');
   }
   if (year === 'all') {
     year = '';
+  } else {
+    year = toSimplified(year || '');
   }
   if (platform === 'all') {
     platform = '';
+  } else {
+    platform = toSimplified(platform || '');
   }
   if (sort === 'T') {
     sort = '';
@@ -432,8 +459,8 @@ async function fetchDoubanRecommends(
   const baseUrl = useTencentCDN
     ? `https://m.douban.cmliussss.net/rexxar/api/v2/${kind}/recommend`
     : useAliCDN
-      ? `https://m.douban.cmliussss.com/rexxar/api/v2/${kind}/recommend`
-      : `https://m.douban.com/rexxar/api/v2/${kind}/recommend`;
+    ? `https://m.douban.cmliussss.com/rexxar/api/v2/${kind}/recommend`
+    : `https://m.douban.com/rexxar/api/v2/${kind}/recommend`;
   const reqParams = new URLSearchParams();
   reqParams.append('refresh', '0');
   reqParams.append('start', pageStart.toString());

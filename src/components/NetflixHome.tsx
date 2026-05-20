@@ -251,7 +251,7 @@ export default function NetflixHome({
                                 }`
                               )
                             }
-                            className='group relative flex-shrink-0 w-72 aspect-[16/9] rounded-xl overflow-hidden cursor-pointer'
+                            className='group relative flex-shrink-0 w-80 sm:w-96 md:w-[440px] aspect-[16/9] rounded-xl overflow-hidden cursor-pointer'
                           >
                             <Image
                               src={
@@ -266,23 +266,23 @@ export default function NetflixHome({
                             />
                             <div className='absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent' />
                             {/* 進度條 */}
-                            <div className='absolute bottom-0 left-0 right-0 h-1 bg-zinc-700'>
+                            <div className='absolute bottom-0 left-0 right-0 h-1.5 bg-zinc-700'>
                               <div
                                 className='h-full bg-[#e50914] transition-all'
                                 style={{ width: `${progress}%` }}
                               />
                             </div>
                             {/* 集數標籤 */}
-                            <div className='absolute top-2 left-2 px-2 py-0.5 bg-black/70 backdrop-blur-sm text-white text-xs rounded'>
+                            <div className='absolute top-3 left-3 px-2.5 py-1 bg-black/75 backdrop-blur-sm text-white text-xs sm:text-sm font-medium rounded-lg'>
                               第{record.index}集 / 共{record.total_episodes}集
                             </div>
                             {/* 標題 */}
-                            <div className='absolute inset-x-0 bottom-0 p-3'>
-                              <p className='text-white text-sm font-medium line-clamp-1'>
+                            <div className='absolute inset-x-0 bottom-0 p-4'>
+                              <p className='text-white text-sm sm:text-base md:text-lg font-bold line-clamp-1 group-hover:text-[#e50914] transition-colors'>
                                 {record.title}
                               </p>
-                              <p className='text-zinc-400 text-xs mt-0.5 flex items-center gap-1'>
-                                <Watch className='w-3 h-3' />
+                              <p className='text-zinc-400 text-xs sm:text-sm mt-1 flex items-center gap-1.5'>
+                                <Watch className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
                                 {Math.floor(record.play_time / 60)}分鐘
                               </p>
                             </div>
@@ -934,11 +934,29 @@ export function NetflixHomePage() {
               kind: 'movie',
               category: '熱門',
               type: '全部',
+            }).catch(() => {
+              return { code: 500, message: 'error', list: [] };
             }),
-            getDoubanCategories({ kind: 'tv', category: 'tv', type: 'tv' }),
-            getDoubanCategories({ kind: 'tv', category: 'show', type: 'show' }),
-            GetBangumiCalendarData(),
-            getAllPlayRecords(),
+            getDoubanCategories({
+              kind: 'tv',
+              category: 'tv',
+              type: 'tv',
+            }).catch(() => {
+              return { code: 500, message: 'error', list: [] };
+            }),
+            getDoubanCategories({
+              kind: 'tv',
+              category: 'show',
+              type: 'show',
+            }).catch(() => {
+              return { code: 500, message: 'error', list: [] };
+            }),
+            GetBangumiCalendarData().catch(() => {
+              return [];
+            }),
+            getAllPlayRecords().catch(() => {
+              return {};
+            }),
           ]);
         if (moviesData.code === 200) setHotMovies(moviesData.list);
         if (tvShowsData.code === 200) setHotTvShows(tvShowsData.list);

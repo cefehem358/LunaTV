@@ -116,13 +116,18 @@ async function searchWithCache(
         };
       });
 
-      const results = allResults.filter((result: SearchResult) => result.episodes.length > 0);
+      const results = allResults.filter(
+        (result: SearchResult) => result.episodes.length > 0
+      );
       const pageCount = page === 1 ? data.pagecount || 1 : undefined;
       setCachedSearchPage(apiSite.key, query, page, 'ok', results, pageCount);
       return { results, pageCount };
     } catch (error: any) {
       clearTimeout(timeoutId);
-      const aborted = error?.name === 'AbortError' || error?.code === 20 || error?.message?.includes('aborted');
+      const aborted =
+        error?.name === 'AbortError' ||
+        error?.code === 20 ||
+        error?.message?.includes('aborted');
       if (aborted) {
         setCachedSearchPage(apiSite.key, query, page, 'timeout', []);
       }
@@ -139,14 +144,31 @@ export async function searchFromApi(
   try {
     const apiBaseUrl = apiSite.api;
 
-    const searchVariants = precomputedVariants || generateSearchVariants(query);
+    let searchVariants = precomputedVariants;
+    if (!searchVariants) {
+      const stcasc = (await import('switch-chinese')).default;
+      const converter = stcasc();
+      const simplifiedQuery = converter.simplized(query);
+      const searchVariantsSet = new Set<string>();
+      generateSearchVariants(simplifiedQuery).forEach((v) =>
+        searchVariantsSet.add(v)
+      );
+      generateSearchVariants(query).forEach((v) => searchVariantsSet.add(v));
+      searchVariants = Array.from(searchVariantsSet);
+    }
 
     const variantPromises = searchVariants.map(async (variant, index) => {
-      const apiUrl = apiBaseUrl + API_CONFIG.search.path + encodeURIComponent(variant);
+      const apiUrl =
+        apiBaseUrl + API_CONFIG.search.path + encodeURIComponent(variant);
 
       try {
         const result = await searchWithCache(apiSite, variant, 1, apiUrl, 8000);
-        return { variant, index, results: result.results, pageCount: result.pageCount };
+        return {
+          variant,
+          index,
+          results: result.results,
+          pageCount: result.pageCount,
+        };
       } catch {
         return { variant, index, results: [], pageCount: undefined };
       }
@@ -166,7 +188,7 @@ export async function searchFromApi(
           pageCountFromFirst = pageCount;
         }
 
-        variantData.forEach(result => {
+        variantData.forEach((result) => {
           const uniqueKey = `${result.source}_${result.id}`;
           if (!seenIds.has(uniqueKey)) {
             seenIds.add(uniqueKey);
@@ -200,7 +222,13 @@ export async function searchFromApi(
             .replace('{page}', page.toString());
 
         const pagePromise = (async () => {
-          const pageResult = await searchWithCache(apiSite, query, page, pageUrl, 8000);
+          const pageResult = await searchWithCache(
+            apiSite,
+            query,
+            page,
+            pageUrl,
+            8000
+          );
           return pageResult.results;
         })();
 
@@ -211,7 +239,7 @@ export async function searchFromApi(
 
       additionalResults.forEach((pageResults) => {
         if (pageResults.length > 0) {
-          pageResults.forEach(result => {
+          pageResults.forEach((result) => {
             const uniqueKey = `${result.source}_${result.id}`;
             if (!seenIds.has(uniqueKey)) {
               seenIds.add(uniqueKey);

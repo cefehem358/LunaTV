@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { getCacheTime } from '@/lib/config';
-import { fetchDoubanData } from '@/lib/douban';
+import { fetchDoubanData, toSimplified } from '@/lib/douban';
 import { DoubanItem, DoubanResult } from '@/lib/types';
 
 interface DoubanApiResponse {
@@ -57,7 +57,10 @@ export async function GET(request: Request) {
     return handleTop250(pageStart);
   }
 
-  const target = `https://movie.douban.com/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageSize}&page_start=${pageStart}`;
+  const simTag = toSimplified(tag);
+  const target = `https://movie.douban.com/j/search_subjects?type=${type}&tag=${encodeURIComponent(
+    simTag
+  )}&sort=recommend&page_limit=${pageSize}&page_start=${pageStart}`;
 
   try {
     // 調用豆瓣 API

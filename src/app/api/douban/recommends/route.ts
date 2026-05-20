@@ -3,9 +3,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getCacheTime } from '@/lib/config';
-import { fetchDoubanData } from '@/lib/douban';
+import { fetchDoubanData, toSimplified } from '@/lib/douban';
 import { DoubanResult } from '@/lib/types';
-
 interface DoubanRecommendApiResponse {
   total: number;
   items: Array<{
@@ -32,19 +31,25 @@ export async function GET(request: NextRequest) {
   const kind = searchParams.get('kind');
   const pageLimit = parseInt(searchParams.get('limit') || '20');
   const pageStart = parseInt(searchParams.get('start') || '0');
+  const categoryRaw = searchParams.get('category');
+  const formatRaw = searchParams.get('format');
+  const regionRaw = searchParams.get('region');
+  const yearRaw = searchParams.get('year');
+  const platformRaw = searchParams.get('platform');
+  const sortRaw = searchParams.get('sort');
+  const labelRaw = searchParams.get('label');
+
   const category =
-    searchParams.get('category') === 'all' ? '' : searchParams.get('category');
+    categoryRaw === 'all' || !categoryRaw ? '' : toSimplified(categoryRaw);
   const format =
-    searchParams.get('format') === 'all' ? '' : searchParams.get('format');
+    formatRaw === 'all' || !formatRaw ? '' : toSimplified(formatRaw);
   const region =
-    searchParams.get('region') === 'all' ? '' : searchParams.get('region');
-  const year =
-    searchParams.get('year') === 'all' ? '' : searchParams.get('year');
+    regionRaw === 'all' || !regionRaw ? '' : toSimplified(regionRaw);
+  const year = yearRaw === 'all' || !yearRaw ? '' : toSimplified(yearRaw);
   const platform =
-    searchParams.get('platform') === 'all' ? '' : searchParams.get('platform');
-  const sort = searchParams.get('sort') === 'T' ? '' : searchParams.get('sort');
-  const label =
-    searchParams.get('label') === 'all' ? '' : searchParams.get('label');
+    platformRaw === 'all' || !platformRaw ? '' : toSimplified(platformRaw);
+  const sort = sortRaw === 'T' || !sortRaw ? '' : sortRaw;
+  const label = labelRaw === 'all' || !labelRaw ? '' : toSimplified(labelRaw);
 
   if (!kind) {
     return NextResponse.json({ error: '缺少必要參數: kind' }, { status: 400 });
@@ -55,7 +60,7 @@ export async function GET(request: NextRequest) {
     selectedCategories['形式'] = format;
   }
   if (region) {
-    selectedCategories['地區'] = region;
+    selectedCategories['地区'] = region;
   }
 
   const tags = [] as Array<string>;

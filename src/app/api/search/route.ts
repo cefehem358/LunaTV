@@ -37,11 +37,20 @@ export async function GET(request: NextRequest) {
   const config = await getConfig();
   const apiSites = await getAvailableApiSites(authInfo.username);
 
-  const searchVariants = generateSearchVariants(query);
+  const stcasc = (await import('switch-chinese')).default;
+  const converter = stcasc();
+  const simplifiedQuery = converter.simplized(query);
+
+  const searchVariantsSet = new Set<string>();
+  generateSearchVariants(simplifiedQuery).forEach((v) =>
+    searchVariantsSet.add(v)
+  );
+  generateSearchVariants(query).forEach((v) => searchVariantsSet.add(v));
+  const searchVariants = Array.from(searchVariantsSet);
 
   const searchPromises = apiSites.map((site) =>
     Promise.race([
-      searchFromApi(site, query, searchVariants),
+      searchFromApi(site, simplifiedQuery, searchVariants),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error(`${site.name} timeout`)), 20000)
       ),
