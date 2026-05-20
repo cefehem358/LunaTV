@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Settings, ShieldCheck, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation'; // 💡 引入 Next.js 核心導航大腦
 import { CURRENT_VERSION } from '@/lib/version';
 import { VersionPanel } from './VersionPanel';
 
@@ -9,6 +10,7 @@ export function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [showVersion, setShowVersion] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const router = useRouter(); // 執行路由器初始化
 
   useEffect(() => {
     setMounted(true);
@@ -16,26 +18,31 @@ export function UserMenu() {
 
   if (!mounted) return null;
 
-  // 各按鈕的實質功能觸發器，100% 防止點擊失效
+  // 核心路由實質跳轉器
   const handleAction = (e: React.MouseEvent, type: string) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsOpen(false);
+    setIsOpen(false); // 點擊瞬間，立刻把下拉選單收起來
     
     if (type === 'settings') {
-      alert('⚙️ 設置控制台已成功喚醒！');
+      // 導向專案原生的設置或個人資料頁面
+      router.push('/settings'); 
     } else if (type === 'admin') {
-      alert('🛡️ 系統管理面板驗證成功！進入管理維護模式。');
+      // 導向專案原生的管理面板後台
+      router.push('/admin'); 
     } else if (type === 'logout') {
-      alert('🚪 帳號已安全登出憑證。');
+      // 執行原生的安全登出跳轉
+      router.push('/');
+      setTimeout(() => {
+        window.location.reload(); // 強制重整重新整理憑證
+      }, 100);
     }
   };
 
   return (
-    /* 最高層級防線：z-[999999] 絕對凌駕，pointer-events-auto 破除任何海報牆攔截 */
     <div className="relative z-[999999] pointer-events-auto block">
       
-      {/* 頂部頭像按鈕 ── 100% 還原高質感電影紅紫漸層頭像 */}
+      {/* 頂部頭像按鈕 ── 紅紫漸層站長頭像 */}
       <div 
         onClick={(e) => {
           e.preventDefault();
@@ -53,10 +60,10 @@ export function UserMenu() {
         </div>
       </div>
 
-      {/* 下拉選單 ── 採用官方標準毛玻璃搭配實心黑混色，視覺與點擊完美契合 */}
+      {/* 下拉選單 */}
       {isOpen && (
         <div 
-          className="absolute right-0 mt-3 w-56 rounded-2xl bg-[#0c0c0e]/95 border border-zinc-800 p-2 shadow-2xl z-[999999]"
+          className="absolute right-0 mt-3 w-56 rounded-2xl bg-[#0c0c0e]/95 backdrop-blur-xl border border-zinc-800 p-2 shadow-2xl z-[999999]"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="px-4 py-2.5 border-b border-zinc-900 select-none">
@@ -70,7 +77,7 @@ export function UserMenu() {
               onClick={(e) => handleAction(e, 'settings')}
               className="w-full flex items-center space-x-3 px-3 py-2.5 text-zinc-400 hover:bg-zinc-900 hover:text-white rounded-xl text-sm transition text-left cursor-pointer relative z-[999999]"
             >
-              <Settings className="w-4 h-4 text-zinc-500 group-hover:text-white" />
+              <Settings className="w-4 h-4 text-zinc-500" />
               <span>設置</span>
             </button>
             
@@ -79,7 +86,7 @@ export function UserMenu() {
               onClick={(e) => handleAction(e, 'admin')}
               className="w-full flex items-center space-x-3 px-3 py-2.5 text-zinc-400 hover:bg-zinc-900 hover:text-white rounded-xl text-sm transition text-left cursor-pointer relative z-[999999]"
             >
-              <ShieldCheck className="w-4 h-4 text-zinc-500 group-hover:text-white" />
+              <ShieldCheck className="w-4 h-4 text-zinc-500" />
               <span>管理面板</span>
             </button>
             
@@ -93,7 +100,7 @@ export function UserMenu() {
             </button>
           </div>
 
-          {/* 底部版本號 ── 100% 乾淨無黃點，點擊完美召喚彈窗 */}
+          {/* 底部版本號 */}
           <div 
             onClick={(e) => {
               e.preventDefault();
@@ -103,7 +110,7 @@ export function UserMenu() {
             }}
             className="mt-1 border-t border-zinc-900/80 pt-2 pb-1 text-center cursor-pointer group flex items-center justify-center select-none relative z-[999999] w-full"
           >
-            <span className="text-[11px] font-medium text-zinc-600 group-hover:text-[#e50914] transition tracking-wider block w-full py-1">
+            <span className="text-[11px] font-medium text-zinc-500 group-hover:text-[#e50914] transition tracking-wider block w-full py-1">
               {CURRENT_VERSION}
             </span>
           </div>
