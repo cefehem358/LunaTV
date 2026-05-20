@@ -11,6 +11,24 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: '1.0.7',
+    date: '2026-05-20',
+    added: [],
+    changed: [],
+    fixed: [
+      '修复首页「最新上架」查看更多错误跳转到动漫页的问题 - 改为跳转到电影页面',
+    ],
+  },
+  {
+    version: '1.0.6',
+    date: '2026-05-20',
+    added: [],
+    changed: [],
+    fixed: [
+      "修复番剧/剧场版显示真人影视问题 - format参数改为'動畫'过滤动画内容",
+    ],
+  },
+  {
     version: '1.0.4',
     date: '2026-05-20',
     added: [],
