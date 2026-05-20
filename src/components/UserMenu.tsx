@@ -1095,13 +1095,19 @@ export const UserMenu: React.FC = () => {
       <div className='relative'>
         <button
           onClick={handleMenuClick}
-          className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors'
+          className='flex items-center gap-3 text-left focus:outline-none hover:opacity-90 transition-opacity'
           aria-label='User Menu'
         >
-          <User className='w-full h-full' />
+          <div className='w-10 h-10 rounded-lg bg-gradient-to-br from-[#e50914] to-orange-600 flex items-center justify-center font-bold text-white shadow-md select-none'>
+            {authInfo?.username?.charAt(0).toUpperCase() || 'M'}
+          </div>
+          <div className='hidden sm:block select-none leading-tight'>
+            <p className='text-sm font-medium text-white'>{getRoleText(authInfo?.role) || '管理員'}</p>
+            <p className='text-[10px] text-zinc-400 dark:text-zinc-500 font-mono'>{authInfo?.username || 'Administrator'}</p>
+          </div>
         </button>
         {updateStatus === UpdateStatus.HAS_UPDATE && (
-          <div className='absolute top-[2px] right-[2px] w-2 h-2 bg-yellow-500 rounded-full'></div>
+          <div className='absolute -top-0.5 -right-0.5 w-2 h-2 bg-yellow-500 rounded-full animate-pulse'></div>
         )}
       </div>
 

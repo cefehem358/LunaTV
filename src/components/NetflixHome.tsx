@@ -43,6 +43,7 @@ import { DoubanItem } from '@/lib/types';
 import { useSite } from '@/components/SiteProvider';
 import VideoCard from '@/components/VideoCard';
 import { processImageUrl } from '@/lib/utils';
+import { UserMenu } from '@/components/UserMenu';
 
 export default function NetflixHome({
   hotMovies = [],
@@ -158,17 +159,6 @@ export default function NetflixHome({
             label='收藏夾'
           />
         </nav>
-
-        {/* 底部設置 */}
-        <div className='p-4 border-t border-white/5 mt-auto'>
-          <Link
-            href='/admin'
-            className='flex items-center gap-3 px-4 py-3 text-zinc-500 hover:text-white transition-colors rounded-xl hover:bg-zinc-800/50'
-          >
-            <Settings className='w-5 h-5' />
-            <span className='text-sm'>⚙️ 後台配置管理</span>
-          </Link>
-        </div>
       </aside>
 
       {/* ========== 主內容區域 ========== */}
@@ -194,19 +184,7 @@ export default function NetflixHome({
             </div>
           </form>
           <div className='flex items-center gap-6'>
-            <button className='relative p-2 text-zinc-400 hover:text-white transition-colors'>
-              <Bell className='w-6 h-6' />
-              <span className='absolute top-1 right-1 w-2 h-2 bg-[#e50914] rounded-full' />
-            </button>
-            <div className='flex items-center gap-3'>
-              <div className='w-10 h-10 rounded-lg bg-gradient-to-br from-[#e50914] to-orange-600 flex items-center justify-center font-bold text-white'>
-                M
-              </div>
-              <div className='hidden sm:block'>
-                <p className='text-sm font-medium text-white'>管理員</p>
-                <p className='text-xs text-zinc-500'>Administrator</p>
-              </div>
-            </div>
+            <UserMenu />
           </div>
         </header>
 
