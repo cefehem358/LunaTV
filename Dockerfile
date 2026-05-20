@@ -10,8 +10,9 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 
 # 安装所有依赖（含 devDependencies，后续会裁剪）
-# 使用 --ignore-scripts 跳过 husky install（.git 不存在于 deps 阶段）
-RUN pnpm install --frozen-lockfile --ignore-scripts
+# --ignore-scripts: 跳过 husky install（.git 不存在于 deps 阶段）
+# --no-frozen-lockfile: 允许 pnpm 根据环境更新 lockfile
+RUN pnpm --version && pnpm install --no-frozen-lockfile --ignore-scripts
 
 # ---- 第 2 阶段：构建项目 ----
 FROM node:20-alpine AS builder
@@ -23,9 +24,10 @@ COPY --from=deps /app/node_modules ./node_modules
 # 复制全部源代码
 COPY . .
 
-# 在构建阶段也显式设置 DOCKER_ENV，
+# 在构建阶段也显式设置环境变量
 ENV DOCKER_ENV=true
 ENV NEXT_PUBLIC_STORAGE_TYPE=redis
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # 生成生产构建（使用原始构建命令）
 RUN pnpm run build
