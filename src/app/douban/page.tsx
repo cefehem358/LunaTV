@@ -314,18 +314,17 @@ function DoubanPageClient() {
           throw new Error('沒有找到對應的日期');
         }
       } else if (type === 'anime') {
-        const animeKind = primarySelection === '番劇' ? 'tv' : 'movie';
         data = await getDoubanRecommends({
-          kind: animeKind,
+          kind: primarySelection === '番劇' ? 'tv' : 'movie',
           pageLimit: 25,
           pageStart: 0,
-          category: '',
-          format: '動畫',
-          region: '',
-          year: '',
-          platform: '',
-          sort: multiLevelValues.sort ? (multiLevelValues.sort as string) : '',
-          label: '',
+          category: '动画',
+          format: primarySelection === '番劇' ? '电视剧' : '',
+          region: (multiLevelValues.region as string) || '',
+          year: (multiLevelValues.year as string) || '',
+          platform: (multiLevelValues.platform as string) || '',
+          sort: (multiLevelValues.sort as string) || '',
+          label: (multiLevelValues.label as string) || '',
         });
       } else if (primarySelection === '全部') {
         data = await getDoubanRecommends({
@@ -362,14 +361,13 @@ function DoubanPageClient() {
           setHasMore(data.list.length !== 0);
           setLoading(false);
         } else {
-          console.log('参数不一致，不执行任何操作，避免设置过期数据');
+          // 參數不一致，不執行任何操作，避免設置過期數據
         }
         // 如果參數不一致，不執行任何操作，避免設置過期數據
       } else {
         throw new Error(data.message || '獲取數據失敗');
       }
     } catch (err) {
-      console.error(err);
       setError((err as Error).message || '獲取數據失敗，請稍後重試');
       setLoading(false); // 發生錯誤時總是停止loading狀態
     }
@@ -464,15 +462,13 @@ function DoubanPageClient() {
               kind: primarySelection === '番劇' ? 'tv' : 'movie',
               pageLimit: 25,
               pageStart: currentPage * 25,
-              category: '',
-              format: '動畫',
-              region: '',
-              year: '',
-              platform: '',
-              sort: multiLevelValues.sort
-                ? (multiLevelValues.sort as string)
-                : '',
-              label: '',
+              category: '动画',
+              format: primarySelection === '番劇' ? '电视剧' : '',
+              region: (multiLevelValues.region as string) || '',
+              year: (multiLevelValues.year as string) || '',
+              platform: (multiLevelValues.platform as string) || '',
+              sort: (multiLevelValues.sort as string) || '',
+              label: (multiLevelValues.label as string) || '',
             });
           } else if (primarySelection === '全部') {
             data = await getDoubanRecommends({
@@ -514,13 +510,13 @@ function DoubanPageClient() {
               setDoubanData((prev) => [...prev, ...data.list]);
               setHasMore(data.list.length !== 0);
             } else {
-              console.log('参数不一致，不执行任何操作，避免设置过期数据');
+              // 參數不一致，不執行任何操作，避免設置過期數據
             }
           } else {
             throw new Error(data.message || '獲取數據失敗');
           }
         } catch (err) {
-          console.error(err);
+          // 忽略錯誤，加載更多失敗不影響現有數據
         } finally {
           setIsLoadingMore(false);
         }
