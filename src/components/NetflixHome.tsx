@@ -251,7 +251,7 @@ export default function NetflixHome({
                                 }`
                               )
                             }
-                            className='group relative flex-shrink-0 w-80 sm:w-96 md:w-[440px] aspect-[16/9] rounded-xl overflow-hidden cursor-pointer'
+                            className='group relative flex-shrink-0 w-60 sm:w-72 md:w-80 aspect-[16/9] rounded-xl overflow-hidden cursor-pointer'
                           >
                             <Image
                               src={
