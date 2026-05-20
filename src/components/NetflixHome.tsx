@@ -53,7 +53,7 @@ export default function NetflixHome({
   playRecords?: (PlayRecord & { key: string })[];
 }) {
   const router = useRouter();
-  const { announcement } = useSite();
+  const { siteName, announcement } = useSite();
   const [searchQuery, setSearchQuery] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeNav, setActiveNav] = useState<'home' | 'favorites'>('home');
@@ -101,7 +101,7 @@ export default function NetflixHome({
         {/* Logo */}
         <div className='p-6'>
           <h1 className='text-3xl font-black text-[#e50914] font-[Impact] tracking-wider'>
-            LunaTV
+            {siteName || 'LunaTV'}
           </h1>
         </div>
 
