@@ -11,6 +11,15 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: '1.0.8',
+    date: '2026-05-20',
+    added: [],
+    changed: [],
+    fixed: [
+      '修复动漫番剧/剧场版切换时卡片消失问题 - 修正getDoubanRecommends的category和format参数',
+    ],
+  },
+  {
     version: '1.0.7',
     date: '2026-05-20',
     added: [],

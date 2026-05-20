@@ -270,11 +270,18 @@ export default function NetflixHome({
                             <div className='absolute top-3 left-3 px-2.5 py-1 bg-black/75 backdrop-blur-sm text-white text-xs sm:text-sm font-medium rounded-lg'>
                               第{record.index}集 / 共{record.total_episodes}集
                             </div>
-                            {/* 標題 */}
+                            {/* 底部訊息區 */}
                             <div className='absolute inset-x-0 bottom-0 p-4'>
                               <p className='text-white text-sm sm:text-base md:text-lg font-bold line-clamp-1 group-hover:text-[#e50914] transition-colors'>
                                 {record.title}
                               </p>
+                              {/* 片源標籤 */}
+                              <div className='mt-1'>
+                                <span className='inline-block px-2 py-0.5 bg-zinc-800/60 backdrop-blur text-zinc-500 text-xs rounded'>
+                                  {record.source_name || 'unknown'}
+                                </span>
+                              </div>
+                              {/* 時間進度 */}
                               <p className='text-zinc-400 text-xs sm:text-sm mt-1 flex items-center gap-1.5'>
                                 <Watch className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
                                 {Math.floor(record.play_time / 60)}分鐘
