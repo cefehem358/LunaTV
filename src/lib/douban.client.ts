@@ -405,6 +405,7 @@ async function fetchDoubanRecommends(
     format = toSimplified(format || '');
   }
   if (label === 'all') {
+    // 保留 'all' 值，不转换为空字符串，让 API 使用默认行为
     label = '';
   } else {
     label = toSimplified(label || '');
@@ -486,7 +487,13 @@ async function fetchDoubanRecommends(
 
     const doubanData: DoubanRecommendApiResponse = await response.json();
     const list: DoubanItem[] = doubanData.items
-      .filter((item) => item.type == 'movie' || item.type == 'tv')
+      .filter((item) => {
+        // 兼容不同类型的type值：movie, tv, 可能是其他如 anime
+        // 只要不是明确未知类型就保留
+        const validTypes = ['movie', 'tv'];
+        const itemType = item.type?.toString().toLowerCase();
+        return validTypes.includes(itemType) || !itemType;
+      })
       .map((item) => ({
         id: item.id,
         title: item.title,
