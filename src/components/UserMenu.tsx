@@ -16,18 +16,20 @@ export function UserMenu() {
   if (!mounted) return null;
 
   return (
-    /* 超強防線：z-[99999] 絕對凌駕全站海報、pointer-events-auto 確保事件絕不漏抓 */
-    <div className="relative z-[99999] pointer-events-auto">
+    /* 最外層：強制拉高層級，阻斷一切外部干擾 */
+    <div className="relative z-[999999] block">
       
-      {/* 頂部頭像按鈕 ── 100% 還原原版高質感電影漸層頭像與白字 */}
+      {/* 頂部頭像按鈕 ── 完美漸層頭像 */}
       <div 
         onClick={(e) => {
-          e.stopPropagation(); // 阻斷 Next.js 路由與背景海報攔截
+          e.preventDefault();
+          e.stopPropagation();
           setIsOpen(!isOpen);
         }} 
-        className="flex items-center space-x-3 cursor-pointer group select-none relative z-[99999]"
+        className="flex items-center space-x-3 cursor-pointer group select-none relative z-[999999]"
+        style={{ pointerEvents: 'auto' }}
       >
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#e50914] to-purple-600 flex items-center justify-center font-bold text-white text-sm shadow-md transition transform group-hover:scale-105 duration-200">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#e50914] to-purple-600 flex items-center justify-center font-bold text-white text-sm shadow-md">
           站
         </div>
         <div className="hidden md:block">
@@ -36,59 +38,71 @@ export function UserMenu() {
         </div>
       </div>
 
-      {/* 下拉選單 ── 精確通電，無可撼動 */}
+      {/* 下拉選單 ── 徹底拔除 backdrop-blur 毛玻璃，改用純色防禦，根治瀏覽器點擊攔截 Bug */}
       {isOpen && (
         <div 
-          className="absolute right-0 mt-3 w-56 rounded-2xl bg-[#0c0c0e]/95 backdrop-blur-xl border border-zinc-800 p-2 shadow-2xl animate-fade-in z-[99999] pointer-events-auto"
+          className="absolute right-0 mt-3 w-56 rounded-2xl bg-[#121214] border border-zinc-800 p-2 shadow-2xl z-[999999]"
+          style={{ pointerEvents: 'auto' }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="px-4 py-2.5 border-b border-zinc-900">
+          <div className="px-4 py-2.5 border-b border-zinc-900 select-none">
             <p className="text-xs text-zinc-500">當前用戶</p>
             <p className="text-sm font-bold text-white truncate mt-0.5">asd09832839...</p>
           </div>
           
-          <div className="p-1 space-y-0.5 relative z-[99999]">
-            <button 
+          {/* 改用超高容錯的 a 標籤代替 button，徹底繞過所有 CSS 渲染引擎的點擊死角 */}
+          <div className="p-1 space-y-0.5 relative z-[999999]">
+            <a 
+              href="#"
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
+                alert('設置按鈕成功觸發！');
                 setIsOpen(false);
               }}
-              className="w-full flex items-center space-x-3 px-3 py-2.5 text-zinc-400 hover:bg-zinc-900 hover:text-white rounded-xl text-sm transition text-left cursor-pointer relative z-[99999]"
+              className="w-full flex items-center space-x-3 px-3 py-2.5 text-zinc-400 hover:bg-zinc-900 hover:text-white rounded-xl text-sm transition text-left cursor-pointer block relative z-[999999]"
             >
               <span>⚙️</span> <span>設置</span>
-            </button>
+            </a>
             
-            <button 
+            <a 
+              href="#"
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
+                alert('管理面板成功觸發！');
                 setIsOpen(false);
               }}
-              className="w-full flex items-center space-x-3 px-3 py-2.5 text-zinc-400 hover:bg-zinc-900 hover:text-white rounded-xl text-sm transition text-left cursor-pointer relative z-[99999]"
+              className="w-full flex items-center space-x-3 px-3 py-2.5 text-zinc-400 hover:bg-zinc-900 hover:text-white rounded-xl text-sm transition text-left cursor-pointer block relative z-[999999]"
             >
               <span>🛡️</span> <span>管理面板</span>
-            </button>
+            </a>
             
-            <button 
+            <a 
+              href="#"
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
+                alert('即將登出...');
                 setIsOpen(false);
               }}
-              className="w-full flex items-center space-x-3 px-3 py-2.5 text-red-400 hover:bg-red-950/20 rounded-xl text-sm transition font-medium border-t border-zinc-900/50 mt-1 text-left cursor-pointer relative z-[99999]"
+              className="w-full flex items-center space-x-3 px-3 py-2.5 text-red-400 hover:bg-red-950/20 rounded-xl text-sm transition font-medium border-t border-zinc-900/50 mt-1 text-left cursor-pointer block relative z-[999999]"
             >
               <span>🚪</span> <span>登出</span>
-            </button>
+            </a>
           </div>
 
-          {/* 底部純淨版號 ── 絲滑喚醒歷史紀錄 */}
+          {/* 底部版本號 */}
           <div 
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
-              setShowVersion(true);
-              setIsOpen(false);
+              setShowVersion(true); // 喚醒彈窗
+              setIsOpen(false);     // 關閉下拉
             }}
-            className="mt-1 border-t border-zinc-900/80 pt-2 pb-1 text-center cursor-pointer group flex items-center justify-center space-x-1.5 select-none relative z-[99999]"
+            className="mt-1 border-t border-zinc-900/80 pt-2 pb-1 text-center cursor-pointer group flex items-center justify-center space-x-1.5 select-none relative z-[999999] w-full"
           >
-            <span className="text-[11px] font-medium text-zinc-600 group-hover:text-[#e50914] transition tracking-wider block w-full py-1">
+            <span className="text-[11px] font-medium text-zinc-500 group-hover:text-[#e50914] transition tracking-wider block w-full py-1">
               {CURRENT_VERSION}
             </span>
           </div>
