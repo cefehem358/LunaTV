@@ -320,6 +320,25 @@ export async function getConfig(): Promise<AdminConfig> {
 
 export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
   // 确保必要的属性存在和初始化
+  if (!adminConfig.SiteConfig) {
+    adminConfig.SiteConfig = {
+      SiteName: 'LunaTV',
+      Announcement: '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。',
+      SearchDownstreamMaxPage: 5,
+      SiteInterfaceCacheTime: 7200,
+      DoubanProxyType: 'cmliussss-cdn-tencent',
+      DoubanProxy: '',
+      DoubanImageProxyType: 'cmliussss-cdn-tencent',
+      DoubanImageProxy: '',
+      DisableYellowFilter: false,
+      FluidSearch: true,
+      EnableWebLive: false,
+    };
+  }
+  if (!adminConfig.SiteConfig.SiteName || adminConfig.SiteConfig.SiteName === 'MoonTV') {
+    adminConfig.SiteConfig.SiteName = 'LunaTV';
+  }
+
   if (!adminConfig.UserConfig) {
     adminConfig.UserConfig = { Users: [] };
   }

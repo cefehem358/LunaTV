@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 const nextConfig = {
-  output: 'standalone',
+  output: process.platform === 'win32' ? undefined : 'standalone',
   eslint: {
     dirs: ['src'],
   },

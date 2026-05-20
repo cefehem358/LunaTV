@@ -12,7 +12,7 @@ interface PageLayoutProps {
 
 const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
   return (
-    <div className='w-full min-h-screen'>
+    <div className='w-full min-h-screen bg-[#040404] text-zinc-100'>
       {/* 移動端頭部 */}
       <MobileHeader showBackButton={['/play', '/live'].includes(activePath)} />
 

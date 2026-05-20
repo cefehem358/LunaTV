@@ -42,6 +42,7 @@ import { DoubanItem } from '@/lib/types';
 
 import { useSite } from '@/components/SiteProvider';
 import VideoCard from '@/components/VideoCard';
+import { processImageUrl } from '@/lib/utils';
 
 export default function NetflixHome({
   hotMovies = [],
@@ -267,10 +268,12 @@ export default function NetflixHome({
                             className='group relative flex-shrink-0 w-52 aspect-[2.35/1] rounded-xl overflow-hidden cursor-pointer'
                           >
                             <Image
-                              src={record.cover || '/placeholder.jpg'}
+                              src={processImageUrl(record.cover) || '/placeholder.jpg'}
                               alt={record.title}
                               fill
                               className='object-cover transition-transform duration-300 group-hover:scale-105'
+                              unoptimized
+                              referrerPolicy='no-referrer'
                             />
                             <div className='absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent' />
                             {/* 進度條 */}
@@ -307,11 +310,13 @@ export default function NetflixHome({
                 <section className='relative h-[480px] rounded-3xl overflow-hidden mb-10'>
                   <div className='absolute inset-0'>
                     <Image
-                      src={featuredItem.poster || '/placeholder.jpg'}
+                      src={processImageUrl(featuredItem.poster) || '/placeholder.jpg'}
                       alt={featuredItem.title}
                       fill
                       className='object-cover'
                       priority
+                      unoptimized
+                      referrerPolicy='no-referrer'
                     />
                     <div className='absolute inset-0 bg-gradient-to-t from-[#040404] via-transparent to-transparent' />
                     <div className='absolute inset-0 bg-gradient-to-r from-[#040404]/80 via-transparent to-transparent' />
@@ -581,17 +586,30 @@ function NetflixScrollCard({
   item: DoubanItem;
   onClick: () => void;
 }) {
+  const [imgError, setImgError] = useState(false);
+
   return (
     <button
       onClick={onClick}
-      className='group relative flex-shrink-0 w-44 aspect-[2/3] rounded-xl overflow-hidden cursor-pointer'
+      className='group relative flex-shrink-0 w-44 aspect-[2/3] rounded-xl overflow-hidden cursor-pointer bg-zinc-800'
     >
-      <Image
-        src={item.poster || '/placeholder.jpg'}
-        alt={item.title}
-        fill
-        className='object-cover transition-transform duration-300 group-hover:scale-110'
-      />
+      {!imgError ? (
+        <Image
+          src={processImageUrl(item.poster) || '/placeholder.jpg'}
+          alt={item.title}
+          fill
+          className='object-cover transition-transform duration-300 group-hover:scale-110'
+          onError={() => setImgError(true)}
+          unoptimized
+          referrerPolicy='no-referrer'
+        />
+      ) : (
+        <div className='absolute inset-0 flex items-center justify-center bg-zinc-800'>
+          <span className='text-zinc-500 text-xs text-center px-2'>
+            {item.title}
+          </span>
+        </div>
+      )}
       <div className='absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300' />
       <div className='absolute bottom-2 left-2'>
         <span className='px-2 py-1 bg-black/70 backdrop-blur-sm text-white text-xs font-medium rounded flex items-center gap-1'>
@@ -615,17 +633,30 @@ function NetflixScrollCard({
 
 function NetflixGridCard({ item }: { item: DoubanItem }) {
   const router = useRouter();
+  const [imgError, setImgError] = useState(false);
+
   return (
     <button
       onClick={() => router.push(`/play?id=${item.id}&source=douban`)}
-      className='group relative aspect-[2/3] rounded-xl overflow-hidden cursor-pointer'
+      className='group relative aspect-[2/3] rounded-xl overflow-hidden cursor-pointer bg-zinc-800'
     >
-      <Image
-        src={item.poster || '/placeholder.jpg'}
-        alt={item.title}
-        fill
-        className='object-cover transition-all duration-300 group-hover:scale-105'
-      />
+      {!imgError ? (
+        <Image
+          src={processImageUrl(item.poster) || '/placeholder.jpg'}
+          alt={item.title}
+          fill
+          className='object-cover transition-all duration-300 group-hover:scale-105'
+          onError={() => setImgError(true)}
+          unoptimized
+          referrerPolicy='no-referrer'
+        />
+      ) : (
+        <div className='absolute inset-0 flex items-center justify-center bg-zinc-800'>
+          <span className='text-zinc-500 text-xs text-center px-2'>
+            {item.title}
+          </span>
+        </div>
+      )}
       <div className='absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all' />
       <div className='absolute inset-0 border-2 border-transparent group-hover:border-[#e50914] rounded-xl transition-all' />
       {item.rate && (
@@ -701,16 +732,19 @@ function NetflixBangumiRow({
             >
               <Image
                 src={
-                  anime.images.large ||
-                  anime.images.common ||
-                  anime.images.medium ||
-                  anime.images.small ||
-                  anime.images.grid ||
-                  '/placeholder.jpg'
+                  processImageUrl(
+                    anime.images.large ||
+                      anime.images.common ||
+                      anime.images.medium ||
+                      anime.images.small ||
+                      anime.images.grid
+                  ) || '/placeholder.jpg'
                 }
                 alt={anime.name_cn || anime.name}
                 fill
                 className='object-cover transition-transform duration-300 group-hover:scale-110'
+                unoptimized
+                referrerPolicy='no-referrer'
               />
               <div className='absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all' />
               {anime.rating?.score && (

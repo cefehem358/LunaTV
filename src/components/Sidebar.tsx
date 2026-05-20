@@ -194,13 +194,9 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
       <div className='hidden md:flex'>
         <aside
           data-sidebar
-          className={`fixed top-0 left-0 h-screen bg-white/40 backdrop-blur-xl transition-all duration-300 border-r border-gray-200/50 z-10 shadow-lg dark:bg-gray-900/70 dark:border-gray-700/50 ${
+          className={`fixed top-0 left-0 h-screen bg-[#08080a] border-r border-white/5 transition-all duration-300 z-10 shadow-lg text-white ${
             isCollapsed ? 'w-16' : 'w-64'
           }`}
-          style={{
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-          }}
         >
           <div className='flex h-full flex-col'>
             {/* 頂部 Logo 區域 */}
@@ -216,26 +212,29 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
               </div>
               <button
                 onClick={handleToggle}
-                className={`absolute top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 transition-colors duration-200 z-10 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700/50 ${
+                className={`absolute top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-colors duration-200 z-10 ${
                   isCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-2'
                 }`}
               >
                 <Menu className='h-4 w-4' />
               </button>
             </div>
-
+ 
             {/* 首頁和搜索導航 */}
             <nav className='px-2 mt-4 space-y-1'>
               <Link
                 href='/'
                 onClick={() => setActive('/')}
-                data-active={active === '/'}
-                className={`group flex items-center rounded-lg px-2 py-2 pl-4 text-gray-700 hover:bg-gray-100/30 hover:text-green-600 data-[active=true]:bg-green-500/20 data-[active=true]:text-green-700 font-medium transition-colors duration-200 min-h-[40px] dark:text-gray-300 dark:hover:text-green-400 dark:data-[active=true]:bg-green-500/10 dark:data-[active=true]:text-green-400 ${
+                className={`group flex items-center rounded-lg px-2 py-2 pl-4 transition-colors duration-200 min-h-[40px] ${
                   isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
-                } gap-3 justify-start`}
+                } gap-3 justify-start ${
+                  active === '/'
+                    ? 'bg-zinc-800 text-white font-semibold'
+                    : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+                }`}
               >
                 <div className='w-4 h-4 flex items-center justify-center'>
-                  <Home className='h-4 w-4 text-gray-500 group-hover:text-green-600 data-[active=true]:text-green-700 dark:text-gray-400 dark:group-hover:text-green-400 dark:data-[active=true]:text-green-400' />
+                  <Home className={`h-4 w-4 ${active === '/' ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`} />
                 </div>
                 {!isCollapsed && (
                   <span className='whitespace-nowrap transition-opacity duration-200 opacity-100'>
@@ -250,13 +249,16 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                   handleSearchClick();
                   setActive('/search');
                 }}
-                data-active={active === '/search'}
-                className={`group flex items-center rounded-lg px-2 py-2 pl-4 text-gray-700 hover:bg-gray-100/30 hover:text-green-600 data-[active=true]:bg-green-500/20 data-[active=true]:text-green-700 font-medium transition-colors duration-200 min-h-[40px] dark:text-gray-300 dark:hover:text-green-400 dark:data-[active=true]:bg-green-500/10 dark:data-[active=true]:text-green-400 ${
+                className={`group flex items-center rounded-lg px-2 py-2 pl-4 transition-colors duration-200 min-h-[40px] ${
                   isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
-                } gap-3 justify-start`}
+                } gap-3 justify-start ${
+                  active === '/search'
+                    ? 'bg-zinc-800 text-white font-semibold'
+                    : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+                }`}
               >
                 <div className='w-4 h-4 flex items-center justify-center'>
-                  <Search className='h-4 w-4 text-gray-500 group-hover:text-green-600 data-[active=true]:text-green-700 dark:text-gray-400 dark:group-hover:text-green-400 dark:data-[active=true]:text-green-400' />
+                  <Search className={`h-4 w-4 ${active === '/search' ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`} />
                 </div>
                 {!isCollapsed && (
                   <span className='whitespace-nowrap transition-opacity duration-200 opacity-100'>
@@ -265,18 +267,18 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                 )}
               </Link>
             </nav>
-
+ 
             {/* 菜單項 */}
             <div className='flex-1 overflow-y-auto px-2 pt-4'>
               <div className='space-y-1'>
                 {menuItems.map((item) => {
                   // 檢查當前路徑是否匹配這個菜單項
                   const typeMatch = item.href.match(/type=([^&]+)/)?.[1];
-
+ 
                   // 解碼URL以進行正確的比較
                   const decodedActive = decodeURIComponent(active);
                   const decodedItemHref = decodeURIComponent(item.href);
-
+ 
                   const isActive =
                     decodedActive === decodedItemHref ||
                     (decodedActive.startsWith('/douban') &&
@@ -287,13 +289,16 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                       key={item.label}
                       href={item.href}
                       onClick={() => setActive(item.href)}
-                      data-active={isActive}
-                      className={`group flex items-center rounded-lg px-2 py-2 pl-4 text-sm text-gray-700 hover:bg-gray-100/30 hover:text-green-600 data-[active=true]:bg-green-500/20 data-[active=true]:text-green-700 transition-colors duration-200 min-h-[40px] dark:text-gray-300 dark:hover:text-green-400 dark:data-[active=true]:bg-green-500/10 dark:data-[active=true]:text-green-400 ${
+                      className={`group flex items-center rounded-lg px-2 py-2 pl-4 text-sm transition-colors duration-200 min-h-[40px] ${
                         isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
-                      } gap-3 justify-start`}
+                      } gap-3 justify-start ${
+                        isActive
+                          ? 'bg-zinc-800 text-white font-semibold'
+                          : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+                      }`}
                     >
                       <div className='w-4 h-4 flex items-center justify-center'>
-                        <Icon className='h-4 w-4 text-gray-500 group-hover:text-green-600 data-[active=true]:text-green-700 dark:text-gray-400 dark:group-hover:text-green-400 dark:data-[active=true]:text-green-400' />
+                        <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`} />
                       </div>
                       {!isCollapsed && (
                         <span className='whitespace-nowrap transition-opacity duration-200 opacity-100'>

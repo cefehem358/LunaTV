@@ -1065,21 +1065,21 @@ function LivePageClient() {
           <div className='text-center max-w-md mx-auto px-6'>
             {/* 動畫直播圖標 */}
             <div className='relative mb-8'>
-              <div className='relative mx-auto w-24 h-24 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
+              <div className='relative mx-auto w-24 h-24 bg-gradient-to-r from-[#e50914] to-[#b20710] rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
                 <div className='text-white text-4xl'>📺</div>
                 {/* 旋轉光環 */}
-                <div className='absolute -inset-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl opacity-20 animate-spin'></div>
+                <div className='absolute -inset-2 bg-gradient-to-r from-[#e50914] to-[#b20710] rounded-2xl opacity-20 animate-spin'></div>
               </div>
-
+ 
               {/* 浮動粒子效果 */}
               <div className='absolute top-0 left-0 w-full h-full pointer-events-none'>
-                <div className='absolute top-2 left-2 w-2 h-2 bg-green-400 rounded-full animate-bounce'></div>
+                <div className='absolute top-2 left-2 w-2 h-2 bg-[#e50914] rounded-full animate-bounce'></div>
                 <div
-                  className='absolute top-4 right-4 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce'
+                  className='absolute top-4 right-4 w-1.5 h-1.5 bg-red-400 rounded-full animate-bounce'
                   style={{ animationDelay: '0.5s' }}
                 ></div>
                 <div
-                  className='absolute bottom-3 left-6 w-1 h-1 bg-lime-400 rounded-full animate-bounce'
+                  className='absolute bottom-3 left-6 w-1 h-1 bg-red-300 rounded-full animate-bounce'
                   style={{ animationDelay: '1s' }}
                 ></div>
               </div>
@@ -1089,15 +1089,15 @@ function LivePageClient() {
             <div className='mb-6 w-80 mx-auto'>
               <div className='flex justify-center space-x-2 mb-4'>
                 <div
-                  className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'loading' ? 'bg-green-500 scale-125' : 'bg-green-500'
+                  className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'loading' ? 'bg-[#e50914] scale-125' : 'bg-[#e50914]'
                     }`}
                 ></div>
                 <div
-                  className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'fetching' ? 'bg-green-500 scale-125' : 'bg-green-500'
+                  className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'fetching' ? 'bg-[#e50914] scale-125' : 'bg-[#e50914]'
                     }`}
                 ></div>
                 <div
-                  className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'ready' ? 'bg-green-500 scale-125' : 'bg-gray-300'
+                  className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'ready' ? 'bg-[#e50914] scale-125' : 'bg-gray-300'
                     }`}
                 ></div>
               </div>
@@ -1105,7 +1105,7 @@ function LivePageClient() {
               {/* 進度條 */}
               <div className='w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden'>
                 <div
-                  className='h-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-full transition-all duration-1000 ease-out'
+                  className='h-full bg-gradient-to-r from-[#e50914] to-[#b20710] rounded-full transition-all duration-1000 ease-out'
                   style={{
                     width:
                       loadingStage === 'loading' ? '33%' : loadingStage === 'fetching' ? '66%' : '100%',
@@ -1230,7 +1230,7 @@ function LivePageClient() {
               <div
                 className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full transition-all duration-200 ${isChannelListCollapsed
                   ? 'bg-orange-400 animate-pulse'
-                  : 'bg-green-400'
+                  : 'bg-[#e50914]'
                   }`}
               ></div>
             </button>
@@ -1283,9 +1283,9 @@ function LivePageClient() {
                   <div className='absolute inset-0 bg-black/85 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg border border-white/0 dark:border-white/30 flex items-center justify-center z-[500] transition-all duration-300'>
                     <div className='text-center max-w-md mx-auto px-6'>
                       <div className='relative mb-8'>
-                        <div className='relative mx-auto w-24 h-24 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
+                        <div className='relative mx-auto w-24 h-24 bg-gradient-to-r from-[#e50914] to-[#b20710] rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
                           <div className='text-white text-4xl'>📺</div>
-                          <div className='absolute -inset-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl opacity-20 animate-spin'></div>
+                          <div className='absolute -inset-2 bg-gradient-to-r from-[#e50914] to-[#b20710] rounded-2xl opacity-20 animate-spin'></div>
                         </div>
                       </div>
                       <div className='space-y-2'>
@@ -1311,8 +1311,8 @@ function LivePageClient() {
                     onClick={() => setActiveTab('channels')}
                     className={`flex-1 py-3 px-6 text-center cursor-pointer transition-all duration-200 font-medium
                       ${activeTab === 'channels'
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-gray-700 hover:text-green-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-green-400 hover:bg-black/3 dark:hover:bg-white/3'
+                        ? 'text-[#e50914]'
+                        : 'text-zinc-400 hover:text-white bg-white/5 dark:bg-white/5 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-800/30 dark:hover:bg-zinc-800/30'
                       }
                     `.trim()}
                   >
@@ -1322,8 +1322,8 @@ function LivePageClient() {
                     onClick={() => setActiveTab('sources')}
                     className={`flex-1 py-3 px-6 text-center cursor-pointer transition-all duration-200 font-medium
                       ${activeTab === 'sources'
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-gray-700 hover:text-green-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-green-400 hover:bg-black/3 dark:hover:bg-white/3'
+                        ? 'text-[#e50914]'
+                        : 'text-zinc-400 hover:text-white bg-white/5 dark:bg-white/5 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-800/30 dark:hover:bg-zinc-800/30'
                       }
                     `.trim()}
                   >
@@ -1385,8 +1385,8 @@ function LivePageClient() {
                                  ${isSwitchingSource
                                   ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'
                                   : selectedGroup === group
-                                    ? 'text-green-500 dark:text-green-400'
-                                    : 'text-gray-700 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400'
+                                    ? 'text-[#e50914] font-semibold'
+                                    : 'text-zinc-400 hover:text-white'
                                 }
                                `.trim()}
                             >
@@ -1394,7 +1394,7 @@ function LivePageClient() {
                                 {group}
                               </div>
                               {selectedGroup === group && !isSwitchingSource && (
-                                <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-green-500 dark:bg-green-400' />
+                                <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-[#e50914]' />
                               )}
                             </button>
                           ))}
@@ -1416,7 +1416,7 @@ function LivePageClient() {
                               className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${isSwitchingSource
                                 ? 'opacity-50 cursor-not-allowed'
                                 : isActive
-                                  ? 'bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700'
+                                  ? 'bg-[#e50914]/20 border border-[#e50914]/40 font-semibold text-[#e50914]'
                                   : 'hover:bg-gray-100 dark:hover:bg-gray-700'
                                 }`}
                             >
@@ -1428,6 +1428,7 @@ function LivePageClient() {
                                       alt={channel.name}
                                       className='w-full h-full rounded object-contain'
                                       loading="lazy"
+                                      referrerPolicy='no-referrer'
                                     />
                                   ) : (
                                     <Tv className='w-5 h-5 text-gray-500' />
@@ -1496,7 +1497,7 @@ function LivePageClient() {
 
                               {/* 當前標識 */}
                               {isCurrentSource && (
-                                <div className='absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full'></div>
+                                <div className='absolute top-2 right-2 w-2 h-2 bg-[#e50914] rounded-full'></div>
                               )}
                             </div>
                           );
@@ -1536,6 +1537,7 @@ function LivePageClient() {
                         alt={currentChannel.name}
                         className='w-full h-full rounded object-contain'
                         loading="lazy"
+                        referrerPolicy='no-referrer'
                       />
                     ) : (
                       <Tv className='w-10 h-10 text-gray-500' />
