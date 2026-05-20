@@ -10,13 +10,13 @@ export async function GET(request: NextRequest) {
     const sourceKey = searchParams.get('source');
 
     if (!sourceKey) {
-      return NextResponse.json({ error: '缺少直播源参数' }, { status: 400 });
+      return NextResponse.json({ error: '缺少直播源參數' }, { status: 400 });
     }
 
     const channelData = await getCachedLiveChannels(sourceKey);
 
     if (!channelData) {
-      return NextResponse.json({ error: '频道信息未找到' }, { status: 404 });
+      return NextResponse.json({ error: '頻道信息未找到' }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: '获取频道信息失败' },
+      { error: '獲取頻道信息失敗' },
       { status: 500 }
     );
   }

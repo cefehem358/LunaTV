@@ -23,9 +23,9 @@ export async function GET(request: NextRequest) {
       data: liveSources
     });
   } catch (error) {
-    console.error('获取直播源失败:', error);
+    console.error('獲取直播源失敗:', error);
     return NextResponse.json(
-      { error: '获取直播源失败' },
+      { error: '獲取直播源失敗' },
       { status: 500 }
     );
   }

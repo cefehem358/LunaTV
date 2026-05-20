@@ -21,8 +21,8 @@ export const useLongPress = ({
   const isLongPress = useRef(false);
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const startPosition = useRef<TouchPosition | null>(null);
-  const isActive = useRef(false); // 防止重复触发
-  const wasButton = useRef(false); // 记录触摸开始时是否是按钮
+  const isActive = useRef(false); // 防止重複觸發
+  const wasButton = useRef(false); // 記錄觸摸開始時是否是按鈕
 
   const clearTimer = useCallback(() => {
     if (pressTimer.current) {
@@ -33,7 +33,7 @@ export const useLongPress = ({
 
   const handleStart = useCallback(
     (clientX: number, clientY: number, isButton = false) => {
-      // 如果已经有活跃的手势，忽略新的开始
+      // 如果已經有活躍的手勢，忽略新的開始
       if (isActive.current) {
         return;
       }
@@ -42,11 +42,11 @@ export const useLongPress = ({
       isLongPress.current = false;
       startPosition.current = { x: clientX, y: clientY };
 
-      // 记录触摸开始时是否是按钮
+      // 記錄觸摸開始時是否是按鈕
       wasButton.current = isButton;
 
       pressTimer.current = setTimeout(() => {
-        // 再次检查是否仍然活跃
+        // 再次檢查是否仍然活躍
         if (!isActive.current) return;
 
         isLongPress.current = true;
@@ -55,7 +55,7 @@ export const useLongPress = ({
           navigator.vibrate(50);
         }
 
-        // 触发长按事件
+        // 觸發長按事件
         onLongPress();
       }, longPressDelay);
     },
@@ -71,7 +71,7 @@ export const useLongPress = ({
         Math.pow(clientY - startPosition.current.y, 2)
       );
 
-      // 如果移动距离超过阈值，取消长按
+      // 如果移動距離超過閾值，取消長按
       if (distance > moveThreshold) {
         clearTimer();
         isActive.current = false;
@@ -83,31 +83,31 @@ export const useLongPress = ({
   const handleEnd = useCallback(() => {
     clearTimer();
 
-    // 根据情况决定是否触发点击事件：
-    // 1. 如果是长按，不触发点击
-    // 2. 如果不是长按且触摸开始时是按钮，不触发点击
-    // 3. 否则触发点击
+    // 根據情況決定是否觸發點擊事件：
+    // 1. 如果是長按，不觸發點擊
+    // 2. 如果不是長按且觸摸開始時是按鈕，不觸發點擊
+    // 3. 否則觸發點擊
     const shouldClick = !isLongPress.current && !wasButton.current && onClick && isActive.current;
 
     if (shouldClick) {
       onClick();
     }
 
-    // 重置所有状态
+    // 重置所有狀態
     isLongPress.current = false;
     startPosition.current = null;
     isActive.current = false;
     wasButton.current = false;
   }, [clearTimer, onClick]);
 
-  // 触摸事件处理器
+  // 觸摸事件處理器
   const onTouchStart = useCallback(
     (e: React.TouchEvent) => {
-      // 检查是否触摸的是按钮或其他交互元素
+      // 檢查是否觸摸的是按鈕或其他交互元素
       const target = e.target as HTMLElement;
       const buttonElement = target.closest('[data-button]');
 
-      // 更精确的按钮检测：只有当触摸目标直接是按钮元素或其直接子元素时才认为是按钮
+      // 更精確的按鈕檢測：只有當觸摸目標直接是按鈕元素或其直接子元素時才認為是按鈕
       const isDirectButton = target.hasAttribute('data-button');
       const isButton = !!buttonElement && isDirectButton;
 

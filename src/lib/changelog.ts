@@ -11,16 +11,19 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
-    version: "100.1.2",
-    date: "2026-03-15",
+    version: "1.0.0",
+    date: "2026-05-20",
     added: [
-      // 无新增内容
+    "全新 Netflix 風格首頁 UI（深色主題、橫向滾動列、Hero Banner）",
+    "繁簡轉換搜尋支援（可搜尋簡體內容並以繁體顯示）",
+    "API 搜尋結果緩存（2小時 TTL，防記憶體溢出）",
+    "請求去重機制（防止並發重複請求）"
     ],
     changed: [
-    "移除豆瓣图片代理中的「直连」和「豆瓣官方精品 CDN」选项，历史数据自动兼容为服务器代理"
+    "首頁全面換用 Netflix UI 元件"
     ],
     fixed: [
-      // 无修复内容
+      // 無修復內容
     ]
   },
   {

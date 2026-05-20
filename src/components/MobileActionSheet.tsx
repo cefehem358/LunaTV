@@ -18,10 +18,10 @@ interface MobileActionSheetProps {
   actions: ActionItem[];
   poster?: string;
   sources?: string[]; // 播放源信息
-  isAggregate?: boolean; // 是否为聚合内容
-  sourceName?: string; // 播放源名称
-  currentEpisode?: number; // 当前集数
-  totalEpisodes?: number; // 总集数
+  isAggregate?: boolean; // 是否為聚合內容
+  sourceName?: string; // 播放源名稱
+  currentEpisode?: number; // 當前集數
+  totalEpisodes?: number; // 總集數
   origin?: 'vod' | 'live';
 }
 
@@ -41,14 +41,14 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // 控制动画状态
+  // 控製動畫狀態
   useEffect(() => {
     let animationId: number;
     let timer: NodeJS.Timeout;
 
     if (isOpen) {
       setIsVisible(true);
-      // 使用双重 requestAnimationFrame 确保DOM完全渲染
+      // 使用雙重 requestAnimationFrame 確保DOM完全渲染
       animationId = requestAnimationFrame(() => {
         animationId = requestAnimationFrame(() => {
           setIsAnimating(true);
@@ -56,7 +56,7 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
       });
     } else {
       setIsAnimating(false);
-      // 等待动画完成后隐藏组件
+      // 等待動畫完成後隱藏組件
       timer = setTimeout(() => {
         setIsVisible(false);
       }, 200);
@@ -72,19 +72,19 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
     };
   }, [isOpen]);
 
-  // 阻止背景滚动
+  // 阻止背景滾動
   useEffect(() => {
     if (isVisible) {
-      // 保存当前滚动位置
+      // 保存當前滾動位置
       const scrollY = window.scrollY;
       const scrollX = window.scrollX;
       const body = document.body;
       const html = document.documentElement;
 
-      // 获取滚动条宽度
+      // 獲取滾動條寬度
       const scrollBarWidth = window.innerWidth - html.clientWidth;
 
-      // 保存原始样式
+      // 保存原始樣式
       const originalBodyStyle = {
         position: body.style.position,
         top: body.style.top,
@@ -95,7 +95,7 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
         overflow: body.style.overflow,
       };
 
-      // 设置body样式来阻止滚动，但保持原位置
+      // 設置body樣式來阻止滾動，但保持原位置
       body.style.position = 'fixed';
       body.style.top = `-${scrollY}px`;
       body.style.left = `-${scrollX}px`;
@@ -105,7 +105,7 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
       body.style.paddingRight = `${scrollBarWidth}px`;
 
       return () => {
-        // 恢复所有原始样式
+        // 恢復所有原始樣式
         body.style.position = originalBodyStyle.position;
         body.style.top = originalBodyStyle.top;
         body.style.left = originalBodyStyle.left;
@@ -114,7 +114,7 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
         body.style.paddingRight = originalBodyStyle.paddingRight;
         body.style.overflow = originalBodyStyle.overflow;
 
-        // 使用 requestAnimationFrame 确保样式恢复后再滚动
+        // 使用 requestAnimationFrame 確保樣式恢復後再滾動
         requestAnimationFrame(() => {
           window.scrollTo(scrollX, scrollY);
         });
@@ -122,7 +122,7 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
     }
   }, [isVisible]);
 
-  // ESC键关闭
+  // ESC鍵關閉
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -164,12 +164,12 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
     <div
       className="fixed inset-0 z-[9999] flex items-end justify-center"
       onTouchMove={(e) => {
-        // 阻止最外层容器的触摸移动，防止背景滚动
+        // 阻止最外層容器的觸摸移動，防止背景滾動
         e.preventDefault();
         e.stopPropagation();
       }}
       style={{
-        touchAction: 'none', // 禁用所有触摸操作
+        touchAction: 'none', // 禁用所有觸摸操作
       }}
     >
       {/* 背景遮罩 */}
@@ -178,39 +178,39 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
           }`}
         onClick={onClose}
         onTouchMove={(e) => {
-          // 只阻止滚动，允许其他触摸事件（包括点击）
+          // 只阻止滾動，允許其他觸摸事件（包括點擊）
           e.preventDefault();
         }}
         onWheel={(e) => {
-          // 阻止滚轮滚动
+          // 阻止滾輪滾動
           e.preventDefault();
         }}
         style={{
           backdropFilter: 'blur(4px)',
           willChange: 'opacity',
-          touchAction: 'none', // 禁用所有触摸操作
+          touchAction: 'none', // 禁用所有觸摸操作
         }}
       />
 
-      {/* 操作表单 */}
+      {/* 操作表單 */}
       <div
         className="relative w-full max-w-lg mx-4 mb-4 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl transition-all duration-200 ease-out"
         onTouchMove={(e) => {
-          // 允许操作表单内部滚动，阻止事件冒泡到外层
+          // 允許操作表單內部滾動，阻止事件冒泡到外層
           e.stopPropagation();
         }}
         style={{
           marginBottom: 'calc(1rem + env(safe-area-inset-bottom))',
           willChange: 'transform, opacity',
-          backfaceVisibility: 'hidden', // 避免闪烁
+          backfaceVisibility: 'hidden', // 避免閃爍
           transform: isAnimating
             ? 'translateY(0) translateZ(0)'
-            : 'translateY(100%) translateZ(0)', // 组合变换保持滑入效果和硬件加速
+            : 'translateY(100%) translateZ(0)', // 組合變換保持滑入效果和硬件加速
           opacity: isAnimating ? 1 : 0,
-          touchAction: 'auto', // 允许操作表单内的正常触摸操作
+          touchAction: 'auto', // 允許操作表單內的正常觸摸操作
         }}
       >
-        {/* 头部 */}
+        {/* 頭部 */}
         <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             {poster && (
@@ -239,7 +239,7 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
                 )}
               </div>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                选择操作
+                選擇操作
               </p>
             </div>
           </div>
@@ -271,7 +271,7 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
                 `}
                 style={{ willChange: 'transform, background-color' }}
               >
-                {/* 图标 - 使用线条风格 */}
+                {/* 圖標 - 使用線條風格 */}
                 <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
                   <span className={`transition-colors duration-150 ${action.disabled
                     ? 'text-gray-400 dark:text-gray-600'
@@ -292,7 +292,7 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
                   {action.label}
                 </span>
 
-                {/* 播放进度 - 只在播放按钮且有播放记录时显示 */}
+                {/* 播放進度 - 只在播放按鈕且有播放記錄時顯示 */}
                 {action.id === 'play' && currentEpisode && totalEpisodes && (
                   <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
                     {currentEpisode}/{totalEpisodes}
@@ -302,7 +302,7 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
 
               </button>
 
-              {/* 分割线 - 最后一项不显示 */}
+              {/* 分割線 - 最後一項不顯示 */}
               {index < actions.length - 1 && (
                 <div className="border-b border-gray-100 dark:border-gray-800 ml-10"></div>
               )}
@@ -310,16 +310,16 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
           ))}
         </div>
 
-        {/* 播放源信息展示区域 */}
+        {/* 播放源信息展示區域 */}
         {isAggregate && sources && sources.length > 0 && (
           <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800">
-            {/* 标题区域 */}
+            {/* 標題區域 */}
             <div className="mb-3">
               <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
                 可用播放源
               </h4>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                共 {sources.length} 个播放源
+                共 {sources.length} 個播放源
               </p>
             </div>
 

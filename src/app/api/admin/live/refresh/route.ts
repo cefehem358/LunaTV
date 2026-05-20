@@ -11,17 +11,17 @@ export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
-    // 权限检查
+    // 權限檢查
     const authInfo = getAuthInfoFromCookie(request);
     const username = authInfo?.username;
     const config = await getConfig();
     if (username !== process.env.USERNAME) {
-      // 管理员
+      // 管理員
       const user = config.UserConfig.Users.find(
         (u) => u.username === username
       );
       if (!user || user.role !== 'admin' || user.banned) {
-        return NextResponse.json({ error: '权限不足' }, { status: 401 });
+        return NextResponse.json({ error: '權限不足' }, { status: 401 });
       }
     }
 
@@ -48,9 +48,9 @@ export async function POST(request: NextRequest) {
       message: '直播源刷新成功',
     });
   } catch (error) {
-    console.error('直播源刷新失败:', error);
+    console.error('直播源刷新失敗:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : '刷新失败' },
+      { error: error instanceof Error ? error.message : '刷新失敗' },
       { status: 500 }
     );
   }

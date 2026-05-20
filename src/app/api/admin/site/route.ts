@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   if (storageType === 'localstorage') {
     return NextResponse.json(
       {
-        error: '不支持本地存储进行管理员配置',
+        error: '不支持本地存儲進行管理員配置',
       },
       { status: 400 }
     );
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       EnableWebLive: boolean;
     };
 
-    // 参数校验
+    // 參數校驗
     if (
       typeof SiteName !== 'string' ||
       typeof Announcement !== 'string' ||
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       typeof DisableYellowFilter !== 'boolean' ||
       typeof FluidSearch !== 'boolean'
     ) {
-      return NextResponse.json({ error: '参数格式错误' }, { status: 400 });
+      return NextResponse.json({ error: '參數格式錯誤' }, { status: 400 });
     }
 
     const adminConfig = await getConfig();
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
         (u) => u.username === username
       );
       if (!user || user.role !== 'admin' || user.banned) {
-        return NextResponse.json({ error: '权限不足' }, { status: 401 });
+        return NextResponse.json({ error: '權限不足' }, { status: 401 });
       }
     }
 
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       { ok: true },
       {
         headers: {
-          'Cache-Control': 'no-store', // 不缓存结果
+          'Cache-Control': 'no-store', // 不緩存結果
         },
       }
     );
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
     console.error('更新站点配置失败:', error);
     return NextResponse.json(
       {
-        error: '更新站点配置失败',
+        error: '更新站點配置失敗',
         details: (error as Error).message,
       },
       { status: 500 }

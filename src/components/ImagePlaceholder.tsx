@@ -15,13 +15,13 @@ const ImagePlaceholder = ({ aspectRatio }: { aspectRatio: string }) => (
         100% { background-position: 200% 0; }
       }
       
-      /* 亮色模式变量 */
+      /* 亮色模式變量 */
       :root {
         --skeleton-color: #f0f0f0;
         --skeleton-highlight: #e0e0e0;
       }
       
-      /* 暗色模式变量 */
+      /* 暗色模式變量 */
       @media (prefers-color-scheme: dark) {
         :root {
           --skeleton-color: #2d2d2d;

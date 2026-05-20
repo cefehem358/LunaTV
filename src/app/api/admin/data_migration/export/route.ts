@@ -15,11 +15,11 @@ const gzipAsync = promisify(gzip);
 
 export async function POST(req: NextRequest) {
   try {
-    // 检查存储类型
+    // 檢查存儲類型
     const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
     if (storageType === 'localstorage') {
       return NextResponse.json(
-        { error: '不支持本地存储进行数据迁移' },
+        { error: '不支持本地存儲進行數據遷移' },
         { status: 400 }
       );
     }
@@ -27,23 +27,23 @@ export async function POST(req: NextRequest) {
     // 验证身份和权限
     const authInfo = getAuthInfoFromCookie(req);
     if (!authInfo || !authInfo.username) {
-      return NextResponse.json({ error: '未登录' }, { status: 401 });
+      return NextResponse.json({ error: '未登錄' }, { status: 401 });
     }
 
     // 检查用户权限（只有站长可以导出数据）
     if (authInfo.username !== process.env.USERNAME) {
-      return NextResponse.json({ error: '权限不足，只有站长可以导出数据' }, { status: 401 });
+      return NextResponse.json({ error: '權限不足，只有站長可以導出數據' }, { status: 401 });
     }
 
     const config = await db.getAdminConfig();
     if (!config) {
-      return NextResponse.json({ error: '无法获取配置' }, { status: 500 });
+      return NextResponse.json({ error: '無法獲取配置' }, { status: 500 });
     }
 
     // 解析请求体获取密码
     const { password } = await req.json();
     if (!password || typeof password !== 'string') {
-      return NextResponse.json({ error: '请提供加密密码' }, { status: 400 });
+      return NextResponse.json({ error: '請提供加密密碼' }, { status: 400 });
     }
 
     // 收集所有数据
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
     const filename = `moontv-backup-${timestamp}.dat`;
 
-    // 返回加密的数据作为文件下载
+    // 返回加密的數據作為文件下載
     return new NextResponse(encryptedData, {
       status: 200,
       headers: {
@@ -110,18 +110,18 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('数据导出失败:', error);
+    console.error('數據導出失敗:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : '导出失败' },
+      { error: error instanceof Error ? error.message : '導出失敗' },
       { status: 500 }
     );
   }
 }
 
-// 辅助函数：获取用户密码（通过数据库直接访问）
+// 輔助函數：獲取用戶密碼（通過數據庫直接訪問）
 async function getUserPassword(username: string): Promise<string | null> {
   try {
-    // 使用 Redis 存储的直接访问方法
+    // 使用 Redis 存儲的直接訪問方法
     const storage = (db as any).storage;
     if (storage && typeof storage.client?.get === 'function') {
       const passwordKey = `u:${username}:pwd`;
@@ -130,7 +130,7 @@ async function getUserPassword(username: string): Promise<string | null> {
     }
     return null;
   } catch (error) {
-    console.error(`获取用户 ${username} 密码失败:`, error);
+    console.error(`獲取用戶 ${username} 密碼失敗:`, error);
     return null;
   }
 }

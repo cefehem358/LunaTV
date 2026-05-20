@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
   if (!query) {
     return new Response(
-      JSON.stringify({ error: '搜索关键词不能为空' }),
+      JSON.stringify({ error: '搜索關鍵詞不能為空' }),
       {
         status: 400,
         headers: {
@@ -33,32 +33,32 @@ export async function GET(request: NextRequest) {
   const config = await getConfig();
   const apiSites = await getAvailableApiSites(authInfo.username);
 
-  // 共享状态
+  // 共享狀態
   let streamClosed = false;
 
-  // 创建可读流
+  // 創建可讀流
   const stream = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder();
 
-      // 辅助函数：安全地向控制器写入数据
+      // 輔助函數：安全地向控製器寫入數據
       const safeEnqueue = (data: Uint8Array) => {
         try {
           if (streamClosed || (!controller.desiredSize && controller.desiredSize !== 0)) {
-            // 流已标记为关闭或控制器已关闭
+            // 流已標記為關閉或控製器已關閉
             return false;
           }
           controller.enqueue(data);
           return true;
         } catch (error) {
-          // 控制器已关闭或出现其他错误
+          // 控製器已關閉或出現其他錯誤
           console.warn('Failed to enqueue data:', error);
           streamClosed = true;
           return false;
         }
       };
 
-      // 发送开始事件
+      // 發送開始事件
       const startEvent = `data: ${JSON.stringify({
         type: 'start',
         query,
@@ -67,17 +67,17 @@ export async function GET(request: NextRequest) {
       })}\n\n`;
 
       if (!safeEnqueue(encoder.encode(startEvent))) {
-        return; // 连接已关闭，提前退出
+        return; // 連接已關閉，提前退出
       }
 
-      // 记录已完成的源数量
+      // 記錄已完成的源數量
       let completedSources = 0;
       const allResults: any[] = [];
 
-      // 为每个源创建搜索 Promise
+      // 為每個源創建搜索 Promise
       const searchPromises = apiSites.map(async (site) => {
         try {
-          // 添加超时控制
+          // 添加超時控製
           const searchPromise = Promise.race([
             searchFromApi(site, query),
             new Promise((_, reject) =>
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
 
           const results = await searchPromise as any[];
 
-          // 过滤黄色内容
+          // 過濾黃色內容
           let filteredResults = results;
           if (!config.SiteConfig.DisableYellowFilter) {
             filteredResults = results.filter((result) => {
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
             });
           }
 
-          // 发送该源的搜索结果
+          // 發送該源的搜索結果
           completedSources++;
 
           if (!streamClosed) {
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
 
             if (!safeEnqueue(encoder.encode(sourceEvent))) {
               streamClosed = true;
-              return; // 连接已关闭，停止处理
+              return; // 連接已關閉，停止處理
             }
           }
 
@@ -119,9 +119,9 @@ export async function GET(request: NextRequest) {
           }
 
         } catch (error) {
-          console.warn(`搜索失败 ${site.name}:`, error);
+          console.warn(`搜索失敗 ${site.name}:`, error);
 
-          // 发送源错误事件
+          // 發送源錯誤事件
           completedSources++;
 
           if (!streamClosed) {
@@ -129,21 +129,21 @@ export async function GET(request: NextRequest) {
               type: 'source_error',
               source: site.key,
               sourceName: site.name,
-              error: error instanceof Error ? error.message : '搜索失败',
+              error: error instanceof Error ? error.message : '搜索失敗',
               timestamp: Date.now()
             })}\n\n`;
 
             if (!safeEnqueue(encoder.encode(errorEvent))) {
               streamClosed = true;
-              return; // 连接已关闭，停止处理
+              return; // 連接已關閉，停止處理
             }
           }
         }
 
-        // 检查是否所有源都已完成
+        // 檢查是否所有源都已完成
         if (completedSources === apiSites.length) {
           if (!streamClosed) {
-            // 发送最终完成事件
+            // 發送最終完成事件
             const completeEvent = `data: ${JSON.stringify({
               type: 'complete',
               totalResults: allResults.length,
@@ -152,7 +152,7 @@ export async function GET(request: NextRequest) {
             })}\n\n`;
 
             if (safeEnqueue(encoder.encode(completeEvent))) {
-              // 只有在成功发送完成事件后才关闭流
+              // 只有在成功發送完成事件後才關閉流
               try {
                 controller.close();
               } catch (error) {
@@ -168,13 +168,13 @@ export async function GET(request: NextRequest) {
     },
 
     cancel() {
-      // 客户端断开连接时，标记流已关闭
+      // 客戶端斷開連接時，標記流已關閉
       streamClosed = true;
       console.log('Client disconnected, cancelling search stream');
     },
   });
 
-  // 返回流式响应
+  // 返回流式響應
   return new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream',

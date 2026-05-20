@@ -83,7 +83,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
   const [favorited, setFavorited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
-  const [searchFavorited, setSearchFavorited] = useState<boolean | null>(null); // 搜索结果的收藏状态
+  const [searchFavorited, setSearchFavorited] = useState<boolean | null>(null); // 搜索結果的收藏狀態
 
   // 可外部修改的可控字段
   const [dynamicEpisodes, setDynamicEpisodes] = useState<number | undefined>(
@@ -126,7 +126,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     ? (actualEpisodes && actualEpisodes === 1 ? 'movie' : 'tv')
     : type;
 
-  // 获取收藏状态（搜索结果页面不检查）
+  // 獲取收藏狀態（搜索結果頁面不檢查）
   useEffect(() => {
     if (from === 'douban' || from === 'search' || !actualSource || !actualId) return;
 
@@ -135,7 +135,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         const fav = await isFavorited(actualSource, actualId);
         setFavorited(fav);
       } catch (err) {
-        throw new Error('检查收藏状态失败');
+        throw new Error('檢查收藏狀態失敗');
       }
     };
 
@@ -146,7 +146,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     const unsubscribe = subscribeToDataUpdates(
       'favoritesUpdated',
       (newFavorites: Record<string, any>) => {
-        // 检查当前项目是否在新的收藏列表中
+        // 檢查當前項目是否在新的收藏列表中
         const isNowFavorited = !!newFavorites[storageKey];
         setFavorited(isNowFavorited);
       }
@@ -162,11 +162,11 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       if (from === 'douban' || !actualSource || !actualId) return;
 
       try {
-        // 确定当前收藏状态
+        // 確定當前收藏狀態
         const currentFavorited = from === 'search' ? searchFavorited : favorited;
 
         if (currentFavorited) {
-          // 如果已收藏，删除收藏
+          // 如果已收藏，刪除收藏
           await deleteFavorite(actualSource, actualId);
           if (from === 'search') {
             setSearchFavorited(false);
@@ -190,7 +190,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
           }
         }
       } catch (err) {
-        throw new Error('切换收藏状态失败');
+        throw new Error('切換收藏狀態失敗');
       }
     },
     [
@@ -216,7 +216,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         await deletePlayRecord(actualSource, actualId);
         onDelete?.();
       } catch (err) {
-        throw new Error('删除播放记录失败');
+        throw new Error('刪除播放記錄失敗');
       }
     },
     [from, actualSource, actualId, onDelete]
@@ -224,7 +224,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
 
   const handleClick = useCallback(() => {
     if (origin === 'live' && actualSource && actualId) {
-      // 直播内容跳转到直播页面
+      // 直播內容跳轉到直播頁面
       const url = `/live?source=${actualSource.replace('live_', '')}&id=${actualId.replace('live_', '')}`;
       router.push(url);
     } else if (from === 'douban' || (isAggregate && !actualSource && !actualId)) {
@@ -252,10 +252,10 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     actualSearchType,
   ]);
 
-  // 新标签页播放处理函数
+  // 新標籤頁播放處理函數
   const handlePlayInNewTab = useCallback(() => {
     if (origin === 'live' && actualSource && actualId) {
-      // 直播内容跳转到直播页面
+      // 直播內容跳轉到直播頁面
       const url = `/live?source=${actualSource.replace('live_', '')}&id=${actualId.replace('live_', '')}`;
       window.open(url, '_blank');
     } else if (from === 'douban' || (isAggregate && !actualSource && !actualId)) {
@@ -281,7 +281,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     actualSearchType,
   ]);
 
-  // 检查搜索结果的收藏状态
+  // 檢查搜索結果的收藏狀態
   const checkSearchFavoriteStatus = useCallback(async () => {
     if (from === 'search' && !isAggregate && actualSource && actualId && searchFavorited === null) {
       try {
@@ -293,23 +293,23 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     }
   }, [from, isAggregate, actualSource, actualId, searchFavorited]);
 
-  // 长按操作
+  // 長按操作
   const handleLongPress = useCallback(() => {
-    if (!showMobileActions) { // 防止重复触发
-      // 立即显示菜单，避免等待数据加载导致动画卡顿
+    if (!showMobileActions) { // 防止重複觸發
+      // 立即顯示菜單，避免等待數據加載導致動畫卡頓
       setShowMobileActions(true);
 
-      // 异步检查收藏状态，不阻塞菜单显示
+      // 異步檢查收藏狀態，不阻塞菜單顯示
       if (from === 'search' && !isAggregate && actualSource && actualId && searchFavorited === null) {
         checkSearchFavoriteStatus();
       }
     }
   }, [showMobileActions, from, isAggregate, actualSource, actualId, searchFavorited, checkSearchFavoriteStatus]);
 
-  // 长按手势hook
+  // 長按手勢hook
   const longPressProps = useLongPress({
     onLongPress: handleLongPress,
-    onClick: handleClick, // 保持点击播放功能
+    onClick: handleClick, // 保持點擊播放功能
     longPressDelay: 500,
   });
 
@@ -339,9 +339,9 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         showSourceName: true,
         showProgress: false,
         showPlayButton: true,
-        showHeart: true, // 移动端菜单中需要显示收藏选项
+        showHeart: true, // 移動端菜單中需要顯示收藏選項
         showCheckCircle: false,
-        showDoubanLink: true, // 移动端菜单中显示豆瓣链接
+        showDoubanLink: true, // 移動端菜單中顯示豆瓣鏈接
         showRating: false,
         showYear: true,
       },
@@ -359,7 +359,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     return configs[from] || configs.search;
   }, [from, isAggregate, douban_id, rate]);
 
-  // 移动端操作菜单配置
+  // 移動端操作菜單配置
   const mobileActions = useMemo(() => {
     const actions = [];
 
@@ -367,32 +367,32 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     if (config.showPlayButton) {
       actions.push({
         id: 'play',
-        label: origin === 'live' ? '观看直播' : '播放',
+        label: origin === 'live' ? '觀看直播' : '播放',
         icon: <PlayCircleIcon size={20} />,
         onClick: handleClick,
         color: 'primary' as const,
       });
 
-      // 新标签页播放
+      // 新標籤頁播放
       actions.push({
         id: 'play-new-tab',
-        label: origin === 'live' ? '新标签页观看' : '新标签页播放',
+        label: origin === 'live' ? '新標籤頁觀看' : '新標籤頁播放',
         icon: <ExternalLink size={20} />,
         onClick: handlePlayInNewTab,
         color: 'default' as const,
       });
     }
 
-    // 聚合源信息 - 直接在菜单中展示，不需要单独的操作项
+    // 聚合源信息 - 直接在菜單中展示，不需要單獨的操作項
 
     // 收藏/取消收藏操作
     if (config.showHeart && from !== 'douban' && actualSource && actualId) {
       const currentFavorited = from === 'search' ? searchFavorited : favorited;
 
       if (from === 'search') {
-        // 搜索结果：根据加载状态显示不同的选项
+        // 搜索結果：根據加載狀態顯示不同的選項
         if (searchFavorited !== null) {
-          // 已加载完成，显示实际的收藏状态
+          // 已加載完成，顯示實際的收藏狀態
           actions.push({
             id: 'favorite',
             label: currentFavorited ? '取消收藏' : '添加收藏',
@@ -411,17 +411,17 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             color: currentFavorited ? ('danger' as const) : ('default' as const),
           });
         } else {
-          // 正在加载中，显示占位项
+          // 正在加載中，顯示占位項
           actions.push({
             id: 'favorite-loading',
-            label: '收藏加载中...',
+            label: '收藏加載中...',
             icon: <Heart size={20} />,
-            onClick: () => { }, // 加载中时不响应点击
+            onClick: () => { }, // 加載中時不響應點擊
             disabled: true,
           });
         }
       } else {
-        // 非搜索结果：直接显示收藏选项
+        // 非搜索結果：直接顯示收藏選項
         actions.push({
           id: 'favorite',
           label: currentFavorited ? '取消收藏' : '添加收藏',
@@ -442,11 +442,11 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       }
     }
 
-    // 删除播放记录操作
+    // 刪除播放記錄操作
     if (config.showCheckCircle && from === 'playrecord' && actualSource && actualId) {
       actions.push({
         id: 'delete',
-        label: '删除记录',
+        label: '刪除記錄',
         icon: <Trash2 size={20} />,
         onClick: () => {
           const mockEvent = {
@@ -459,11 +459,11 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
       });
     }
 
-    // 豆瓣链接操作
+    // 豆瓣鏈接操作
     if (config.showDoubanLink && actualDoubanId && actualDoubanId !== 0) {
       actions.push({
         id: 'douban',
-        label: isBangumi ? 'Bangumi 详情' : '豆瓣详情',
+        label: isBangumi ? 'Bangumi 詳情' : '豆瓣詳情',
         icon: <Link size={20} />,
         onClick: () => {
           const url = isBangumi
@@ -499,24 +499,24 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         onClick={handleClick}
         {...longPressProps}
         style={{
-          // 禁用所有默认的长按和选择效果
+          // 禁用所有默認的長按和選擇效果
           WebkitUserSelect: 'none',
           userSelect: 'none',
           WebkitTouchCallout: 'none',
           WebkitTapHighlightColor: 'transparent',
           touchAction: 'manipulation',
-          // 禁用右键菜单和长按菜单
+          // 禁用右鍵菜單和長按菜單
           pointerEvents: 'auto',
         } as React.CSSProperties}
         onContextMenu={(e) => {
-          // 阻止默认右键菜单
+          // 阻止默認右鍵菜單
           e.preventDefault();
           e.stopPropagation();
 
-          // 右键弹出操作菜单
+          // 右鍵彈出操作菜單
           setShowMobileActions(true);
 
-          // 异步检查收藏状态，不阻塞菜单显示
+          // 異步檢查收藏狀態，不阻塞菜單顯示
           if (from === 'search' && !isAggregate && actualSource && actualId && searchFavorited === null) {
             checkSearchFavoriteStatus();
           }
@@ -530,7 +530,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
           return false;
         }}
       >
-        {/* 海报容器 */}
+        {/* 海報容器 */}
         <div
           className={`relative aspect-[2/3] overflow-hidden rounded-lg ${origin === 'live' ? 'ring-1 ring-gray-300/80 dark:ring-gray-600/80' : ''}`}
           style={{
@@ -545,7 +545,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
         >
           {/* 骨架屏 */}
           {!isLoading && <ImagePlaceholder aspectRatio='aspect-[2/3]' />}
-          {/* 图片 */}
+          {/* 圖片 */}
           <Image
             src={processImageUrl(actualPoster)}
             alt={actualTitle}
@@ -555,7 +555,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             loading='lazy'
             onLoadingComplete={() => setIsLoading(true)}
             onError={(e) => {
-              // 图片加载失败时的重试机制
+              // 圖片加載失敗時的重試機製
               const img = e.target as HTMLImageElement;
               if (!img.dataset.retried) {
                 img.dataset.retried = 'true';
@@ -565,11 +565,11 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
               }
             }}
             style={{
-              // 禁用图片的默认长按效果
+              // 禁用圖片的默認長按效果
               WebkitUserSelect: 'none',
               userSelect: 'none',
               WebkitTouchCallout: 'none',
-              pointerEvents: 'none', // 图片不响应任何指针事件
+              pointerEvents: 'none', // 圖片不響應任何指針事件
             } as React.CSSProperties}
             onContextMenu={(e) => {
               e.preventDefault();
@@ -581,7 +581,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             }}
           />
 
-          {/* 悬浮遮罩 */}
+          {/* 懸浮遮罩 */}
           <div
             className='absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-300 ease-in-out opacity-0 group-hover:opacity-100'
             style={{
@@ -595,7 +595,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             }}
           />
 
-          {/* 播放按钮 */}
+          {/* 播放按鈕 */}
           {config.showPlayButton && (
             <div
               data-button="true"
@@ -627,7 +627,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             </div>
           )}
 
-          {/* 操作按钮 */}
+          {/* 操作按鈕 */}
           {(config.showHeart || config.showCheckCircle) && (
             <div
               data-button="true"
@@ -735,7 +735,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             </div>
           )}
 
-          {/* 豆瓣链接 */}
+          {/* 豆瓣鏈接 */}
           {config.showDoubanLink && actualDoubanId && actualDoubanId !== 0 && (
             <a
               href={
@@ -823,12 +823,12 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                     {sourceCount}
                   </div>
 
-                  {/* 播放源详情悬浮框 */}
+                  {/* 播放源詳情懸浮框 */}
                   {(() => {
-                    // 优先显示的播放源（常见的主流平台）
-                    const prioritySources = ['爱奇艺', '腾讯视频', '优酷', '芒果TV', '哔哩哔哩', 'Netflix', 'Disney+'];
+                    // 優先顯示的播放源（常見的主流平臺）
+                    const prioritySources = ['愛奇藝', '騰訊視頻', '優酷', '芒果TV', '嗶哩嗶哩', 'Netflix', 'Disney+'];
 
-                    // 按优先级排序播放源
+                    // 按優先級排序播放源
                     const sortedSources = uniqueSources.sort((a, b) => {
                       const aIndex = prioritySources.indexOf(a);
                       const bIndex = prioritySources.indexOf(b);
@@ -838,7 +838,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                       return a.localeCompare(b);
                     });
 
-                    const maxDisplayCount = 6; // 最多显示6个
+                    const maxDisplayCount = 6; // 最多顯示6個
                     const displaySources = sortedSources.slice(0, maxDisplayCount);
                     const hasMore = sortedSources.length > maxDisplayCount;
                     const remainingCount = sortedSources.length - maxDisplayCount;
@@ -868,7 +868,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                             return false;
                           }}
                         >
-                          {/* 单列布局 */}
+                          {/* 單列佈局 */}
                           <div className='space-y-0.5 sm:space-y-1'>
                             {displaySources.map((sourceName, index) => (
                               <div key={index} className='flex items-center gap-1 sm:gap-1.5'>
@@ -880,7 +880,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                             ))}
                           </div>
 
-                          {/* 显示更多提示 */}
+                          {/* 顯示更多提示 */}
                           {hasMore && (
                             <div className='mt-1 sm:mt-2 pt-1 sm:pt-1.5 border-t border-gray-700/50'>
                               <div className='flex items-center justify-center text-gray-400'>
@@ -889,7 +889,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
                             </div>
                           )}
 
-                          {/* 小箭头 */}
+                          {/* 小箭頭 */}
                           <div className='absolute top-full right-2 sm:right-3 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] sm:border-l-[6px] sm:border-r-[6px] sm:border-t-[6px] border-transparent border-t-gray-800/90'></div>
                         </div>
                       </div>
@@ -901,7 +901,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
           })()}
         </div>
 
-        {/* 进度条 */}
+        {/* 進度條 */}
         {config.showProgress && progress !== undefined && (
           <div
             className='mt-1 h-1 w-full bg-gray-200 rounded-full overflow-hidden'
@@ -931,7 +931,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
           </div>
         )}
 
-        {/* 标题与来源 */}
+        {/* 標題與來源 */}
         <div
           className='mt-2 text-center'
           style={{
@@ -966,7 +966,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
             >
               {actualTitle}
             </span>
-            {/* 自定义 tooltip */}
+            {/* 自定義 tooltip */}
             <div
               className='absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-md shadow-lg opacity-0 invisible peer-hover:opacity-100 peer-hover:visible transition-all duration-200 ease-out delay-100 whitespace-nowrap pointer-events-none'
               style={{

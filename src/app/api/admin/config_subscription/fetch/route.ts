@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
-    // 权限检查：仅站长可以拉取配置订阅
+    // 權限檢查：僅站長可以拉取配置訂閱
     const authInfo = getAuthInfoFromCookie(request);
     if (!authInfo || !authInfo.username) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     if (authInfo.username !== process.env.USERNAME) {
       return NextResponse.json(
-        { error: '权限不足，只有站长可以拉取配置订阅' },
+        { error: '權限不足，只有站長可以拉取配置訂閱' },
         { status: 401 }
       );
     }
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const { url } = await request.json();
 
     if (!url) {
-      return NextResponse.json({ error: '缺少URL参数' }, { status: 400 });
+      return NextResponse.json({ error: '缺少URL參數' }, { status: 400 });
     }
 
     // 直接 fetch URL 获取配置内容
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: `请求失败: ${response.status} ${response.statusText}` },
+        { error: `請求失敗: ${response.status} ${response.statusText}` },
         { status: response.status }
       );
     }
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       const decodedBytes = bs58.decode(configContent);
       decodedContent = new TextDecoder().decode(decodedBytes);
     } catch (decodeError) {
-      console.warn('Base58 解码失败', decodeError);
+      console.warn('Base58 解碼失敗', decodeError);
       throw decodeError;
     }
 
@@ -57,9 +57,9 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('拉取配置失败:', error);
+    console.error('拉取配置失敗:', error);
     return NextResponse.json(
-      { error: '拉取配置失败' },
+      { error: '拉取配置失敗' },
       { status: 500 }
     );
   }

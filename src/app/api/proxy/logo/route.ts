@@ -46,16 +46,16 @@ export async function GET(request: Request) {
       );
     }
 
-    // 创建响应头
+    // 創建響應頭
     const headers = new Headers();
     if (contentType) {
       headers.set('Content-Type', contentType);
     }
 
-    // 设置缓存头
-    headers.set('Cache-Control', 'public, max-age=86400, s-maxage=86400'); // 缓存一天
+    // 設置緩存頭
+    headers.set('Cache-Control', 'public, max-age=86400, s-maxage=86400'); // 緩存一天
 
-    // 直接返回图片流
+    // 直接返回圖片流
     return new Response(imageResponse.body, {
       status: 200,
       headers,

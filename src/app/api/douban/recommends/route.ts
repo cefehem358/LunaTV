@@ -28,7 +28,7 @@ export const runtime = 'nodejs';
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
-  // 获取参数
+  // 獲取參數
   const kind = searchParams.get('kind');
   const pageLimit = parseInt(searchParams.get('limit') || '20');
   const pageStart = parseInt(searchParams.get('start') || '0');
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     searchParams.get('label') === 'all' ? '' : searchParams.get('label');
 
   if (!kind) {
-    return NextResponse.json({ error: '缺少必要参数: kind' }, { status: 400 });
+    return NextResponse.json({ error: '缺少必要參數: kind' }, { status: 400 });
   }
 
   const selectedCategories = { 类型: category } as any;
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     selectedCategories['形式'] = format;
   }
   if (region) {
-    selectedCategories['地区'] = region;
+    selectedCategories['地區'] = region;
   }
 
   const tags = [] as Array<string>;
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
       }));
     const response: DoubanResult = {
       code: 200,
-      message: '获取成功',
+      message: '獲取成功',
       list: list,
     };
 
@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: '获取豆瓣数据失败', details: (error as Error).message },
+      { error: '獲取豆瓣數據失敗', details: (error as Error).message },
       { status: 500 }
     );
   }
