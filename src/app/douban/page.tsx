@@ -314,19 +314,16 @@ function DoubanPageClient() {
           throw new Error('沒有找到對應的日期');
         }
       } else if (type === 'anime') {
+        const animeKind = primarySelection === '番劇' ? 'tv' : 'movie';
         data = await getDoubanRecommends({
-          kind: primarySelection === '番劇' ? 'tv' : 'movie',
+          kind: animeKind,
           pageLimit: 25,
           pageStart: 0,
-          category: '動畫',
+          category: '',
           format: '',
-          region: multiLevelValues.region
-            ? (multiLevelValues.region as string)
-            : '',
-          year: multiLevelValues.year ? (multiLevelValues.year as string) : '',
-          platform: multiLevelValues.platform
-            ? (multiLevelValues.platform as string)
-            : '',
+          region: '',
+          year: '',
+          platform: '',
           sort: multiLevelValues.sort ? (multiLevelValues.sort as string) : '',
           label: '',
         });
@@ -467,17 +464,11 @@ function DoubanPageClient() {
               kind: primarySelection === '番劇' ? 'tv' : 'movie',
               pageLimit: 25,
               pageStart: currentPage * 25,
-              category: '動畫',
+              category: '',
               format: '',
-              region: multiLevelValues.region
-                ? (multiLevelValues.region as string)
-                : '',
-              year: multiLevelValues.year
-                ? (multiLevelValues.year as string)
-                : '',
-              platform: multiLevelValues.platform
-                ? (multiLevelValues.platform as string)
-                : '',
+              region: '',
+              year: '',
+              platform: '',
               sort: multiLevelValues.sort
                 ? (multiLevelValues.sort as string)
                 : '',
