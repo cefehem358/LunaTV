@@ -1,6 +1,6 @@
 'use client';
 
-import { LogOut,Settings, ShieldCheck } from 'lucide-react';
+import { LogOut,Settings, ShieldCheck, UserRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect,useState } from 'react';
 
@@ -49,8 +49,8 @@ export function UserMenu() {
         }} 
         className="flex items-center space-x-3 cursor-pointer group select-none relative z-[999999]"
       >
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#e50914] to-purple-600 flex items-center justify-center font-bold text-white text-sm shadow-md transition transform group-hover:scale-105 duration-200">
-          站
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#e50914] via-purple-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-red-500/20 transition transform group-hover:scale-110 group-hover:rotate-3 duration-200">
+          <UserRound className="w-5 h-5" />
         </div>
         <div className="hidden md:block">
           <p className="text-sm font-medium text-zinc-300 group-hover:text-white transition">站長</p>
