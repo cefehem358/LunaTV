@@ -7,11 +7,7 @@ import {
   CirclePlay,
   Clapperboard,
   Film,
-  Flag,
   Home,
-  Info,
-  Play,
-  Plus,
   Search,
   Sparkles,
   Star,
@@ -97,8 +93,6 @@ export default function NetflixHome({
       behavior: 'smooth',
     });
   };
-
-  const featuredItem = hotMovies[0] || hotTvShows[0];
 
   return (
     <div className='min-h-screen bg-[#040404] text-white'>
@@ -251,7 +245,7 @@ export default function NetflixHome({
                                 }`
                               )
                             }
-                            className='group relative flex-shrink-0 w-60 sm:w-72 md:w-80 aspect-[16/9] rounded-xl overflow-hidden cursor-pointer'
+                            className='group relative flex-shrink-0 w-44 aspect-[16/9] rounded-xl overflow-hidden cursor-pointer'
                           >
                             <Image
                               src={
@@ -294,82 +288,7 @@ export default function NetflixHome({
                 </section>
               )}
 
-              {/* Hero Banner */}
-              {featuredItem && (
-                <section className='relative h-[480px] rounded-3xl overflow-hidden mb-10'>
-                  <div className='absolute inset-0'>
-                    <Image
-                      src={
-                        processImageUrl(featuredItem.poster) ||
-                        '/placeholder.jpg'
-                      }
-                      alt={featuredItem.title}
-                      fill
-                      className='object-cover'
-                      priority
-                      unoptimized
-                      referrerPolicy='no-referrer'
-                    />
-                    <div className='absolute inset-0 bg-gradient-to-t from-[#040404] via-transparent to-transparent' />
-                    <div className='absolute inset-0 bg-gradient-to-r from-[#040404]/80 via-transparent to-transparent' />
-                  </div>
-                  <div className='relative h-full flex flex-col justify-end p-10'>
-                    <div className='flex items-center gap-3 mb-4'>
-                      <span className='px-3 py-1 bg-[#e50914] text-white text-xs font-bold rounded flex items-center gap-1'>
-                        <Flag className='w-3 h-3' /> 今日主打首選
-                      </span>
-                      <span className='px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs rounded flex items-center gap-1'>
-                        <Sparkles className='w-3 h-3' /> HD 1080P
-                      </span>
-                    </div>
-                    <h2 className='text-4xl font-black text-white mb-4 tracking-tight leading-tight max-w-2xl'>
-                      {featuredItem.title}
-                    </h2>
-                    <div className='flex items-center gap-4 mb-6'>
-                      <span className='text-zinc-300'>{featuredItem.year}</span>
-                      {featuredItem.rate && (
-                        <span className='text-yellow-400 font-semibold flex items-center gap-1'>
-                          ★ {featuredItem.rate}
-                        </span>
-                      )}
-                    </div>
-                    <div className='flex gap-4'>
-                      <button
-                        onClick={() =>
-                          router.push(
-                            `/play?title=${encodeURIComponent(
-                              featuredItem.title
-                            )}${
-                              featuredItem.year
-                                ? `&year=${featuredItem.year}`
-                                : ''
-                            }&prefer=true`
-                          )
-                        }
-                        className='flex items-center gap-2 px-8 py-3 bg-white text-black font-bold rounded-xl hover:bg-[#e50914] hover:text-white transition-all duration-200'
-                      >
-                        <Play className='w-5 h-5 fill-current' />
-                        立即播放
-                      </button>
-                      <button className='flex items-center gap-2 px-8 py-3 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-white/30 transition-all duration-200'>
-                        <Plus className='w-5 h-5' />
-                        加入片單
-                      </button>
-                      <button
-                        onClick={() =>
-                          router.push(
-                            `/info?id=${featuredItem.id}&source=douban`
-                          )
-                        }
-                        className='flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-white/20 transition-all duration-200'
-                      >
-                        <Info className='w-5 h-5' />
-                        詳細資訊
-                      </button>
-                    </div>
-                  </div>
-                </section>
-              )}
+              {/* Hero Banner removed */}
 
               {/* 熱門電影 */}
               <NetflixSectionRow
