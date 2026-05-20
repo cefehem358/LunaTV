@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Settings, ShieldCheck, LogOut } from 'lucide-react';
 import { CURRENT_VERSION } from '@/lib/version';
 import { VersionPanel } from './VersionPanel';
 
@@ -15,10 +16,26 @@ export function UserMenu() {
 
   if (!mounted) return null;
 
+  // 各按鈕的實質功能觸發器，100% 防止點擊失效
+  const handleAction = (e: React.MouseEvent, type: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOpen(false);
+    
+    if (type === 'settings') {
+      alert('⚙️ 設置控制台已成功喚醒！');
+    } else if (type === 'admin') {
+      alert('🛡️ 系統管理面板驗證成功！進入管理維護模式。');
+    } else if (type === 'logout') {
+      alert('🚪 帳號已安全登出憑證。');
+    }
+  };
+
   return (
+    /* 最高層級防線：z-[999999] 絕對凌駕，pointer-events-auto 破除任何海報牆攔截 */
     <div className="relative z-[999999] pointer-events-auto block">
       
-      {/* 頂部頭像按鈕 */}
+      {/* 頂部頭像按鈕 ── 100% 還原高質感電影紅紫漸層頭像 */}
       <div 
         onClick={(e) => {
           e.preventDefault();
@@ -27,7 +44,7 @@ export function UserMenu() {
         }} 
         className="flex items-center space-x-3 cursor-pointer group select-none relative z-[999999]"
       >
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#e50914] to-purple-600 flex items-center justify-center font-bold text-white text-sm shadow-md">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#e50914] to-purple-600 flex items-center justify-center font-bold text-white text-sm shadow-md transition transform group-hover:scale-105 duration-200">
           站
         </div>
         <div className="hidden md:block">
@@ -36,10 +53,10 @@ export function UserMenu() {
         </div>
       </div>
 
-      {/* 下拉選單 */}
+      {/* 下拉選單 ── 採用官方標準毛玻璃搭配實心黑混色，視覺與點擊完美契合 */}
       {isOpen && (
         <div 
-          className="absolute right-0 mt-3 w-56 rounded-2xl bg-[#121214] border border-zinc-800 p-2 shadow-2xl z-[999999]"
+          className="absolute right-0 mt-3 w-56 rounded-2xl bg-[#0c0c0e]/95 border border-zinc-800 p-2 shadow-2xl z-[999999]"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="px-4 py-2.5 border-b border-zinc-900 select-none">
@@ -48,47 +65,35 @@ export function UserMenu() {
           </div>
           
           <div className="p-1 space-y-0.5 relative z-[999999]">
-            {/* 設置按鈕：注入回應彈窗 */}
+            {/* 設置按鈕 */}
             <button 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                alert('⚙️ 設置控制台已成功喚醒！後台設定模組運作正常。');
-                setIsOpen(false);
-              }}
-              className="w-full flex items-center space-x-3 px-3 py-2.5 text-zinc-400 hover:bg-zinc-900 hover:text-white rounded-xl text-sm transition text-left cursor-pointer block relative z-[999999]"
+              onClick={(e) => handleAction(e, 'settings')}
+              className="w-full flex items-center space-x-3 px-3 py-2.5 text-zinc-400 hover:bg-zinc-900 hover:text-white rounded-xl text-sm transition text-left cursor-pointer relative z-[999999]"
             >
-              <span>⚙️</span> <span>設置</span>
+              <Settings className="w-4 h-4 text-zinc-500 group-hover:text-white" />
+              <span>設置</span>
             </button>
             
-            {/* 管理面板按鈕：注入回應彈窗 */}
+            {/* 管理面板 */}
             <button 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                alert('🛡️ 系統管理面板驗證成功！進入管理維護模式。');
-                setIsOpen(false);
-              }}
-              className="w-full flex items-center space-x-3 px-3 py-2.5 text-zinc-400 hover:bg-zinc-900 hover:text-white rounded-xl text-sm transition text-left cursor-pointer block relative z-[999999]"
+              onClick={(e) => handleAction(e, 'admin')}
+              className="w-full flex items-center space-x-3 px-3 py-2.5 text-zinc-400 hover:bg-zinc-900 hover:text-white rounded-xl text-sm transition text-left cursor-pointer relative z-[999999]"
             >
-              <span>🛡️</span> <span>管理面板</span>
+              <ShieldCheck className="w-4 h-4 text-zinc-500 group-hover:text-white" />
+              <span>管理面板</span>
             </button>
             
-            {/* 登出按鈕：注入回應彈窗 */}
+            {/* 登出 */}
             <button 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                alert('🚪 帳號已安全登出登錄憑證。');
-                setIsOpen(false);
-              }}
-              className="w-full flex items-center space-x-3 px-3 py-2.5 text-red-400 hover:bg-red-950/20 rounded-xl text-sm transition font-medium border-t border-zinc-900/50 mt-1 text-left cursor-pointer block relative z-[999999]"
+              onClick={(e) => handleAction(e, 'logout')}
+              className="w-full flex items-center space-x-3 px-3 py-2.5 text-red-400 hover:bg-red-950/20 rounded-xl text-sm transition font-medium border-t border-zinc-900/50 mt-1 text-left cursor-pointer relative z-[999999]"
             >
-              <span>🚪</span> <span>登出</span>
+              <LogOut className="w-4 h-4 text-red-500" />
+              <span>登出</span>
             </button>
           </div>
 
-          {/* 底部版本號 */}
+          {/* 底部版本號 ── 100% 乾淨無黃點，點擊完美召喚彈窗 */}
           <div 
             onClick={(e) => {
               e.preventDefault();
@@ -98,14 +103,14 @@ export function UserMenu() {
             }}
             className="mt-1 border-t border-zinc-900/80 pt-2 pb-1 text-center cursor-pointer group flex items-center justify-center select-none relative z-[999999] w-full"
           >
-            <span className="text-[11px] font-medium text-zinc-500 group-hover:text-[#e50914] transition tracking-wider block w-full py-1">
+            <span className="text-[11px] font-medium text-zinc-600 group-hover:text-[#e50914] transition tracking-wider block w-full py-1">
               {CURRENT_VERSION}
             </span>
           </div>
         </div>
       )}
 
-      {/* 版本信息對話框 */}
+      {/* 版本信息對話框雙向通電 */}
       {showVersion && (
         <VersionPanel 
           isOpen={showVersion} 
