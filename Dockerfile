@@ -29,12 +29,11 @@ COPY . .
 
 # 在构建阶段也显式设置环境变量
 ENV DOCKER_ENV=true
-ENV NEXT_PUBLIC_STORAGE_TYPE=redis
+ENV NEXT_PUBLIC_STORAGE_TYPE=kvrocks
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=4096"
-# 构建期 dummy 值：Next.js 在 collect page data 阶段会执行模块顶层代码，
-# 导致 RedisStorage 构造函数因 REDIS_URL 未设置而抛出异常
-ENV REDIS_URL=redis://localhost:6379
+# 构建期 dummy 值：避免 KvrocksStorage 在建構時因 KVROCKS_URL 未設定而拋錯
+ENV KVROCKS_URL=redis://localhost:6666
 
 # 生成生产构建
 RUN pnpm run build
