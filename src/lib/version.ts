@@ -6,15 +6,25 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   { 
-    version: 'v2.1.0', 
+    version: 'v1.0.4', 
     date: '2026-05-20', 
-    content: '🎉 釋出 v2.1.0 完美收官版！修正設置按鈕路由至 /profile，徹底解決 404 找不到網頁錯誤，全功能（設置、管理、登出、版本號）完美對接通電。' 
+    content: '重新設計登入頁面 - 電影級動態背景、發光按鈕、掃描線效果、全新視覺層級。' 
   },
   { 
-    version: 'v2.0.9', 
+    version: 'v1.0.3', 
     date: '2026-05-20', 
-    content: '導入 Next.js useRouter 核心導航，拔除測試用 alert 彈窗。' 
+    content: '重新設計選集/換源 UI - Netflix 風格標籤、圓角按鈕、發光當前標記、更好的響應式佈局。' 
+  },
+  { 
+    version: 'v1.0.2', 
+    date: '2026-05-20', 
+    content: '移除生產環境 console.log 除錯代碼。' 
+  },
+  { 
+    version: 'v1.0.1', 
+    date: '2026-05-20', 
+    content: '修正設定按鈕 404 錯誤 - 路由從 /profile 改為 /admin。' 
   }
 ];
 
-export const CURRENT_VERSION = CHANGELOGS[0]?.version || 'v2.1.0';
+export const CURRENT_VERSION = CHANGELOGS[0]?.version || 'v1.0.4';

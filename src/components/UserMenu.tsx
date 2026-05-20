@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Settings, ShieldCheck, LogOut } from 'lucide-react';
+import { LogOut,Settings, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import React, { useEffect,useState } from 'react';
+
 import { CURRENT_VERSION } from '@/lib/version';
+
 import { VersionPanel } from './VersionPanel';
 
 export function UserMenu() {
@@ -24,8 +26,7 @@ export function UserMenu() {
     setIsOpen(false);
     
     if (type === 'settings') {
-      // 💡 修正：將原本 404 的 /settings 重定向至官方原生個人設定路徑 /profile
-      router.push('/profile'); 
+      router.push('/admin'); 
     } else if (type === 'admin') {
       router.push('/admin'); 
     } else if (type === 'logout') {

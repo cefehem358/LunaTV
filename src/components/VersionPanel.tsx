@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { CURRENT_VERSION, CHANGELOGS } from '@/lib/version';
+import React, { useEffect,useState } from 'react';
+
+import { CHANGELOGS,CURRENT_VERSION } from '@/lib/version';
 
 interface VersionPanelProps {
   isOpen?: boolean;
