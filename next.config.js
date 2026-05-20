@@ -5,13 +5,25 @@ const nextConfig = {
   output: process.platform === 'win32' ? undefined : 'standalone',
   eslint: {
     dirs: ['src'],
+    ignoreDuringBuilds: true, // 1C1G 小機器優化：編譯時忽略 ESLint，防止記憶體不足崩潰
+  },
+  typescript: {
+    ignoreBuildErrors: true, // 1C1G 小機器優化：編譯時忽略 TS 檢查，防止 OOM
   },
 
   reactStrictMode: false,
-  swcMinify: false,
+  swcMinify: true, // 1C1G 小機器優化：啟用 SWC 壓縮（Rust 引擎），大幅節省記憶體與時間
+  productionBrowserSourceMaps: false, // 1C1G 小機器優化：關閉 Source Map 以減少打包時的記憶體佔用
 
   experimental: {
     instrumentationHook: process.env.NODE_ENV === 'production',
+    webpackMemoryOptimizations: true, // 1C1G 小機器優化：開啟 Webpack 記憶體優化
+    optimizePackageImports: [
+      'lucide-react',
+      'framer-motion',
+      '@headlessui/react',
+      'swiper',
+    ], // 優化模組載入
   },
 
   // Uncoment to add domain whitelist

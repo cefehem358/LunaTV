@@ -94,8 +94,24 @@ export async function GET(request: Request) {
     );
   }
 }
+const TOP250_CACHE = new Map<number, { expiresAt: number; data: unknown }>();
+const TOP250_CACHE_TTL = 60 * 60 * 1000; // Top250 變化非常慢，快取 1 小時
 
-function handleTop250(pageStart: number) {
+async function handleTop250(pageStart: number) {
+  const now = Date.now();
+  const cached = TOP250_CACHE.get(pageStart);
+  if (cached && cached.expiresAt > now) {
+    const cacheTime = await getCacheTime();
+    return NextResponse.json(cached.data, {
+      headers: {
+        'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+        'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+        'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+        'Netlify-Vary': 'query',
+      },
+    });
+  }
+
   const target = `https://movie.douban.com/top250?start=${pageStart}&filter=`;
 
   // 直接使用 fetch 獲取 HTML 頁面
@@ -113,65 +129,69 @@ function handleTop250(pageStart: number) {
     },
   };
 
-  return fetch(target, fetchOptions)
-    .then(async (fetchResponse) => {
-      clearTimeout(timeoutId);
+  try {
+    const fetchResponse = await fetch(target, fetchOptions);
+    clearTimeout(timeoutId);
 
-      if (!fetchResponse.ok) {
-        throw new Error(`HTTP error! Status: ${fetchResponse.status}`);
-      }
+    if (!fetchResponse.ok) {
+      throw new Error(`HTTP error! Status: ${fetchResponse.status}`);
+    }
 
-      // 獲取 HTML 內容
-      const html = await fetchResponse.text();
+    // 獲取 HTML 內容
+    const html = await fetchResponse.text();
 
-      // 通過正則同時捕獲影片 id、標題、封面以及評分
-      const moviePattern =
-        /<div class="item">[\s\S]*?<a[^>]+href="https?:\/\/movie\.douban\.com\/subject\/(\d+)\/"[\s\S]*?<img[^>]+alt="([^"]+)"[^>]*src="([^"]+)"[\s\S]*?<span class="rating_num"[^>]*>([^<]*)<\/span>[\s\S]*?<\/div>/g;
-      const movies: DoubanItem[] = [];
-      let match;
+    // 通過正則同時捕獲影片 id、標題、封面以及評分
+    const moviePattern =
+      /<div class="item">[\s\S]*?<a[^>]+href="https?:\/\/movie\.douban\.com\/subject\/(\d+)\/"[\s\S]*?<img[^>]+alt="([^"]+)"[^>]*src="([^"]+)"[\s\S]*?<span class="rating_num"[^>]*>([^<]*)<\/span>[\s\S]*?<\/div>/g;
+    const movies: DoubanItem[] = [];
+    let match;
 
-      while ((match = moviePattern.exec(html)) !== null) {
-        const id = match[1];
-        const title = match[2];
-        const cover = match[3];
-        const rate = match[4] || '';
+    while ((match = moviePattern.exec(html)) !== null) {
+      const id = match[1];
+      const title = match[2];
+      const cover = match[3];
+      const rate = match[4] || '';
 
-        // 處理圖片 URL，確保使用 HTTPS
-        const processedCover = cover.replace(/^http:/, 'https:');
+      // 處理圖片 URL，確保使用 HTTPS
+      const processedCover = cover.replace(/^http:/, 'https:');
 
-        movies.push({
-          id: id,
-          title: title,
-          poster: processedCover,
-          rate: rate,
-          year: '',
-        });
-      }
-
-      const apiResponse: DoubanResult = {
-        code: 200,
-        message: '獲取成功',
-        list: movies,
-      };
-
-      const cacheTime = await getCacheTime();
-      return NextResponse.json(apiResponse, {
-        headers: {
-          'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
-          'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
-          'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
-          'Netlify-Vary': 'query',
-        },
+      movies.push({
+        id: id,
+        title: title,
+        poster: processedCover,
+        rate: rate,
+        year: '',
       });
-    })
-    .catch((error) => {
-      clearTimeout(timeoutId);
-      return NextResponse.json(
-        {
-          error: '獲取豆瓣 Top250 數據失敗',
-          details: (error as Error).message,
-        },
-        { status: 500 }
-      );
+    }
+
+    const apiResponse: DoubanResult = {
+      code: 200,
+      message: '獲取成功',
+      list: movies,
+    };
+
+    TOP250_CACHE.set(pageStart, {
+      expiresAt: Date.now() + TOP250_CACHE_TTL,
+      data: apiResponse,
     });
+
+    const cacheTime = await getCacheTime();
+    return NextResponse.json(apiResponse, {
+      headers: {
+        'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+        'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+        'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+        'Netlify-Vary': 'query',
+      },
+    });
+  } catch (error) {
+    clearTimeout(timeoutId);
+    return NextResponse.json(
+      {
+        error: '獲取豆瓣 Top250 數據失敗',
+        details: (error as Error).message,
+      },
+      { status: 500 }
+    );
+  }
 }
