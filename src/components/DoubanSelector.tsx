@@ -49,18 +49,18 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
   // 電影的一級選擇器選項
   const moviePrimaryOptions: SelectorOption[] = [
     { label: '全部', value: '全部' },
-    { label: '熱門電影', value: '熱門' },
+    { label: '熱門電影', value: '热门' },
     { label: '最新電影', value: '最新' },
     { label: '豆瓣高分', value: '豆瓣高分' },
-    { label: '冷門佳片', value: '冷門佳片' },
+    { label: '冷門佳片', value: '冷门佳片' },
   ];
 
   // 电影的二级选择器选项
   const movieSecondaryOptions: SelectorOption[] = [
     { label: '全部', value: '全部' },
-    { label: '華語', value: '華語' },
-    { label: '歐美', value: '歐美' },
-    { label: '韓國', value: '韓國' },
+    { label: '華語', value: '华语' },
+    { label: '歐美', value: '欧美' },
+    { label: '韓國', value: '韩国' },
     { label: '日本', value: '日本' },
   ];
 

@@ -932,7 +932,7 @@ export function NetflixHomePage() {
           await Promise.all([
             getDoubanCategories({
               kind: 'movie',
-              category: '熱門',
+              category: '热门',
               type: '全部',
             }).catch(() => {
               return { code: 500, message: 'error', list: [] };

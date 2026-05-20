@@ -53,7 +53,7 @@ function DoubanPageClient() {
 
   // 選擇器狀態 - 完全獨立，不依賴URL參數
   const [primarySelection, setPrimarySelection] = useState<string>(() => {
-    if (type === 'movie') return '熱門';
+    if (type === 'movie') return '热门';
     if (type === 'tv' || type === 'show') return '最近熱門';
     if (type === 'anime') return '每日放送';
     return '';
@@ -151,7 +151,7 @@ function DoubanPageClient() {
     } else {
       // 原有邏輯
       if (type === 'movie') {
-        setPrimarySelection('熱門');
+        setPrimarySelection('热门');
         setSecondarySelection('全部');
       } else if (type === 'tv') {
         setPrimarySelection('最近熱門');
