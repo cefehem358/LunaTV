@@ -77,6 +77,19 @@ jobs:
             type=semver,pattern={{version}},enable=${{ github.event_name == 'release' }}
             type=semver,pattern={{major}}.{{minor}},enable=${{ github.event_name == 'release' }}
 
+      - name: Debug Docker build
+        run: |
+          docker build --no-cache -f ./Dockerfile --progress=plain -t debug-test . 2>&1 | tee /tmp/docker-build.log
+        continue-on-error: true
+
+      - name: Upload build log
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-${{ env.PLATFORM_NAME }}
+          path: /tmp/docker-build.log
+          retention-days: 1
+          if-no-files-found: warn
+
       - name: Build and push by digest
         id: build
         uses: docker/build-push-action@v5
@@ -87,6 +100,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           tags: ghcr.io/${{ steps.lowercase.outputs.owner }}/lunatv:${{ steps.docker-tag.outputs.tag }}
           outputs: type=image,name=ghcr.io/${{ steps.lowercase.outputs.owner }}/lunatv,name-canonical=true,push=true
+          provenance: false
 
       - name: Export digest
         run: |
