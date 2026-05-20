@@ -21,7 +21,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
   useState,
 } from 'react';
 
@@ -80,7 +79,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
   });
 
   // 首次掛載時讀取 localStorage，以便刷新後仍保持上次的摺疊狀態
-  useLayoutEffect(() => {
+  useEffect(() => {
     const saved = localStorage.getItem('sidebarCollapsed');
     if (saved !== null) {
       const val = JSON.parse(saved);
@@ -90,7 +89,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
   }, []);
 
   // 當摺疊狀態變化時，同步到 <html> data 屬性，供首屏 CSS 使用
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (typeof document !== 'undefined') {
       if (isCollapsed) {
         document.documentElement.dataset.sidebarCollapsed = 'true';
@@ -195,7 +194,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
       <div className='hidden md:flex'>
         <aside
           data-sidebar
-          className={`fixed top-0 left-0 h-screen bg-[#08080a] border-r border-white/5 transition-all duration-300 z-10 shadow-lg text-white ${
+          className={`fixed top-0 left-0 h-screen bg-white dark:bg-[#08080a] border-r border-zinc-200 dark:border-white/5 transition-all duration-300 z-10 shadow-lg text-zinc-900 dark:text-white ${
             isCollapsed ? 'w-16' : 'w-64'
           }`}
         >
@@ -213,7 +212,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
               </div>
               <button
                 onClick={handleToggle}
-                className={`absolute top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-colors duration-200 z-10 ${
+                className={`absolute top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors duration-200 z-10 ${
                   isCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-2'
                 }`}
               >
@@ -230,16 +229,16 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                   isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
                 } gap-3 justify-start ${
                   active === '/'
-                    ? 'bg-zinc-800 text-white font-semibold'
-                    : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+                    ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white font-semibold'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-white'
                 }`}
               >
                 <div className='w-4 h-4 flex items-center justify-center'>
                   <Home
                     className={`h-4 w-4 ${
                       active === '/'
-                        ? 'text-white'
-                        : 'text-zinc-400 group-hover:text-white'
+                        ? 'text-zinc-900 dark:text-white'
+                        : 'text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white'
                     }`}
                   />
                 </div>
@@ -260,16 +259,16 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                   isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
                 } gap-3 justify-start ${
                   active === '/search'
-                    ? 'bg-zinc-800 text-white font-semibold'
-                    : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+                    ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white font-semibold'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-white'
                 }`}
               >
                 <div className='w-4 h-4 flex items-center justify-center'>
                   <Search
                     className={`h-4 w-4 ${
                       active === '/search'
-                        ? 'text-white'
-                        : 'text-zinc-400 group-hover:text-white'
+                        ? 'text-zinc-900 dark:text-white'
+                        : 'text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white'
                     }`}
                   />
                 </div>
@@ -286,16 +285,16 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                   isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
                 } gap-3 justify-start ${
                   active === '/?tab=favorites'
-                    ? 'bg-zinc-800 text-white font-semibold'
-                    : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+                    ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white font-semibold'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-white'
                 }`}
               >
                 <div className='w-4 h-4 flex items-center justify-center'>
                   <BookMarked
                     className={`h-4 w-4 ${
                       active === '/?tab=favorites'
-                        ? 'text-white'
-                        : 'text-zinc-400 group-hover:text-white'
+                        ? 'text-zinc-900 dark:text-white'
+                        : 'text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white'
                     }`}
                   />
                 </div>
@@ -332,16 +331,16 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                         isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
                       } gap-3 justify-start ${
                         isActive
-                          ? 'bg-zinc-800 text-white font-semibold'
-                          : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+                          ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white font-semibold'
+                          : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-white'
                       }`}
                     >
                       <div className='w-4 h-4 flex items-center justify-center'>
                         <Icon
                           className={`h-4 w-4 ${
                             isActive
-                              ? 'text-white'
-                              : 'text-zinc-400 group-hover:text-white'
+                              ? 'text-zinc-900 dark:text-white'
+                              : 'text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white'
                           }`}
                         />
                       </div>

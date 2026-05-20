@@ -14,13 +14,13 @@ interface MobileHeaderProps {
 const MobileHeader = ({ showBackButton = false }: MobileHeaderProps) => {
   const { siteName } = useSite();
   return (
-    <header className='md:hidden fixed top-0 left-0 right-0 z-[999] w-full bg-[#08080a]/80 backdrop-blur-xl border-b border-white/5 shadow-sm text-white'>
+    <header className='md:hidden fixed top-0 left-0 right-0 z-[999] w-full bg-white/80 dark:bg-[#08080a]/80 backdrop-blur-xl border-b border-zinc-200 dark:border-white/5 shadow-sm text-zinc-900 dark:text-white'>
       <div className='h-12 flex items-center justify-between px-4'>
         {/* 左側：搜索按鈕、返回按鈕和設置按鈕 */}
         <div className='flex items-center gap-2'>
           <Link
             href='/search'
-            className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-zinc-400 hover:bg-zinc-800/50 hover:text-white transition-colors'
+            className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-white transition-colors'
           >
             <svg
               className='w-full h-full'

@@ -12,7 +12,7 @@ interface PageLayoutProps {
 
 const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
   return (
-    <div className='w-full min-h-screen bg-[#040404] text-zinc-100'>
+    <div className='w-full min-h-screen bg-transparent text-zinc-900 dark:text-zinc-100'>
       {/* 移動端頭部 */}
       <MobileHeader showBackButton={['/play', '/live'].includes(activePath)} />
 
@@ -39,12 +39,7 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
           </div>
 
           {/* 主內容 */}
-          <main
-            className='flex-1 md:min-h-0 mb-14 md:mb-0 md:mt-0 mt-12'
-            style={{
-              paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))',
-            }}
-          >
+          <main className='flex-1 md:min-h-0 mb-14 md:mb-0 md:mt-0 mt-12 pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0'>
             {children}
           </main>
         </div>

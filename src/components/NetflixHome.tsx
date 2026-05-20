@@ -107,9 +107,9 @@ export default function NetflixHome({
   };
 
   return (
-    <div className='min-h-screen bg-[#040404] text-white'>
+    <div className='min-h-screen bg-transparent text-zinc-900 dark:text-zinc-100'>
       {/* ========== A. 固定側邊導覽列 ========== */}
-      <aside className='hidden md:flex fixed top-0 left-0 h-screen w-64 bg-[#08080a] z-50 flex flex-col border-r border-white/5'>
+      <aside className='hidden md:flex fixed top-0 left-0 h-screen w-64 bg-white dark:bg-[#08080a] z-50 flex flex-col border-r border-zinc-200 dark:border-white/5'>
         {/* Logo */}
         <div className='p-6'>
           <h1 className='text-3xl font-black text-[#e50914] font-[Impact] tracking-wider'>
@@ -119,7 +119,7 @@ export default function NetflixHome({
 
         {/* 主導航 */}
         <nav className='px-3 space-y-1'>
-          <p className='px-4 pt-2 pb-1 text-xs font-semibold text-zinc-600 uppercase tracking-wider'>
+          <p className='px-4 pt-2 pb-1 text-xs font-semibold text-zinc-500 uppercase tracking-wider'>
             導覽
           </p>
           <NavButton
@@ -156,7 +156,7 @@ export default function NetflixHome({
             label='綜藝'
           />
 
-          <p className='px-4 pt-5 pb-1 text-xs font-semibold text-zinc-600 uppercase tracking-wider'>
+          <p className='px-4 pt-5 pb-1 text-xs font-semibold text-zinc-500 uppercase tracking-wider'>
             我的
           </p>
           <NavButton
@@ -177,7 +177,7 @@ export default function NetflixHome({
         <header
           className={`sticky top-0 z-40 h-16 md:h-20 flex items-center justify-between px-4 md:px-8 transition-all duration-300 ${
             isScrolled
-              ? 'bg-[#040404]/60 backdrop-blur-xl border-b border-white/5'
+              ? 'bg-white/80 dark:bg-[#040404]/80 backdrop-blur-xl border-b border-zinc-200 dark:border-white/5'
               : 'bg-transparent'
           }`}
         >
@@ -189,7 +189,7 @@ export default function NetflixHome({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder='搜尋電影、電視劇、動漫...'
-                className='w-full md:w-96 h-11 pl-12 pr-4 bg-zinc-900/80 rounded-xl text-white placeholder-zinc-500 border border-transparent focus:border-[#e50914] focus:outline-none transition-all duration-200'
+                className='w-full md:w-96 h-11 pl-12 pr-4 bg-zinc-100 dark:bg-zinc-900/80 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-500 border border-zinc-200 dark:border-transparent focus:border-[#e50914] focus:outline-none transition-all duration-200'
               />
             </div>
           </form>
@@ -213,7 +213,7 @@ export default function NetflixHome({
                 <section className='mb-8'>
                   <div className='flex items-center gap-3 mb-4'>
                     <CirclePlay className='w-5 h-5 text-[#e50914]' />
-                    <h3 className='text-xl font-bold text-white'>繼續觀看</h3>
+                    <h3 className='text-xl font-bold text-zinc-900 dark:text-white'>繼續觀看</h3>
                   </div>
                   <div className='relative group'>
                     <button
@@ -383,22 +383,22 @@ export default function NetflixHome({
           className='fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4'
           onTouchMove={(e) => e.stopPropagation()}
         >
-          <div className='w-full max-w-md rounded-2xl bg-[#1a1a1a] border border-white/10 p-8 shadow-2xl'>
+          <div className='w-full max-w-md rounded-2xl bg-white dark:bg-[#1a1a1a] border border-zinc-200 dark:border-white/10 p-8 shadow-2xl'>
             <div className='flex items-start justify-between mb-6'>
               <div>
-                <h3 className='text-xl font-bold text-white mb-1'>系統公告</h3>
+                <h3 className='text-xl font-bold text-zinc-900 dark:text-white mb-1'>系統公告</h3>
                 <div className='w-8 h-1 bg-[#e50914] rounded-full' />
               </div>
               <button
                 onClick={() => handleCloseAnnouncement(announcement)}
-                className='p-1 text-zinc-500 hover:text-white transition-colors'
+                className='p-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors'
               >
                 <X className='w-5 h-5' />
               </button>
             </div>
             <div className='mb-8'>
-              <div className='bg-[#141414] rounded-xl p-5 border-l-4 border-[#e50914]'>
-                <p className='text-zinc-300 leading-relaxed'>{announcement}</p>
+              <div className='bg-zinc-50 dark:bg-[#141414] rounded-xl p-5 border-l-4 border-[#e50914]'>
+                <p className='text-zinc-650 dark:text-zinc-300 leading-relaxed'>{announcement}</p>
               </div>
             </div>
             <button
@@ -438,8 +438,8 @@ function NavButton({
       onClick={onClick}
       className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl mb-0.5 transition-all duration-200 ${
         active
-          ? 'bg-zinc-800 text-white'
-          : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+          ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium'
+          : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-white'
       }`}
     >
       {icon}
@@ -461,12 +461,12 @@ function SectionTitle({
     <div className='flex items-center justify-between mb-5'>
       <div className='flex items-center gap-3'>
         {icon}
-        <h3 className='text-xl font-bold text-white'>{title}</h3>
+        <h3 className='text-xl font-bold text-zinc-900 dark:text-white'>{title}</h3>
       </div>
       {viewAllHref && (
         <Link
           href={viewAllHref}
-          className='flex items-center text-sm text-zinc-400 hover:text-white transition-colors gap-1'
+          className='flex items-center text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors gap-1'
         >
           查看更多 <ChevronRight className='w-4 h-4' />
         </Link>
@@ -825,12 +825,12 @@ function FavoritesView() {
       <div className='flex items-center justify-between mb-6'>
         <div className='flex items-center gap-3'>
           <BookMarked className='w-6 h-6 text-[#e50914]' />
-          <h2 className='text-2xl font-bold text-white'>我的收藏</h2>
+          <h2 className='text-2xl font-bold text-zinc-900 dark:text-white'>我的收藏</h2>
         </div>
         {favoriteItems.length > 0 && (
           <button
             onClick={handleClearAll}
-            className='text-sm text-zinc-500 hover:text-white transition-colors'
+            className='text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors'
           >
             清空全部
           </button>
@@ -842,7 +842,7 @@ function FavoritesView() {
           {Array.from({ length: 7 }).map((_, i) => (
             <div
               key={i}
-              className='aspect-[2/3] rounded-xl bg-zinc-800 animate-pulse'
+              className='aspect-[2/3] rounded-xl bg-zinc-200 dark:bg-zinc-800 animate-pulse'
             />
           ))}
         </div>
@@ -935,10 +935,10 @@ export function NetflixHomePage() {
 
   if (loading) {
     return (
-      <div className='min-h-screen bg-[#040404] flex items-center justify-center'>
+      <div className='min-h-screen bg-slate-50 dark:bg-[#040404] flex items-center justify-center'>
         <div className='flex flex-col items-center gap-4'>
           <div className='w-16 h-16 border-4 border-[#e50914] border-t-transparent rounded-full animate-spin' />
-          <p className='text-zinc-400'>載入中...</p>
+          <p className='text-zinc-500 dark:text-zinc-400'>載入中...</p>
         </div>
       </div>
     );

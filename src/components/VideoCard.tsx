@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any,react-hooks/exhaustive-deps,@typescript-eslint/no-empty-function */
+/* eslint-disable @typescript-eslint/no-explicit-any,react-hooks/exhaustive-deps,@typescript-eslint/no-empty-function,no-console */
 
 import {
   ExternalLink,
@@ -148,7 +148,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
           const fav = await isFavorited(actualSource, actualId);
           setFavorited(fav);
         } catch (err) {
-          throw new Error('檢查收藏狀態失敗');
+          console.error('檢查收藏狀態失敗', err);
         }
       };
 
@@ -204,7 +204,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
             }
           }
         } catch (err) {
-          throw new Error('切換收藏狀態失敗');
+          console.error('切換收藏狀態失敗', err);
         }
       },
       [
@@ -230,7 +230,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
           await deletePlayRecord(actualSource, actualId);
           onDelete?.();
         } catch (err) {
-          throw new Error('刪除播放記錄失敗');
+          console.error('刪除播放記錄失敗', err);
         }
       },
       [from, actualSource, actualId, onDelete]

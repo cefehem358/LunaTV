@@ -26,7 +26,7 @@ body {
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
+  color: #1f2937; /* zinc-800 for light mode */
 }
 
 html:not(.dark) body {
@@ -40,6 +40,11 @@ html:not(.dark) body {
     #d3dde6 100%
   );
   background-attachment: fixed;
+}
+
+html.dark body {
+  background-color: #040404;
+  color: #f4f4f5; /* zinc-100 */
 }
 
 /* 自定义滚动条样式 */
