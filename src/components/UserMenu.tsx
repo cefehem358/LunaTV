@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Settings, ShieldCheck, LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation'; // 💡 引入 Next.js 核心導航大腦
+import { useRouter } from 'next/navigation';
 import { CURRENT_VERSION } from '@/lib/version';
 import { VersionPanel } from './VersionPanel';
 
@@ -10,7 +10,7 @@ export function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [showVersion, setShowVersion] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const router = useRouter(); // 執行路由器初始化
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -18,23 +18,20 @@ export function UserMenu() {
 
   if (!mounted) return null;
 
-  // 核心路由實質跳轉器
   const handleAction = (e: React.MouseEvent, type: string) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsOpen(false); // 點擊瞬間，立刻把下拉選單收起來
+    setIsOpen(false);
     
     if (type === 'settings') {
-      // 導向專案原生的設置或個人資料頁面
-      router.push('/settings'); 
+      // 💡 修正：將原本 404 的 /settings 重定向至官方原生個人設定路徑 /profile
+      router.push('/profile'); 
     } else if (type === 'admin') {
-      // 導向專案原生的管理面板後台
       router.push('/admin'); 
     } else if (type === 'logout') {
-      // 執行原生的安全登出跳轉
       router.push('/');
       setTimeout(() => {
-        window.location.reload(); // 強制重整重新整理憑證
+        window.location.reload();
       }, 100);
     }
   };
@@ -42,7 +39,7 @@ export function UserMenu() {
   return (
     <div className="relative z-[999999] pointer-events-auto block">
       
-      {/* 頂部頭像按鈕 ── 紅紫漸層站長頭像 */}
+      {/* 頂部頭像按鈕 */}
       <div 
         onClick={(e) => {
           e.preventDefault();
@@ -117,7 +114,7 @@ export function UserMenu() {
         </div>
       )}
 
-      {/* 版本信息對話框雙向通電 */}
+      {/* 版本信息對話框 */}
       {showVersion && (
         <VersionPanel 
           isOpen={showVersion} 
