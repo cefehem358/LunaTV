@@ -6,6 +6,11 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   { 
+    version: 'v1.0.5', 
+    date: '2026-05-20', 
+    content: '建立 /settings 本地設置頁面（豆瓣數據代理、圖片代理、搜索與播放開關）、修正設定按鈕路由。' 
+  },
+  { 
     version: 'v1.0.4', 
     date: '2026-05-20', 
     content: '重新設計登入頁面 - 電影級動態背景、發光按鈕、掃描線效果、全新視覺層級。' 
