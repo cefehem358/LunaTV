@@ -15,6 +15,10 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # ---- 第 2 阶段：构建项目 ----
 FROM node:20-alpine AS builder
+
+# 安装构建工具链，防止部分原生模块因缺少编译环境或 musl 不兼容而失败
+RUN apk add --no-cache python3 make g++ libc6-compat
+
 RUN corepack enable && corepack prepare pnpm@10.14.0 --activate
 WORKDIR /app
 
@@ -27,6 +31,7 @@ COPY . .
 ENV DOCKER_ENV=true
 ENV NEXT_PUBLIC_STORAGE_TYPE=redis
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # 生成生产构建
 RUN pnpm run build

@@ -77,17 +77,31 @@ jobs:
             type=semver,pattern={{version}},enable=${{ github.event_name == 'release' }}
             type=semver,pattern={{major}}.{{minor}},enable=${{ github.event_name == 'release' }}
 
-      - name: Debug Docker build
+      - name: Debug Docker build (deps stage only)
         run: |
-          docker build --no-cache -f ./Dockerfile --progress=plain -t debug-test . 2>&1 | tee /tmp/docker-build.log
+          docker build --no-cache --target deps -f ./Dockerfile --progress=plain -t debug-deps . 2>&1 | tee /tmp/docker-deps.log
+          echo "=== DEPS STAGE SUCCESS ==="
         continue-on-error: true
 
-      - name: Upload build log
+      - name: Upload deps stage log
+        uses: actions/upload-artifact@v4
+        with:
+          name: deps-log-${{ env.PLATFORM_NAME }}
+          path: /tmp/docker-deps.log
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Full Docker build with verbose output
+        run: |
+          docker build --no-cache -f ./Dockerfile --progress=plain -t debug-full . 2>&1 | tee /tmp/docker-full.log
+        continue-on-error: true
+
+      - name: Upload full build log
         uses: actions/upload-artifact@v4
         with:
           name: build-log-${{ env.PLATFORM_NAME }}
-          path: /tmp/docker-build.log
-          retention-days: 1
+          path: /tmp/docker-full.log
+          retention-days: 7
           if-no-files-found: warn
 
       - name: Build and push by digest
@@ -169,4 +183,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           retain_days: 0
-          keep_minimum_runs: 2
+          keep_minimum_runs: 5
