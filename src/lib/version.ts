@@ -6,6 +6,12 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.0.7',
+    date: '2026-05-20',
+    content:
+      '修復 Docker 建置失敗：deps 階段跳過 husky install（無 .git）、拆分建置步驟以利除錯。',
+  },
+  {
     version: 'v1.0.6',
     date: '2026-05-20',
     content:
