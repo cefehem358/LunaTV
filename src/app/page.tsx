@@ -4,7 +4,7 @@
 
 import { Suspense } from 'react';
 
-import NetflixHomePage from '@/components/NetflixHome';
+import { NetflixHomePage } from '@/components/NetflixHome';
 
 export default function Home() {
   return (
