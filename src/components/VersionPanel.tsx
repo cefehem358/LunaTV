@@ -1,9 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CURRENT_VERSION, CHANGELOGS } from '@/lib/version';
 
 export default function VersionPanel() {
+  // 核心防護罩：確保組件只在瀏覽器完全載入後才渲染，徹底消滅 Next.js 網頁死白
+  const [mounted, setMounted] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || !isOpen) return null;
+
   return (
     <div class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
       <div class="bg-[#0c0c0e] border border-zinc-800 rounded-3xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl animate-fade-in">
@@ -12,10 +22,11 @@ export default function VersionPanel() {
         <div class="p-6 border-b border-zinc-900 flex justify-between items-center bg-zinc-900/20">
           <div class="flex items-center space-x-3">
             <h3 class="text-xl font-bold text-white tracking-tight">版本信息</h3>
-            <span class="px-2.5 py-0.5 bg-[#e50914] text-xs font-black text-white rounded-full uppercase tracking-wider animate-pulse">
+            <span class="px-2.5 py-0.5 bg-[#e50914] text-xs font-black text-white rounded-full uppercase tracking-wider">
               {CURRENT_VERSION}
             </span>
           </div>
+          <button onClick={() => setIsOpen(false)} class="text-zinc-500 hover:text-white transition text-lg px-2">✕</button>
         </div>
 
         {/* 內容滾動區 */}
