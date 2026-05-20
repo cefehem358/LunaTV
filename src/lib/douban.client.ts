@@ -180,7 +180,7 @@ export async function fetchDoubanCategories(
 
     return {
       code: 200,
-      message: '获取成功',
+      message: '獲取成功',
       list: list,
     };
   } catch (error) {
@@ -188,7 +188,7 @@ export async function fetchDoubanCategories(
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
         new CustomEvent('globalError', {
-          detail: { message: '获取豆瓣分类数据失败' },
+          detail: { message: '獲取豆瓣分類數據失敗' },
         })
       );
     }
@@ -320,7 +320,7 @@ export async function fetchDoubanList(
 
     return {
       code: 200,
-      message: '获取成功',
+      message: '獲取成功',
       list: list,
     };
   } catch (error) {
@@ -328,7 +328,7 @@ export async function fetchDoubanList(
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
         new CustomEvent('globalError', {
-          detail: { message: '获取豆瓣列表数据失败' },
+          detail: { message: '獲取豆瓣列表數據失敗' },
         })
       );
     }
@@ -503,10 +503,10 @@ async function fetchDoubanRecommends(
 
     return {
       code: 200,
-      message: '获取成功',
+      message: '獲取成功',
       list: list,
     };
   } catch (error) {
-    throw new Error(`获取豆瓣推荐数据失败: ${(error as Error).message}`);
+    throw new Error(`獲取豆瓣推薦數據失敗: ${(error as Error).message}`);
   }
 }

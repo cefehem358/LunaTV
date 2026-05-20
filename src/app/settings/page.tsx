@@ -20,7 +20,12 @@ const IMAGE_PROXY_OPTIONS = [
   { value: 'custom', label: '自定義代理' },
 ];
 
-function SettingToggle({ label, description, checked, onChange }: {
+function SettingToggle({
+  label,
+  description,
+  checked,
+  onChange,
+}: {
   label: string;
   description: string;
   checked: boolean;
@@ -30,7 +35,9 @@ function SettingToggle({ label, description, checked, onChange }: {
     <div className='flex items-start justify-between gap-4 py-4'>
       <div className='flex-1 min-w-0'>
         <p className='text-sm font-bold text-white'>{label}</p>
-        <p className='text-xs text-zinc-500 mt-1 leading-relaxed'>{description}</p>
+        <p className='text-xs text-zinc-500 mt-1 leading-relaxed'>
+          {description}
+        </p>
       </div>
       <button
         onClick={() => onChange(!checked)}
@@ -64,12 +71,20 @@ export default function SettingsPage() {
 
   useEffect(() => {
     setMounted(true);
-    setDoubanSource(localStorage.getItem('doubanDataSource') || 'cmliussss-cdn-tencent');
+    setDoubanSource(
+      localStorage.getItem('doubanDataSource') || 'cmliussss-cdn-tencent'
+    );
     setProxyUrl(localStorage.getItem('doubanProxyUrl') || '');
-    setImageProxyType(localStorage.getItem('doubanImageProxyType') || 'cmliussss-cdn-tencent');
+    setImageProxyType(
+      localStorage.getItem('doubanImageProxyType') || 'cmliussss-cdn-tencent'
+    );
     setImageProxyUrl(localStorage.getItem('doubanImageProxyUrl') || '');
-    setEnableOptimization(localStorage.getItem('enableOptimization') !== 'false');
-    setAggregateResults(localStorage.getItem('defaultAggregateResults') !== 'false');
+    setEnableOptimization(
+      localStorage.getItem('enableOptimization') !== 'false'
+    );
+    setAggregateResults(
+      localStorage.getItem('defaultAggregateResults') !== 'false'
+    );
     setStreamSearch(localStorage.getItem('streamingSearchOutput') !== 'false');
     setIptvDirect(localStorage.getItem('iptvDirectConnect') === 'true');
   }, []);
@@ -143,7 +158,9 @@ export default function SettingsPage() {
             </div>
             <div>
               <h2 className='font-bold text-base'>豆瓣數據代理</h2>
-              <p className='text-xs text-zinc-500 mt-0.5'>選擇獲取豆瓣數據的方式</p>
+              <p className='text-xs text-zinc-500 mt-0.5'>
+                選擇獲取豆瓣數據的方式
+              </p>
             </div>
           </div>
 
@@ -167,7 +184,9 @@ export default function SettingsPage() {
                 />
                 <div
                   className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                    doubanSource === opt.value ? 'border-[#e50914]' : 'border-zinc-600'
+                    doubanSource === opt.value
+                      ? 'border-[#e50914]'
+                      : 'border-zinc-600'
                   }`}
                 >
                   {doubanSource === opt.value && (
@@ -181,7 +200,9 @@ export default function SettingsPage() {
 
           {doubanSource === 'custom' && (
             <div className='mt-4'>
-              <label className='block text-xs text-zinc-500 mb-2'>自定義代理 URL</label>
+              <label className='block text-xs text-zinc-500 mb-2'>
+                自定義代理 URL
+              </label>
               <input
                 type='text'
                 value={proxyUrl}
@@ -196,12 +217,14 @@ export default function SettingsPage() {
         {/* 豆瓣圖片代理 */}
         <div className='bg-zinc-900/60 backdrop-blur-sm rounded-2xl border border-white/5 p-6'>
           <div className='flex items-center gap-3 mb-5'>
-            <div className='w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center'>
-              <ImageIcon className='w-5 h-5 text-blue-400' />
+            <div className='w-10 h-10 rounded-xl bg-[#e50914]/20 flex items-center justify-center'>
+              <ImageIcon className='w-5 h-5 text-[#e50914]' />
             </div>
             <div>
               <h2 className='font-bold text-base'>豆瓣圖片代理</h2>
-              <p className='text-xs text-zinc-500 mt-0.5'>選擇獲取豆瓣圖片的方式</p>
+              <p className='text-xs text-zinc-500 mt-0.5'>
+                選擇獲取豆瓣圖片的方式
+              </p>
             </div>
           </div>
 
@@ -211,7 +234,7 @@ export default function SettingsPage() {
                 key={opt.value}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 ${
                   imageProxyType === opt.value
-                    ? 'bg-blue-500/10 border border-blue-500/30'
+                    ? 'bg-[#e50914]/10 border border-[#e50914]/30'
                     : 'bg-zinc-800/30 border border-transparent hover:bg-zinc-800/50'
                 }`}
               >
@@ -225,11 +248,13 @@ export default function SettingsPage() {
                 />
                 <div
                   className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                    imageProxyType === opt.value ? 'border-blue-500' : 'border-zinc-600'
+                    imageProxyType === opt.value
+                      ? 'border-[#e50914]'
+                      : 'border-zinc-600'
                   }`}
                 >
                   {imageProxyType === opt.value && (
-                    <div className='w-2 h-2 rounded-full bg-blue-500' />
+                    <div className='w-2 h-2 rounded-full bg-[#e50914]' />
                   )}
                 </div>
                 <span className='text-sm'>{opt.label}</span>
@@ -239,13 +264,15 @@ export default function SettingsPage() {
 
           {imageProxyType === 'custom' && (
             <div className='mt-4'>
-              <label className='block text-xs text-zinc-500 mb-2'>自定義代理 URL</label>
+              <label className='block text-xs text-zinc-500 mb-2'>
+                自定義代理 URL
+              </label>
               <input
                 type='text'
                 value={imageProxyUrl}
                 onChange={(e) => setImageProxyUrl(e.target.value)}
                 placeholder='https://your-proxy.com/'
-                className='w-full rounded-xl border border-zinc-800 py-3 px-4 text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 focus:outline-none bg-black/40 text-sm transition-all'
+                className='w-full rounded-xl border border-zinc-800 py-3 px-4 text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-[#e50914]/50 focus:border-[#e50914]/50 focus:outline-none bg-black/40 text-sm transition-all'
               />
             </div>
           )}
@@ -254,8 +281,8 @@ export default function SettingsPage() {
         {/* 開關設置 */}
         <div className='bg-zinc-900/60 backdrop-blur-sm rounded-2xl border border-white/5 p-6 divide-y divide-zinc-800/50'>
           <div className='flex items-center gap-3 mb-2'>
-            <div className='w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center'>
-              <Search className='w-5 h-5 text-green-400' />
+            <div className='w-10 h-10 rounded-xl bg-[#e50914]/20 flex items-center justify-center'>
+              <Search className='w-5 h-5 text-[#e50914]' />
             </div>
             <div>
               <h2 className='font-bold text-base'>搜索與播放</h2>
@@ -307,7 +334,7 @@ export default function SettingsPage() {
 
       {/* 儲存提示 */}
       {saveMessage && (
-        <div className='fixed bottom-8 left-1/2 -translate-x-1/2 bg-green-600/90 text-white px-6 py-3 rounded-xl text-sm font-medium shadow-2xl backdrop-blur-sm z-50'>
+        <div className='fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#e50914]/90 text-white px-6 py-3 rounded-xl text-sm font-medium shadow-2xl backdrop-blur-sm z-50'>
           {saveMessage}
         </div>
       )}

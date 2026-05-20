@@ -281,7 +281,7 @@ export async function getDetailFromApi(
   clearTimeout(timeoutId);
 
   if (!response.ok) {
-    throw new Error(`详情请求失败: ${response.status}`);
+    throw new Error(`詳情請求失敗: ${response.status}`);
   }
 
   const data = await response.json();
@@ -292,7 +292,7 @@ export async function getDetailFromApi(
     !Array.isArray(data.list) ||
     data.list.length === 0
   ) {
-    throw new Error('获取到的详情内容无效');
+    throw new Error('獲取到的詳情內容無效');
   }
 
   const videoDetail = data.list[0];
@@ -366,7 +366,7 @@ async function handleSpecialSourceDetail(
   clearTimeout(timeoutId);
 
   if (!response.ok) {
-    throw new Error(`详情页请求失败: ${response.status}`);
+    throw new Error(`詳情頁請求失敗: ${response.status}`);
   }
 
   const html = await response.text();
