@@ -26,7 +26,7 @@ export function UserMenu() {
     setIsOpen(false);
     
     if (type === 'settings') {
-      router.push('/admin'); 
+      router.push('/settings'); 
     } else if (type === 'admin') {
       router.push('/admin'); 
     } else if (type === 'logout') {
