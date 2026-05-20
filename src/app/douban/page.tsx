@@ -215,7 +215,7 @@ function DoubanPageClient() {
         snapshot1.selectedWeekday === snapshot2.selectedWeekday &&
         snapshot1.currentPage === snapshot2.currentPage &&
         JSON.stringify(snapshot1.multiLevelSelection) ===
-        JSON.stringify(snapshot2.multiLevelSelection)
+          JSON.stringify(snapshot2.multiLevelSelection)
       );
     },
     []
@@ -687,12 +687,12 @@ function DoubanPageClient() {
     return type === 'movie'
       ? '電影'
       : type === 'tv'
-        ? '電視劇'
-        : type === 'anime'
-          ? '動漫'
-          : type === 'show'
-            ? '綜藝'
-            : '自定義';
+      ? '電視劇'
+      : type === 'anime'
+      ? '動漫'
+      : type === 'show'
+      ? '綜藝'
+      : '自定義';
   };
 
   const getPageDescription = () => {
@@ -718,17 +718,17 @@ function DoubanPageClient() {
         <div className='mb-6 sm:mb-8 space-y-4 sm:space-y-6'>
           {/* 頁面標題 */}
           <div>
-            <h1 className='text-2xl sm:text-3xl font-bold text-gray-800 mb-1 sm:mb-2 dark:text-gray-200'>
+            <h1 className='text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2'>
               {getPageTitle()}
             </h1>
-            <p className='text-sm sm:text-base text-gray-600 dark:text-gray-400'>
+            <p className='text-sm sm:text-base text-zinc-400'>
               {getPageDescription()}
             </p>
           </div>
 
           {/* 選擇器組件 */}
           {type !== 'custom' ? (
-            <div className='bg-white/60 dark:bg-gray-800/40 rounded-2xl p-4 sm:p-6 border border-gray-200/30 dark:border-gray-700/30 backdrop-blur-sm'>
+            <div className='bg-zinc-900/60 rounded-2xl p-4 sm:p-6 border border-white/5 backdrop-blur-sm'>
               <DoubanSelector
                 type={type as 'movie' | 'tv' | 'show' | 'anime'}
                 primarySelection={primarySelection}
@@ -740,7 +740,7 @@ function DoubanPageClient() {
               />
             </div>
           ) : (
-            <div className='bg-white/60 dark:bg-gray-800/40 rounded-2xl p-4 sm:p-6 border border-gray-200/30 dark:border-gray-700/30 backdrop-blur-sm'>
+            <div className='bg-zinc-900/60 rounded-2xl p-4 sm:p-6 border border-white/5 backdrop-blur-sm'>
               <DoubanCustomSelector
                 customCategories={customCategories}
                 primarySelection={primarySelection}
@@ -755,12 +755,15 @@ function DoubanPageClient() {
         {/* 內容展示區域 */}
         <div className='max-w-[95%] mx-auto mt-8 overflow-visible'>
           {/* 內容網格 */}
-          {loading || !selectorsReady
-            ? // 顯示骨架屏
+          {loading || !selectorsReady ? (
+            // 顯示骨架屏
             <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-12 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] sm:gap-x-8 sm:gap-y-20'>
-              {skeletonData.map((index) => <DoubanCardSkeleton key={index} />)}
+              {skeletonData.map((index) => (
+                <DoubanCardSkeleton key={index} />
+              ))}
             </div>
-            : // 顯示實際數據
+          ) : (
+            // 顯示實際數據
             <VirtualGrid
               items={doubanData}
               className='grid-cols-3 gap-x-2 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] sm:gap-x-8'
@@ -783,7 +786,7 @@ function DoubanPageClient() {
                 </div>
               )}
             />
-          }
+          )}
 
           {/* 加载更多指示器 */}
           {hasMore && !loading && (
@@ -799,8 +802,8 @@ function DoubanPageClient() {
             >
               {isLoadingMore && (
                 <div className='flex items-center gap-2'>
-                  <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-green-500'></div>
-                  <span className='text-gray-600'>加載中...</span>
+                  <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-[#e50914]'></div>
+                  <span className='text-zinc-400'>加載中...</span>
                 </div>
               )}
             </div>
@@ -808,12 +811,12 @@ function DoubanPageClient() {
 
           {/* 沒有更多數據提示 */}
           {!hasMore && doubanData.length > 0 && (
-            <div className='text-center text-gray-500 py-8'>已加載全部內容</div>
+            <div className='text-center text-zinc-500 py-8'>已加載全部內容</div>
           )}
 
           {/* 空狀態 */}
           {!loading && doubanData.length === 0 && (
-            <div className='text-center text-gray-500 py-8'>暂无相关内容</div>
+            <div className='text-center text-zinc-500 py-8'>暂无相关内容</div>
           )}
         </div>
       </div>
