@@ -15,18 +15,85 @@ const STORAGE_TYPE =
     | 'kvrocks'
     | undefined) || 'localstorage';
 
-// 创建存储实例
+// noop 空存储：当后端存储未配置时使用，避免 500 Internal Server Error
+/* eslint-disable @typescript-eslint/no-empty-function */
+class NoopStorage implements IStorage {
+  async getPlayRecord(): Promise<null> {
+    return null;
+  }
+  async setPlayRecord(): Promise<void> {}
+  async getAllPlayRecords(): Promise<Record<string, PlayRecord>> {
+    return {};
+  }
+  async deletePlayRecord(): Promise<void> {}
+  async deleteAllPlayRecords(): Promise<void> {}
+  async getFavorite(): Promise<null> {
+    return null;
+  }
+  async setFavorite(): Promise<void> {}
+  async getAllFavorites(): Promise<Record<string, Favorite>> {
+    return {};
+  }
+  async deleteFavorite(): Promise<void> {}
+  async deleteAllFavorites(): Promise<void> {}
+  async registerUser(): Promise<void> {}
+  async verifyUser(): Promise<boolean> {
+    return false;
+  }
+  async checkUserExist(): Promise<boolean> {
+    return false;
+  }
+  async changePassword(): Promise<void> {}
+  async deleteUser(): Promise<void> {}
+  async getSearchHistory(): Promise<string[]> {
+    return [];
+  }
+  async addSearchHistory(): Promise<void> {}
+  async deleteSearchHistory(): Promise<void> {}
+  async getAllUsers(): Promise<string[]> {
+    return [];
+  }
+  async getAdminConfig(): Promise<null> {
+    return null;
+  }
+  async setAdminConfig(): Promise<void> {}
+  async getSkipConfig(): Promise<null> {
+    return null;
+  }
+  async setSkipConfig(): Promise<void> {}
+  async deleteSkipConfig(): Promise<void> {}
+  async getAllSkipConfigs(): Promise<Record<string, SkipConfig>> {
+    return {};
+  }
+  async clearAllData(): Promise<void> {}
+}
+/* eslint-enable @typescript-eslint/no-empty-function */
+
 function createStorage(): IStorage {
   switch (STORAGE_TYPE) {
     case 'redis':
+      if (!process.env.REDIS_URL) {
+        console.warn('REDIS_URL not set — Redis storage disabled');
+        return new NoopStorage();
+      }
       return new RedisStorage();
     case 'upstash':
+      if (!process.env.UPSTASH_URL || !process.env.UPSTASH_TOKEN) {
+        console.warn(
+          'UPSTASH_URL/UPSTASH_TOKEN not set — Upstash storage disabled'
+        );
+        return new NoopStorage();
+      }
       return new UpstashRedisStorage();
     case 'kvrocks':
+      if (!process.env.KVROCKS_URL) {
+        console.warn('KVROCKS_URL not set — Kvrocks storage disabled');
+        return new NoopStorage();
+      }
       return new KvrocksStorage();
     case 'localstorage':
     default:
-      return null as unknown as IStorage;
+      return new NoopStorage();
   }
 }
 
@@ -54,14 +121,17 @@ export class DbManager {
     this.storage = getStorage();
     // 启动时自动触发数据迁移（异步，不阻塞构造）
     if (this.storage && typeof this.storage.migrateData === 'function') {
-      this.migrationPromise = this.storage.migrateData().then(async () => {
-        // 数据结构迁移完成后，执行密码哈希迁移
-        if (typeof this.storage.migratePasswords === 'function') {
-          await this.storage.migratePasswords();
-        }
-      }).catch((err) => {
-        console.error('数据迁移异常:', err);
-      });
+      this.migrationPromise = this.storage
+        .migrateData()
+        .then(async () => {
+          // 数据结构迁移完成后，执行密码哈希迁移
+          if (typeof this.storage.migratePasswords === 'function') {
+            await this.storage.migratePasswords();
+          }
+        })
+        .catch((err) => {
+          console.error('数据迁移异常:', err);
+        });
     }
   }
 
