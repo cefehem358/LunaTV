@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Bell,
   BookMarked,
   ChevronLeft,
   ChevronRight,
@@ -14,7 +13,6 @@ import {
   Play,
   Plus,
   Search,
-  Settings,
   Sparkles,
   Star,
   Tv,
@@ -39,11 +37,11 @@ import {
 } from '@/lib/db.client';
 import { getDoubanCategories } from '@/lib/douban.client';
 import { DoubanItem } from '@/lib/types';
+import { processImageUrl } from '@/lib/utils';
 
 import { useSite } from '@/components/SiteProvider';
-import VideoCard from '@/components/VideoCard';
-import { processImageUrl } from '@/lib/utils';
 import { UserMenu } from '@/components/UserMenu';
+import VideoCard from '@/components/VideoCard';
 
 export default function NetflixHome({
   hotMovies = [],
@@ -241,12 +239,25 @@ export default function NetflixHome({
                           <button
                             key={record.key}
                             onClick={() =>
-                              router.push(`/play?id=${id}&source=${source}`)
+                              router.push(
+                                `/play?id=${id}&source=${source}&title=${encodeURIComponent(
+                                  record.title
+                                )}${
+                                  record.search_title
+                                    ? `&stitle=${encodeURIComponent(
+                                        record.search_title
+                                      )}`
+                                    : ''
+                                }`
+                              )
                             }
-                            className='group relative flex-shrink-0 w-52 aspect-[2.35/1] rounded-xl overflow-hidden cursor-pointer'
+                            className='group relative flex-shrink-0 w-72 aspect-[16/9] rounded-xl overflow-hidden cursor-pointer'
                           >
                             <Image
-                              src={processImageUrl(record.cover) || '/placeholder.jpg'}
+                              src={
+                                processImageUrl(record.cover) ||
+                                '/placeholder.jpg'
+                              }
                               alt={record.title}
                               fill
                               className='object-cover transition-transform duration-300 group-hover:scale-105'
@@ -288,7 +299,10 @@ export default function NetflixHome({
                 <section className='relative h-[480px] rounded-3xl overflow-hidden mb-10'>
                   <div className='absolute inset-0'>
                     <Image
-                      src={processImageUrl(featuredItem.poster) || '/placeholder.jpg'}
+                      src={
+                        processImageUrl(featuredItem.poster) ||
+                        '/placeholder.jpg'
+                      }
                       alt={featuredItem.title}
                       fill
                       className='object-cover'
@@ -323,7 +337,13 @@ export default function NetflixHome({
                       <button
                         onClick={() =>
                           router.push(
-                            `/play?id=${featuredItem.id}&source=douban`
+                            `/play?title=${encodeURIComponent(
+                              featuredItem.title
+                            )}${
+                              featuredItem.year
+                                ? `&year=${featuredItem.year}`
+                                : ''
+                            }&prefer=true`
                           )
                         }
                         className='flex items-center gap-2 px-8 py-3 bg-white text-black font-bold rounded-xl hover:bg-[#e50914] hover:text-white transition-all duration-200'
@@ -548,7 +568,13 @@ function NetflixSectionRow({
             <NetflixScrollCard
               key={`${item.id}-${idx}`}
               item={item}
-              onClick={() => router.push(`/play?id=${item.id}&source=douban`)}
+              onClick={() =>
+                router.push(
+                  `/play?title=${encodeURIComponent(item.title)}${
+                    item.year ? `&year=${item.year}` : ''
+                  }&prefer=true`
+                )
+              }
             />
           ))}
         </div>
@@ -615,7 +641,13 @@ function NetflixGridCard({ item }: { item: DoubanItem }) {
 
   return (
     <button
-      onClick={() => router.push(`/play?id=${item.id}&source=douban`)}
+      onClick={() =>
+        router.push(
+          `/play?title=${encodeURIComponent(item.title)}${
+            item.year ? `&year=${item.year}` : ''
+          }&prefer=true`
+        )
+      }
       className='group relative aspect-[2/3] rounded-xl overflow-hidden cursor-pointer bg-zinc-800'
     >
       {!imgError ? (
@@ -705,7 +737,17 @@ function NetflixBangumiRow({
           {todayAnimes.map((anime, idx) => (
             <button
               key={`${anime.id}-${idx}`}
-              onClick={() => router.push(`/play?id=${anime.id}&source=douban`)}
+              onClick={() => {
+                const animeTitle = anime.name_cn || anime.name;
+                const animeYear = anime.air_date
+                  ? anime.air_date.split('-')[0]
+                  : '';
+                router.push(
+                  `/play?title=${encodeURIComponent(animeTitle)}${
+                    animeYear ? `&year=${animeYear}` : ''
+                  }&stype=tv&prefer=true`
+                );
+              }}
               className='group relative flex-shrink-0 w-44 aspect-[2/3] rounded-xl overflow-hidden cursor-pointer'
             >
               <Image
