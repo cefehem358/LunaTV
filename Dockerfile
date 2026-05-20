@@ -1,8 +1,8 @@
 # ---- 第 1 阶段：安装依赖 ----
 FROM node:20-alpine AS deps
 
-# 启用 corepack 并激活 pnpm（Node20 默认提供 corepack）
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# 启用 corepack 并使用项目指定的 pnpm 版本（Node20 默认提供 corepack）
+RUN corepack enable && corepack prepare pnpm@10.14.0 --activate
 
 WORKDIR /app
 
@@ -10,16 +10,13 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 
 # 安装所有依赖（含 devDependencies，后续会裁剪）
-# --ignore-scripts: 跳过 husky install（.git 不存于 deps 阶段），避免 prepare 脚本失败
+# 使用 --ignore-scripts 跳过 husky install（.git 不存在于 deps 阶段）
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # ---- 第 2 阶段：构建项目 ----
 FROM node:20-alpine AS builder
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.14.0 --activate
 WORKDIR /app
-
-# 安装 Alpine 构建工具链（sharp/swc 等原生模块可能需要）
-RUN apk add --no-cache python3 make g++
 
 # 复制依赖
 COPY --from=deps /app/node_modules ./node_modules
@@ -30,9 +27,8 @@ COPY . .
 ENV DOCKER_ENV=true
 ENV NEXT_PUBLIC_STORAGE_TYPE=redis
 
-# 生成生产构建（分两步以便精确定位错误）
-RUN node scripts/generate-manifest.js
-RUN pnpm exec next build
+# 生成生产构建（使用原始构建命令）
+RUN pnpm run build
 
 # ---- 第 3 阶段：生成运行时镜像 ----
 FROM node:20-alpine AS runner
