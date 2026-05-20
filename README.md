@@ -71,20 +71,6 @@
 
 本项目**仅支持 Docker 或其他基于 Docker 的平台** 部署。
 
-### zeabur 一键部署
-
-点击下方按钮即可一键部署，自动配置 LunaTV + Kvrocks 数据库：
-
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/8MPTQU/deploy)
-
-**优势**：
-- ✅ 无需配置，一键启动（自动部署完整环境）
-- ✅ 自动 HTTPS 和全球 CDN 加速
-- ✅ 持久化存储，数据永不丢失
-- ✅ 免费额度足够个人使用
-
-**⚠️ 重要提示**：部署完成后，需要在 Zeabur 中为 LunaTV 服务设置访问域名（Domain）才能在浏览器中访问。详见下方 [设置访问域名](#5-设置访问域名必须) 步骤。
-
 ### Kvrocks 存储（推荐）
 
 ```yml
@@ -172,79 +158,6 @@ services:
       - UPSTASH_URL=上面 https 开头的 HTTPS ENDPOINT
       - UPSTASH_TOKEN=上面的 TOKEN
 ```
-
-### ☁️ Zeabur 部署（推荐）
-
-Thanks to @SzeMeng76
-
-Zeabur 是一站式云端部署平台，使用预构建的 Docker 镜像可以快速部署，无需等待构建。
-
-**部署步骤：**
-
-1. **添加 KVRocks 服务**（先添加数据库）
-   - 点击 "Add Service" > "Docker Images"
-   - 输入镜像名称：`apache/kvrocks`
-   - 配置端口：`6666` (TCP)
-   - **记住服务名称**（通常是 `apachekvrocks`）
-   - **配置持久化卷（重要）**：
-     * 在服务设置中找到 "Volumes" 部分
-     * 点击 "Add Volume" 添加新卷
-     * Volume ID: `kvrocks-data`（可自定义，仅支持字母、数字、连字符）
-     * Path: `/var/lib/kvrocks/db`
-     * 保存配置
-
-   > 💡 **重要提示**：持久化卷路径必须设置为 `/var/lib/kvrocks/db`（KVRocks 数据目录），这样配置文件保留在容器内，数据库文件持久化，重启后数据不会丢失！
-
-2. **添加 LunaTV 服务**
-   - 点击 "Add Service" > "Docker Images"
-   - 输入镜像名称：`ghcr.io/moontechlab/lunatv:latest`
-   - 配置端口：`3000` (HTTP)
-
-3. **配置环境变量**
-
-   在 LunaTV 服务的环境变量中添加：
-
-   ```env
-   # 必填：管理员账号
-   USERNAME=admin
-   PASSWORD=your_secure_password
-
-   # 必填：存储配置
-   NEXT_PUBLIC_STORAGE_TYPE=kvrocks
-   KVROCKS_URL=redis://apachekvrocks:6666
-
-   # 可选：站点配置
-   SITE_BASE=https://your-domain.zeabur.app
-   NEXT_PUBLIC_SITE_NAME=LunaTV Enhanced
-   ANNOUNCEMENT=欢迎使用 LunaTV Enhanced Edition
-
-   # 可选：豆瓣代理配置（推荐）
-   NEXT_PUBLIC_DOUBAN_PROXY_TYPE=cmliussss-cdn-tencent
-   NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE=cmliussss-cdn-tencent
-   ```
-
-   **注意**：
-   - 使用服务名称作为主机名：`redis://apachekvrocks:6666`
-   - 如果服务名称不同，请替换为实际名称
-   - 两个服务必须在同一个 Project 中
-
-4. **部署完成**
-   - Zeabur 会自动拉取镜像并启动服务
-   - 等待服务就绪后，需要手动设置访问域名（见下一步）
-
-#### 5. 设置访问域名（必须）
-
-   - 在 LunaTV 服务页面，点击 "Networking" 或 "网络" 标签
-   - 点击 "Generate Domain" 生成 Zeabur 提供的免费域名（如 `xxx.zeabur.app`）
-   - 或者绑定自定义域名：
-     * 点击 "Add Domain" 添加你的域名
-     * 按照提示配置 DNS CNAME 记录指向 Zeabur 提供的目标地址
-   - 设置完域名后即可通过域名访问 LunaTV
-
-6. **绑定自定义域名（可选）**
-   - 在服务设置中点击 "Domains"
-   - 添加你的自定义域名
-   - 配置 DNS CNAME 记录指向 Zeabur 提供的域名
 
 #### 🔄 更新 Docker 镜像
 
