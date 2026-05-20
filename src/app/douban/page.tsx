@@ -319,7 +319,7 @@ function DoubanPageClient() {
           pageLimit: 25,
           pageStart: 0,
           category: '動畫',
-          format: primarySelection === '番劇' ? '電視劇' : '',
+          format: '',
           region: multiLevelValues.region
             ? (multiLevelValues.region as string)
             : '',
@@ -328,9 +328,7 @@ function DoubanPageClient() {
             ? (multiLevelValues.platform as string)
             : '',
           sort: multiLevelValues.sort ? (multiLevelValues.sort as string) : '',
-          label: multiLevelValues.label
-            ? (multiLevelValues.label as string)
-            : '',
+          label: '',
         });
       } else if (primarySelection === '全部') {
         data = await getDoubanRecommends({
@@ -470,7 +468,7 @@ function DoubanPageClient() {
               pageLimit: 25,
               pageStart: currentPage * 25,
               category: '動畫',
-              format: primarySelection === '番劇' ? '電視劇' : '',
+              format: '',
               region: multiLevelValues.region
                 ? (multiLevelValues.region as string)
                 : '',
@@ -483,9 +481,7 @@ function DoubanPageClient() {
               sort: multiLevelValues.sort
                 ? (multiLevelValues.sort as string)
                 : '',
-              label: multiLevelValues.label
-                ? (multiLevelValues.label as string)
-                : '',
+              label: '',
             });
           } else if (primarySelection === '全部') {
             data = await getDoubanRecommends({
