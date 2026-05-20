@@ -4,10 +4,10 @@ import Hls from 'hls.js';
 
 function getDoubanImageProxyConfig(): {
   proxyType:
-  | 'server'
-  | 'cmliussss-cdn-tencent'
-  | 'cmliussss-cdn-ali'
-  | 'custom';
+    | 'server'
+    | 'cmliussss-cdn-tencent'
+    | 'cmliussss-cdn-ali'
+    | 'custom';
   proxyUrl: string;
 } {
   let doubanImageProxyType =
@@ -28,14 +28,26 @@ function getDoubanImageProxyConfig(): {
   };
 }
 
-/**
- * 处理图片 URL，如果设置了图片代理则使用代理
- */
 export function processImageUrl(originalUrl: string): string {
   if (!originalUrl) return originalUrl;
 
-  // 仅处理豆瓣图片代理
+  // 如果是本地路徑或 base64/blob，直接返回
+  if (
+    originalUrl.startsWith('/') ||
+    originalUrl.startsWith('data:') ||
+    originalUrl.startsWith('blob:')
+  ) {
+    return originalUrl;
+  }
+
+  // 處理豆瓣以外的其他外部圖片 URL (以 http/https 開頭，且非本站域名)
   if (!originalUrl.includes('doubanio.com')) {
+    if (
+      originalUrl.startsWith('http://') ||
+      originalUrl.startsWith('https://')
+    ) {
+      return `/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
+    }
     return originalUrl;
   }
 
@@ -130,14 +142,14 @@ export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
               width >= 3840
                 ? '4K' // 4K: 3840x2160
                 : width >= 2560
-                  ? '2K' // 2K: 2560x1440
-                  : width >= 1920
-                    ? '1080p' // 1080p: 1920x1080
-                    : width >= 1280
-                      ? '720p' // 720p: 1280x720
-                      : width >= 854
-                        ? '480p'
-                        : 'SD'; // 480p: 854x480
+                ? '2K' // 2K: 2560x1440
+                : width >= 1920
+                ? '1080p' // 1080p: 1920x1080
+                : width >= 1280
+                ? '720p' // 720p: 1280x720
+                : width >= 854
+                ? '480p'
+                : 'SD'; // 480p: 854x480
 
             resolve({
               quality,
@@ -210,7 +222,8 @@ export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
     });
   } catch (error) {
     throw new Error(
-      `Error getting video resolution: ${error instanceof Error ? error.message : String(error)
+      `Error getting video resolution: ${
+        error instanceof Error ? error.message : String(error)
       }`
     );
   }

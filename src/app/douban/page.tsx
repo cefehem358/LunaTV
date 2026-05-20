@@ -25,6 +25,7 @@ function DoubanPageClient() {
   const searchParams = useSearchParams();
   const [doubanData, setDoubanData] = useState<DoubanItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -261,6 +262,7 @@ function DoubanPageClient() {
 
     try {
       setLoading(true);
+      setError(null);
       // 確保在加載初始數據時重置頁面狀態
       setDoubanData([]);
       setCurrentPage(0);
@@ -369,10 +371,11 @@ function DoubanPageClient() {
         }
         // 如果參數不一致，不執行任何操作，避免設置過期數據
       } else {
-        throw new Error(data.message || '获取数据失败');
+        throw new Error(data.message || '獲取數據失敗');
       }
     } catch (err) {
       console.error(err);
+      setError((err as Error).message || '獲取數據失敗，請稍後重試');
       setLoading(false); // 發生錯誤時總是停止loading狀態
     }
   }, [
@@ -814,8 +817,22 @@ function DoubanPageClient() {
             <div className='text-center text-zinc-500 py-8'>已加載全部內容</div>
           )}
 
+          {/* 錯誤狀態 */}
+          {!loading && error && (
+            <div className='text-center py-16 flex flex-col items-center justify-center gap-4'>
+              <div className='text-[#e50914] text-4xl'>⚠️</div>
+              <p className='text-zinc-400 text-sm max-w-md'>{error}</p>
+              <button
+                onClick={() => loadInitialData()}
+                className='px-6 py-2 bg-[#e50914] text-white rounded-md text-sm font-medium hover:bg-[#b80710] transition-colors focus:outline-none focus:ring-2 focus:ring-[#e50914]/50'
+              >
+                重試一次
+              </button>
+            </div>
+          )}
+
           {/* 空狀態 */}
-          {!loading && doubanData.length === 0 && (
+          {!loading && !error && doubanData.length === 0 && (
             <div className='text-center text-zinc-500 py-8'>暂无相关内容</div>
           )}
         </div>

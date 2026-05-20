@@ -12,13 +12,35 @@ export async function GET(request: Request) {
   }
 
   try {
-    const imageResponse = await fetch(imageUrl, {
-      headers: {
-        Referer: 'https://movie.douban.com/',
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-      },
-    });
+    const reqHeaders: Record<string, string> = {
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+    };
+
+    if (imageUrl.includes('doubanio.com')) {
+      reqHeaders['Referer'] = 'https://movie.douban.com/';
+    } else if (
+      imageUrl.includes('iqiyipic.com') ||
+      imageUrl.includes('iqiyi.com')
+    ) {
+      reqHeaders['Referer'] = 'https://www.iqiyi.com/';
+    } else if (imageUrl.includes('qpic.cn') || imageUrl.includes('qq.com')) {
+      reqHeaders['Referer'] = 'https://v.qq.com/';
+    } else if (
+      imageUrl.includes('ykimg.com') ||
+      imageUrl.includes('youku.com')
+    ) {
+      reqHeaders['Referer'] = 'https://www.youku.com/';
+    } else {
+      try {
+        const urlObj = new URL(imageUrl);
+        reqHeaders['Referer'] = urlObj.origin;
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    const imageResponse = await fetch(imageUrl, { headers: reqHeaders });
 
     if (!imageResponse.ok) {
       return NextResponse.json(

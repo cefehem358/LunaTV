@@ -8,6 +8,7 @@ import { Heart } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useRef, useState } from 'react';
 
+import { toDisplayLanguage } from '@/lib/chinese';
 import {
   deleteFavorite,
   deletePlayRecord,
@@ -328,8 +329,10 @@ function PlayPageClient() {
     console.log('播放源評分排序結果:');
     resultsWithScore.forEach((result, index) => {
       console.log(
-        `${index + 1}. ${result.source.source_name
-        } - 評分: ${result.score.toFixed(2)} (${result.testResult.quality}, ${result.testResult.loadSpeed
+        `${index + 1}. ${
+          result.source.source_name
+        } - 評分: ${result.score.toFixed(2)} (${result.testResult.quality}, ${
+          result.testResult.loadSpeed
         }, ${result.testResult.pingTime}ms)`
       );
     });
@@ -664,7 +667,6 @@ function PlayPageClient() {
           throw new Error('獲取視頻詳情失敗');
         }
         const detailData = (await detailResponse.json()) as SearchResult;
-        setAvailableSources([detailData]);
         return [detailData];
       } catch (err) {
         console.error('獲取視頻詳情失敗:', err);
@@ -684,19 +686,33 @@ function PlayPageClient() {
         }
         const data = await response.json();
 
-        // 處理搜索結果，根據規則過濾
-        const results = data.results.filter(
-          (result: SearchResult) =>
-            result.title.replaceAll(' ', '').toLowerCase() ===
-            videoTitleRef.current.replaceAll(' ', '').toLowerCase() &&
+        // 處理搜索結果，根據規則過濾（加入繁簡轉換與模糊匹配）
+        const results = data.results.filter((result: SearchResult) => {
+          const normalizedResultTitle = toDisplayLanguage(
+            result.title.replaceAll(' ', '').toLowerCase()
+          );
+          const normalizedVideoTitle = toDisplayLanguage(
+            videoTitleRef.current.replaceAll(' ', '').toLowerCase()
+          );
+
+          let titlesMatch = normalizedResultTitle === normalizedVideoTitle;
+          if (!titlesMatch && normalizedVideoTitle.length > 2) {
+            titlesMatch =
+              normalizedResultTitle.includes(normalizedVideoTitle) ||
+              normalizedVideoTitle.includes(normalizedResultTitle);
+          }
+
+          return (
+            titlesMatch &&
             (videoYearRef.current
               ? result.year.toLowerCase() === videoYearRef.current.toLowerCase()
               : true) &&
             (searchType
               ? (searchType === 'tv' && result.episodes.length > 1) ||
-              (searchType === 'movie' && result.episodes.length === 1)
+                (searchType === 'movie' && result.episodes.length === 1)
               : true)
-        );
+          );
+        });
         setAvailableSources(results);
         return results;
       } catch (err) {
@@ -730,7 +746,14 @@ function PlayPageClient() {
           (source) => source.source === currentSource && source.id === currentId
         )
       ) {
-        sourcesInfo = await fetchSourceDetail(currentSource, currentId);
+        const currentDetailList = await fetchSourceDetail(
+          currentSource,
+          currentId
+        );
+        if (currentDetailList.length > 0) {
+          sourcesInfo = [...currentDetailList, ...sourcesInfo];
+          setAvailableSources(sourcesInfo);
+        }
       }
       if (sourcesInfo.length === 0) {
         setError('未找到匹配結果');
@@ -1264,9 +1287,10 @@ function PlayPageClient() {
     // 非WebKit瀏覽器且播放器已存在，使用switch方法切換
     if (!isWebkit && artPlayerRef.current) {
       artPlayerRef.current.switch = videoUrl;
-      artPlayerRef.current.title = `${videoTitle} - 第${currentEpisodeIndex + 1
-        }集`;
-      artPlayerRef.current.poster = videoCover;
+      artPlayerRef.current.title = `${videoTitle} - 第${
+        currentEpisodeIndex + 1
+      }集`;
+      artPlayerRef.current.poster = processImageUrl(videoCover);
       if (artPlayerRef.current?.video) {
         ensureVideoSource(
           artPlayerRef.current.video as HTMLVideoElement,
@@ -1290,7 +1314,7 @@ function PlayPageClient() {
       artPlayerRef.current = new Artplayer({
         container: artRef.current,
         url: videoUrl,
-        poster: videoCover,
+        poster: processImageUrl(videoCover),
         volume: 0.7,
         isLive: false,
         muted: false,
@@ -1592,7 +1616,7 @@ function PlayPageClient() {
           skipConfigRef.current.outro_time < 0 &&
           duration > 0 &&
           currentTime >
-          artPlayerRef.current.duration + skipConfigRef.current.outro_time
+            artPlayerRef.current.duration + skipConfigRef.current.outro_time
         ) {
           if (
             currentEpisodeIndexRef.current <
@@ -1687,7 +1711,7 @@ function PlayPageClient() {
                 {/* 旋轉光環 */}
                 <div className='absolute -inset-2 bg-gradient-to-r from-[#e50914] to-[#b20710] rounded-2xl opacity-20 animate-spin'></div>
               </div>
- 
+
               {/* 浮動粒子效果 */}
               <div className='absolute top-0 left-0 w-full h-full pointer-events-none'>
                 <div className='absolute top-2 left-2 w-2 h-2 bg-[#e50914] rounded-full animate-bounce'></div>
@@ -1706,27 +1730,30 @@ function PlayPageClient() {
             <div className='mb-6 w-80 mx-auto'>
               <div className='flex justify-center space-x-2 mb-4'>
                 <div
-                  className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'searching' || loadingStage === 'fetching'
-                    ? 'bg-[#e50914] scale-125'
-                    : loadingStage === 'preferring' ||
-                      loadingStage === 'ready'
+                  className={`w-3 h-3 rounded-full transition-all duration-500 ${
+                    loadingStage === 'searching' || loadingStage === 'fetching'
+                      ? 'bg-[#e50914] scale-125'
+                      : loadingStage === 'preferring' ||
+                        loadingStage === 'ready'
                       ? 'bg-[#e50914]'
                       : 'bg-gray-300'
-                    }`}
+                  }`}
                 ></div>
                 <div
-                  className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'preferring'
-                    ? 'bg-[#e50914] scale-125'
-                    : loadingStage === 'ready'
+                  className={`w-3 h-3 rounded-full transition-all duration-500 ${
+                    loadingStage === 'preferring'
+                      ? 'bg-[#e50914] scale-125'
+                      : loadingStage === 'ready'
                       ? 'bg-[#e50914]'
                       : 'bg-gray-300'
-                    }`}
+                  }`}
                 ></div>
                 <div
-                  className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'ready'
-                    ? 'bg-[#e50914] scale-125'
-                    : 'bg-gray-300'
-                    }`}
+                  className={`w-3 h-3 rounded-full transition-all duration-500 ${
+                    loadingStage === 'ready'
+                      ? 'bg-[#e50914] scale-125'
+                      : 'bg-gray-300'
+                  }`}
                 ></div>
               </div>
 
@@ -1737,11 +1764,11 @@ function PlayPageClient() {
                   style={{
                     width:
                       loadingStage === 'searching' ||
-                        loadingStage === 'fetching'
+                      loadingStage === 'fetching'
                         ? '33%'
                         : loadingStage === 'preferring'
-                          ? '66%'
-                          : '100%',
+                        ? '66%'
+                        : '100%',
                   }}
                 ></div>
               </div>
@@ -1836,7 +1863,10 @@ function PlayPageClient() {
             {videoTitle || '影片標題'}
             {totalEpisodes > 1 && (
               <span className='text-gray-500 dark:text-gray-400'>
-                {` > ${detail?.episodes_titles?.[currentEpisodeIndex] || `第 ${currentEpisodeIndex + 1} 集`}`}
+                {` > ${
+                  detail?.episodes_titles?.[currentEpisodeIndex] ||
+                  `第 ${currentEpisodeIndex + 1} 集`
+                }`}
               </span>
             )}
           </h1>
@@ -1855,8 +1885,9 @@ function PlayPageClient() {
               }
             >
               <svg
-                className={`w-3.5 h-3.5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isEpisodeSelectorCollapsed ? 'rotate-180' : 'rotate-0'
-                  }`}
+                className={`w-3.5 h-3.5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
+                  isEpisodeSelectorCollapsed ? 'rotate-180' : 'rotate-0'
+                }`}
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -1874,24 +1905,27 @@ function PlayPageClient() {
 
               {/* 精緻的狀態指示點 */}
               <div
-                className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full transition-all duration-200 ${isEpisodeSelectorCollapsed
-                  ? 'bg-orange-400 animate-pulse'
-                  : 'bg-[#e50914]'
-                  }`}
+                className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full transition-all duration-200 ${
+                  isEpisodeSelectorCollapsed
+                    ? 'bg-orange-400 animate-pulse'
+                    : 'bg-[#e50914]'
+                }`}
               ></div>
             </button>
           </div>
 
           <div
-            className={`grid gap-4 lg:h-[500px] xl:h-[650px] 2xl:h-[750px] transition-all duration-300 ease-in-out ${isEpisodeSelectorCollapsed
-              ? 'grid-cols-1'
-              : 'grid-cols-1 md:grid-cols-4'
-              }`}
+            className={`grid gap-4 lg:h-[500px] xl:h-[650px] 2xl:h-[750px] transition-all duration-300 ease-in-out ${
+              isEpisodeSelectorCollapsed
+                ? 'grid-cols-1'
+                : 'grid-cols-1 md:grid-cols-4'
+            }`}
           >
             {/* 播放器 */}
             <div
-              className={`h-full transition-all duration-300 ease-in-out rounded-xl border border-white/0 dark:border-white/30 ${isEpisodeSelectorCollapsed ? 'col-span-1' : 'md:col-span-3'
-                }`}
+              className={`h-full transition-all duration-300 ease-in-out rounded-xl border border-white/0 dark:border-white/30 ${
+                isEpisodeSelectorCollapsed ? 'col-span-1' : 'md:col-span-3'
+              }`}
             >
               <div className='relative w-full h-[300px] lg:h-full'>
                 <div
@@ -1910,7 +1944,7 @@ function PlayPageClient() {
                           {/* 旋轉光環 */}
                           <div className='absolute -inset-2 bg-gradient-to-r from-[#e50914] to-[#b20710] rounded-2xl opacity-20 animate-spin'></div>
                         </div>
- 
+
                         {/* 浮動粒子效果 */}
                         <div className='absolute top-0 left-0 w-full h-full pointer-events-none'>
                           <div className='absolute top-2 left-2 w-2 h-2 bg-[#e50914] rounded-full animate-bounce'></div>
@@ -1941,10 +1975,11 @@ function PlayPageClient() {
 
             {/* 選集和換源 - 在移動端始終顯示，在 lg 及以上可摺疊 */}
             <div
-              className={`h-[300px] lg:h-full md:overflow-hidden transition-all duration-300 ease-in-out ${isEpisodeSelectorCollapsed
-                ? 'md:col-span-1 lg:hidden lg:opacity-0 lg:scale-95'
-                : 'md:col-span-1 lg:opacity-100 lg:scale-100'
-                }`}
+              className={`h-[300px] lg:h-full md:overflow-hidden transition-all duration-300 ease-in-out ${
+                isEpisodeSelectorCollapsed
+                  ? 'md:col-span-1 lg:hidden lg:opacity-0 lg:scale-95'
+                  : 'md:col-span-1 lg:opacity-100 lg:scale-100'
+              }`}
             >
               <EpisodeSelector
                 totalEpisodes={totalEpisodes}
