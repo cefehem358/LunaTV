@@ -121,12 +121,16 @@ function LoginPageClient() {
   };
 
   return (
-    <div className='relative min-h-screen flex items-center justify-center px-4 overflow-hidden'>
-      <div className='absolute top-4 right-4'>
+    <div className='relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-[#08080a]'>
+      {/* 氛圍背景光 */}
+      <div className='absolute top-[-20%] left-[-10%] w-[140%] h-[140%] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-900/30 via-[#08080a]/80 to-[#08080a] pointer-events-none' />
+
+      <div className='absolute top-4 right-4 z-20'>
         <ThemeToggle />
       </div>
-      <div className='relative z-10 w-full max-w-md rounded-3xl bg-gradient-to-b from-white/90 via-white/70 to-white/40 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/40 backdrop-blur-xl shadow-2xl p-10 dark:border dark:border-zinc-800'>
-        <h1 className='text-green-600 tracking-tight text-center text-3xl font-extrabold mb-8 bg-clip-text drop-shadow-sm'>
+
+      <div className='relative z-10 w-full max-w-md rounded-2xl bg-black/60 backdrop-blur-2xl shadow-2xl p-10 border border-white/5'>
+        <h1 className='text-center text-4xl font-black text-[#e50914] font-[Impact] tracking-wider mb-8 drop-shadow-md'>
           {siteName}
         </h1>
         <form onSubmit={handleSubmit} className='space-y-8'>
@@ -139,7 +143,7 @@ function LoginPageClient() {
                 id='username'
                 type='text'
                 autoComplete='username'
-                className='block w-full rounded-lg border-0 py-3 px-4 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-white/60 dark:ring-white/20 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-green-500 focus:outline-none sm:text-base bg-white/60 dark:bg-zinc-800/60 backdrop-blur'
+                className='block w-full rounded-lg border border-zinc-700/50 py-3.5 px-4 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-[#e50914] focus:border-transparent focus:outline-none sm:text-base bg-zinc-900/80 transition-all duration-200'
                 placeholder='輸入用戶名'
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -155,7 +159,7 @@ function LoginPageClient() {
               id='password'
               type='password'
               autoComplete='current-password'
-              className='block w-full rounded-lg border-0 py-3 px-4 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-white/60 dark:ring-white/20 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-green-500 focus:outline-none sm:text-base bg-white/60 dark:bg-zinc-800/60 backdrop-blur'
+              className='block w-full rounded-lg border border-zinc-700/50 py-3.5 px-4 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-[#e50914] focus:border-transparent focus:outline-none sm:text-base bg-zinc-900/80 transition-all duration-200'
               placeholder='輸入訪問密碼'
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -163,14 +167,14 @@ function LoginPageClient() {
           </div>
 
           {error && (
-            <p className='text-sm text-red-600 dark:text-red-400'>{error}</p>
+            <p className='text-sm text-[#e50914] font-medium'>{error}</p>
           )}
 
           {/* 登錄按鈕 */}
           <button
             type='submit'
             disabled={!password || loading || (shouldAskUsername && !username)}
-            className='inline-flex w-full justify-center rounded-lg bg-green-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-50'
+            className='inline-flex w-full justify-center rounded-lg bg-[#e50914] py-3.5 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:bg-red-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100'
           >
             {loading ? '登錄中...' : '登錄'}
           </button>

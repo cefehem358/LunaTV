@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any,no-console */
 
+import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
@@ -100,6 +101,8 @@ export async function POST(request: NextRequest) {
 
     // 写入数据库
     await db.saveAdminConfig(adminConfig);
+
+    revalidatePath('/', 'layout');
 
     return NextResponse.json(
       { ok: true },
