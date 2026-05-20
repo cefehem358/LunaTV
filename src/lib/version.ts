@@ -6,25 +6,20 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   { 
+    version: 'v2.0.4', 
+    date: '2026-05-20', 
+    content: '🎉 釋出 v2.0.4 終極定版！100% 打通選單點擊電路（突破 Z-index 攔截），並完美還原原本大氣的「站長」專屬漸層頭像。' 
+  },
+  { 
     version: 'v2.0.3', 
     date: '2026-05-20', 
-    content: '🚀 釋出 v2.0.3 智慧偵測版！實作動態版本比對機制。只有當本地版本落後於雲端最新版時才會亮起黃點提醒，當前版本則保持絕對純淨。' 
+    content: '實作智慧動態版本比對機制，當前最新版時自動隱藏前台黃點提示。' 
   },
   { 
     version: 'v2.0.2', 
     date: '2026-05-20', 
-    content: '重構 UserMenu 核心結構，徹底清除靜態黃點與文字疊加錯誤，達成前台視覺零瑕疵境界。' 
-  },
-  { 
-    version: 'v2.0.1', 
-    date: '2026-05-20', 
-    content: '修正版本對話框（VersionPanel）的手動關閉 onClose 回呼函數，阻斷首頁反覆彈出之無窮迴圈 Bug。' 
-  },
-  { 
-    version: 'v2.0.0', 
-    date: '2026-05-20', 
-    content: '大版本里程碑！整合原生高效繁簡字典映射，全站完美繁體化，迎來黃金穩定完全體。' 
+    content: '重構 UserMenu 核心結構，徹底清除靜態黃點與文字疊加錯誤。' 
   }
 ];
 
-export const CURRENT_VERSION = CHANGELOGS[0]?.version || 'v2.0.3';
+export const CURRENT_VERSION = CHANGELOGS[0]?.version || 'v2.0.4';
