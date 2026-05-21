@@ -236,7 +236,7 @@ class HybridCacheManager {
     const userCache = this.getUserCache(username);
     const cached = userCache.playRecords;
 
-    if (cached && this.isCacheValid(cached)) {
+    if (cached && this.isCacheValid(cached) && cached.data) {
       return cached.data;
     }
 
@@ -435,6 +435,8 @@ async function handleDatabaseOperationFailure(
         cacheManager.cacheSearchHistory(freshData);
         eventName = 'searchHistoryUpdated';
         break;
+      default:
+        return;
     }
 
     // 触发更新事件通知组件
@@ -584,6 +586,7 @@ export async function savePlayRecord(
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     const cachedRecords = cacheManager.getCachedPlayRecords() || {};
+    const prevRecords = { ...cachedRecords };
     cachedRecords[key] = enrichedRecord;
     cacheManager.cachePlayRecords(cachedRecords);
 
@@ -604,7 +607,13 @@ export async function savePlayRecord(
         body: JSON.stringify({ key, record: enrichedRecord }),
       });
     } catch (err) {
-      await handleDatabaseOperationFailure('playRecords', err);
+      // v1.5.3: rollback 快取，避免前端顯示未入庫的資料
+      cacheManager.cachePlayRecords(prevRecords);
+      window.dispatchEvent(
+        new CustomEvent('playRecordsUpdated', {
+          detail: prevRecords,
+        })
+      );
       triggerGlobalError('保存播放记录失败');
       throw err;
     }

@@ -118,32 +118,26 @@ export default function NetflixHome({
   const handleDelete = async (e: React.MouseEvent, item: any) => {
     e.stopPropagation();
     e.preventDefault();
+    if (!item) return;
+
     try {
-      // 1. 從唯一金鑰中精確還原當初寫入 IndexedDB 的主鍵組合
       const [realSource, realId] =
         item.key && item.key.includes('+')
           ? item.key.split('+')
           : [item.source, item.id || item.vod_id];
 
-      // 2. 核心大招：第一時間強制切斷前端渲染狀態，讓卡片無感蒸發，絕不卡頓
+      const targetKey = item.key || (realSource && realId ? `${realSource}+${realId}` : '');
+
       setContinueWatching((prev) =>
-        prev.filter((c) => {
-          const cName = convertS2T(c.title || c.vod_name || '')
-            .replace(/[\s\-_,.:：，。！？]/g, '')
-            .trim();
-          const iName = convertS2T(item.title || item.vod_name || '')
-            .replace(/[\s\-_,.:：，。！？]/g, '')
-            .trim();
-          return cName !== iName;
-        })
+        targetKey
+          ? prev.filter((c) => (c.key || `${c.source}+${c.id || c.vod_id}`) !== targetKey)
+          : prev
       );
 
-      // 3. 實時洗淨本地 IndexedDB 快取，斷絕「重新整理又長出來」的宿命
       if (realSource && realId) {
         await deletePlayRecord(realSource, realId);
       }
 
-      // 4. 非同步通知遠端資料庫抹除快取
       const authInfo = getAuthInfoFromBrowserCookie();
       const userId = authInfo?.username || 'default_user';
       await fetch('/api/history/delete', {
@@ -154,9 +148,8 @@ export default function NetflixHome({
           source: realSource,
           userId,
         }),
-      }).catch(() => console.log('非遠端環境，已忽略 API 通訊失敗'));
+      }).catch(() => {});
 
-      // 5. 派發全域更新事件
       window.dispatchEvent(new CustomEvent('playRecordsUpdated'));
     } catch (err) {
       console.error('刪除播放記錄錯誤:', err);

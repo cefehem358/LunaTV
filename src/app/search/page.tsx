@@ -448,7 +448,9 @@ function SearchPageClient() {
         );
         eventSourceRef.current = es;
 
+        let closed = false;
         es.onmessage = (event) => {
+          if (closed) return;
           if (!event.data) return;
           try {
             const payload = JSON.parse(event.data);
@@ -490,6 +492,7 @@ function SearchPageClient() {
                 setCompletedSources((prev) => prev + 1);
                 break;
               case 'complete':
+                closed = true;
                 setCompletedSources(payload.completedSources || totalSources);
                 if (pendingResultsRef.current.length > 0) {
                   const toAppend = pendingResultsRef.current;
@@ -515,6 +518,7 @@ function SearchPageClient() {
         };
 
         es.onerror = () => {
+          closed = true;
           setIsLoading(false);
           if (pendingResultsRef.current.length > 0) {
             const toAppend = pendingResultsRef.current;
@@ -570,9 +574,10 @@ function SearchPageClient() {
 
   useEffect(() => {
     return () => {
-      if (eventSourceRef.current) {
+      const es = eventSourceRef.current;
+      if (es) {
         try {
-          eventSourceRef.current.close();
+          es.close();
         } catch {}
         eventSourceRef.current = null;
       }

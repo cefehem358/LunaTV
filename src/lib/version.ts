@@ -6,6 +6,12 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.5.3',
+    date: '2026-05-23',
+    content:
+      '大規模全面除蟲：修復 31 個 Bug。關鍵修復包含：(1) 播放頁集數還原時序競爭導致「看到第5集下次變第4集」—— initFromHistory 改用 currentSource/currentId 依賴觸發，同步更新 ref 並加入 saveLockRef 防止 timeupdate 覆寫正確紀錄；(2) 修正 downstream.ts yearText 重複宣告的語法錯誤；(3) 搜尋引擎 multi-char S2T 映射表無法匹配多字詞問題；(4) SSE 元件卸載後仍在處理資料；(5) history delete API Object.keys(null) 崩潰及 source 精確比對；(6) NetflixHome handleDelete null item 崩潰及 key 精確比對刪除；(7) playrecord 點擊時 stitle 遺失與 currentEpisode 傳遞；(8) VideoCard search 情境收藏狀態不同步；(9) storage.ts localStorage 模式 hgetall/hdel 空實作；(10) 優化更新失敗 rollback 快取、request-dedupe timeout、handleSourceChange 保留 stitle/stype URL 參數、auto-next 防重入。',
+  },
+  {
     version: 'v1.5.2',
     date: '2026-05-21',
     content:

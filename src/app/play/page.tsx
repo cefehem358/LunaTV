@@ -222,6 +222,7 @@ function PlayPageClient() {
   const detailRef = useRef<SearchResult | null>(detail);
   const currentEpisodeIndexRef = useRef(currentEpisodeIndex);
   const pipKeyHandlerRef = useRef<((e: KeyboardEvent) => void) | null>(null);
+  const saveLockRef = useRef(false);
 
   // 同步最新值到 refs
   useEffect(() => {
@@ -330,7 +331,7 @@ function PlayPageClient() {
 
             const episodeUrl =
               source.episodes.length > 1
-                ? source.episodes[1]
+                ? source.episodes[source.episodes.length - 1]
                 : source.episodes[0];
             const testResult = await getVideoResolutionFromM3u8(episodeUrl);
 
@@ -1015,12 +1016,13 @@ function PlayPageClient() {
     initAll();
   }, []);
 
-  // 播放記錄處理
+  // 播放記錄處理 — 等待 currentSource + currentId 就緒後執行
   useEffect(() => {
-    // 僅在初次掛載時檢查播放記錄
-    const initFromHistory = async () => {
-      if (!currentSource || !currentId) return;
+    if (!currentSource || !currentId) return;
 
+    let cancelled = false;
+
+    const initFromHistory = async () => {
       try {
         const allRecords = await getAllPlayRecords();
         const key = generateStorageKey(currentSource, currentId);
@@ -1031,21 +1033,19 @@ function PlayPageClient() {
               r &&
               (r.vod_id === currentId ||
                 r.id === currentId ||
-                (r.key &&
-                  r.key.includes('+') &&
-                  r.key.split('+')[1] === currentId)) &&
+                (r.source === currentSource &&
+                  r.vod_id === currentId)) &&
               r.source === currentSource
           );
         }
 
-        if (record) {
+        if (record && !cancelled) {
           const targetIndex = record.index - 1;
           const targetTime = record.play_time;
 
-          // 更新當前選集索引
-          if (targetIndex !== currentEpisodeIndex) {
-            setCurrentEpisodeIndex(targetIndex);
-          }
+          // 🔧 v1.5.3: 同步更新 ref 以避免 timeupdate 在 state 生效前用舊值存檔
+          currentEpisodeIndexRef.current = targetIndex;
+          setCurrentEpisodeIndex(targetIndex);
 
           // 保存待恢復的播放進度，待播放器就緒後跳轉
           resumeTimeRef.current = targetTime;
@@ -1056,7 +1056,11 @@ function PlayPageClient() {
     };
 
     initFromHistory();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentSource, currentId]);
 
   // 跳過片頭片尾配置處理
   useEffect(() => {
@@ -1149,6 +1153,8 @@ function PlayPageClient() {
       newUrl.searchParams.set('source', newSource);
       newUrl.searchParams.set('id', newId);
       newUrl.searchParams.set('year', newDetail.year);
+      if (searchTitle) newUrl.searchParams.set('stitle', searchTitle);
+      if (searchType) newUrl.searchParams.set('stype', searchType);
       window.history.replaceState({}, '', newUrl.toString());
 
       setVideoTitle(newDetail.title || newTitle);
@@ -1309,7 +1315,10 @@ function PlayPageClient() {
   // 播放記錄相關
   // ---------------------------------------------------------------------------
   // 保存播放進度
-  const saveCurrentPlayProgress = async () => {
+const saveCurrentPlayProgress = async () => {
+    // v1.5.3: saveLockRef 防止 initFromHistory 還原 index 前誤存錯誤集數
+    if (saveLockRef.current) return;
+
     if (
       !artPlayerRef.current ||
       !currentSourceRef.current ||
@@ -1324,12 +1333,12 @@ function PlayPageClient() {
     const currentTime = player.currentTime || 0;
     const duration = player.duration || 0;
 
-    // 如果播放時間太短（少於5秒）或者視頻時長無效，不保存
     if (currentTime < 1 || !duration) {
       return;
     }
 
     try {
+      saveLockRef.current = true;
       await savePlayRecord(currentSourceRef.current, currentIdRef.current, {
         title: videoTitleRef.current,
         source_name: detailRef.current?.source_name || '',
@@ -1352,6 +1361,8 @@ function PlayPageClient() {
       });
     } catch (err) {
       console.error('保存播放進度失敗:', err);
+    } finally {
+      saveLockRef.current = false;
     }
   };
 
@@ -1452,7 +1463,7 @@ function PlayPageClient() {
           cover: detailRef.current?.poster || '',
           total_episodes: detailRef.current?.episodes.length || 1,
           save_time: Date.now(),
-          search_title: searchTitle,
+search_title: searchTitle || videoTitleRef.current,
         });
         setFavorited(true);
       }
@@ -1880,16 +1891,20 @@ function PlayPageClient() {
         }
       });
 
+      const autoNextBusyRef = useRef(false);
+
       // 監聽視頻播放結束事件，自動播放下一集
       artPlayerRef.current.on('video:ended', () => {
         const d = detailRef.current;
         const idx = currentEpisodeIndexRef.current;
+        if (autoNextBusyRef.current) return;
         if (
           d &&
           d.episodes &&
           idx < d.episodes.length - 1 &&
           autoNextRef.current
         ) {
+          autoNextBusyRef.current = true;
           setTimeout(() => {
             setCurrentEpisodeIndex(idx + 1);
           }, 2000);

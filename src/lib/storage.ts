@@ -14,7 +14,15 @@ export const storage = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const storageImpl = (db as any).storage;
     if (!storageImpl || storageType === 'localstorage') {
-      return {};
+      // v1.5.3: localStorage 模式下讀取實際資料
+      const raw = localStorage.getItem(actualKey);
+      if (!raw) return {};
+      try {
+        const parsed = JSON.parse(raw);
+        return typeof parsed === 'object' && parsed !== null ? parsed : {};
+      } catch {
+        return {};
+      }
     }
 
     const client = storageImpl.client;
@@ -27,7 +35,11 @@ export const storage = {
       // convert object values to string if they are parsed objects
       const finalRes: Record<string, string> = {};
       for (const [k, v] of Object.entries(res)) {
-        finalRes[k] = typeof v === 'object' ? JSON.stringify(v) : String(v);
+        if (v === null || v === undefined) {
+          finalRes[k] = '';
+        } else {
+          finalRes[k] = typeof v === 'object' ? JSON.stringify(v) : String(v);
+        }
       }
       return finalRes;
     } else {
@@ -48,6 +60,18 @@ export const storage = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const storageImpl = (db as any).storage;
     if (!storageImpl || storageType === 'localstorage') {
+      // v1.5.3: localStorage 模式下讀取實際資料並刪除指定 field
+      const raw = localStorage.getItem(actualKey);
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw);
+        if (typeof parsed === 'object' && parsed !== null) {
+          delete parsed[field];
+          localStorage.setItem(actualKey, JSON.stringify(parsed));
+        }
+      } catch {
+        /* ignore */
+      }
       return;
     }
 

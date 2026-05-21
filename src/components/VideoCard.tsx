@@ -132,7 +132,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
     const actualDoubanId = dynamicDoubanId;
     const actualEpisodes = dynamicEpisodes;
     const actualYear = year;
-    const actualQuery = query || '';
+    const actualQuery = query || title || '';
     const actualSearchType = isAggregate
       ? actualEpisodes && actualEpisodes === 1
         ? 'movie'
@@ -141,8 +141,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
 
     // 獲取收藏狀態（搜索結果頁面不檢查）
     useEffect(() => {
-      if (from === 'douban' || from === 'search' || !actualSource || !actualId)
-        return;
+      if (!actualSource || !actualId) return;
 
       const fetchFavoriteStatus = async () => {
         try {
@@ -264,7 +263,11 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
           isAggregate ? '&prefer=true' : ''
         }${
           actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
-        }${actualSearchType ? `&stype=${actualSearchType}` : ''}`;
+        }${actualSearchType ? `&stype=${actualSearchType}` : ''}${
+          from === 'playrecord' && currentEpisode && currentEpisode > 1
+            ? `&episode=${currentEpisode}`
+            : ''
+        }`;
         router.push(url);
       } else {
         const url = `/play?title=${encodeURIComponent(actualTitle.trim())}${

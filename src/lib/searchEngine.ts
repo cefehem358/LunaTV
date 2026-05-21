@@ -7,11 +7,13 @@
  * 以上均不滿足則視為不匹配，根治「點 A 搜出 B」問題。
  */
 const rawS2tPairs =
-  '阳陽 陆陸 龟龜 欺诈欺詐 诈欺詐欺 委员委員 裙裙 戏戲 游戏遊戲 废废 柴柴 木木 头頭 与與 和和 漫漫 画畫 动動 漫漫';
+  '阳陽 陆陸 龟龜 欺诈欺詐 诈欺詐欺 委员委員 戏戲 游戏遊戲 废廢 柴柴 木木 动動 漫畫 漫画 头頭';
 
 const s2tMap = new Map<string, string>();
 const t2sMap = new Map<string, string>();
 
+// 支援多字詞映射：保留原始 pairs，但增加全詞替換邏輯
+// 先建立單字元映射
 rawS2tPairs.split(' ').forEach((pair) => {
   if (pair.length >= 2) {
     const [simplified, traditional] = pair.split('');

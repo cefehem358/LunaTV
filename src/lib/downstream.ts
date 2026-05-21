@@ -104,7 +104,7 @@ async function searchWithCache(
         }
         return {
           id: item.vod_id.toString(),
-          title: item.vod_name.trim().replace(/\\s+/g, ' '),
+          title: item.vod_name.trim().replace(/\s+/g, ' '),
           poster: item.vod_pic,
           episodes,
           episodes_titles: titles,
@@ -112,7 +112,7 @@ async function searchWithCache(
           source_name: apiSite.name,
           class: item.vod_class,
           year: item.vod_year
-            ? item.vod_year.match(/\\d{4}/)?.[0] || ''
+            ? item.vod_year.match(/\d{4}/)?.[0] || ''
             : 'unknown',
           desc: cleanHtmlTags(item.vod_content || ''),
           type_name: item.type_name,
@@ -295,7 +295,7 @@ export async function getDetailFromApi(
   }
   if (episodes.length === 0 && videoDetail.vod_content) {
     const matches = videoDetail.vod_content.match(M3U8_PATTERN) || [];
-    episodes = matches.map((link: string) => link.replace(/^\\$/, ''));
+    episodes = matches.map((link: string) => link.replace(/^\$/, ''));
   }
   return {
     id: id.toString(),
@@ -307,7 +307,7 @@ export async function getDetailFromApi(
     source_name: apiSite.name,
     class: videoDetail.vod_class,
     year: videoDetail.vod_year
-      ? videoDetail.vod_year.match(/\\d{4}/)?.[0] || ''
+      ? videoDetail.vod_year.match(/\d{4}/)?.[0] || ''
       : 'unknown',
     desc: cleanHtmlTags(videoDetail.vod_content),
     type_name: videoDetail.type_name,
@@ -332,11 +332,11 @@ async function handleSpecialSourceDetail(
   let matches: string[] = [];
   if (apiSite.key === 'ffzy') {
     const ffzyPattern =
-      /\\$(https?:\/\/[^"'\s]+?\/\d{8}\/\d+_[a-f0-9]+\/index\.m3u8)/g;
+      /\$(https?:\/\/[^"'\s]+?\/\d{8}\/\d+_[a-f0-9]+\/index\.m3u8)/g;
     matches = html.match(ffzyPattern) || [];
   }
   if (matches.length === 0) {
-    const generalPattern = /\\$(https?:\/\/[^"'\s]+?\.m3u8)/g;
+    const generalPattern = /\$(https?:\/\/[^"'\s]+?\.m3u8)/g;
     matches = html.match(generalPattern) || [];
   }
   matches = Array.from(new Set(matches)).map((link: string) => {
@@ -350,13 +350,13 @@ async function handleSpecialSourceDetail(
   const titleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/);
   const titleText = titleMatch ? titleMatch[1].trim() : '';
   const descMatch = html.match(
-    /<div[^>]*class=["']sketch["'][^>]*>([\\s\\S]*?)<\/div>/
+    /<div[^>]*class=["']sketch["'][^>]*>([\s\S]*?)<\/div>/
   );
   const descText = descMatch ? cleanHtmlTags(descMatch[1]) : '';
   const coverMatch = html.match(/(https?:\/\/[^"'\s]+?\.jpg)/g);
   const coverUrl = coverMatch ? coverMatch[0].trim() : '';
-  const yearMatch = html.match(/>(\\d{4})</);
-  const yearText = yearMatch ? yearMatch[1] : 'unknown';
+  const yearMatch = html.match(/>(\d{4})<\//)?.[1] ?? html.match(/>(\d{4})</g)?.[0]?.match(/\d{4}/)?.[0];
+  const yearText = yearMatch || 'unknown';
   return {
     id,
     title: titleText,
