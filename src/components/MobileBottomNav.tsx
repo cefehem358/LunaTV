@@ -103,7 +103,9 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
             >
               <Link
                 href={item.href}
-                className='flex flex-col items-center justify-center w-full h-14 gap-1 text-xs'
+                className={`flex flex-col items-center justify-center w-full h-14 gap-1 text-xs relative ${
+                  active ? 'after:absolute after:top-0 after:left-1/4 after:w-1/2 after:h-0.5 after:bg-[#ff3e6c] after:rounded-full after:shadow-[0_0_6px_#ff3e6c]' : ''
+                }`}
               >
                 <item.icon
                   className={`h-6 w-6 ${

@@ -57,7 +57,7 @@ const WeekdaySelector: React.FC<WeekdaySelectorProps> = ({
               relative z-10 px-2 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 whitespace-nowrap
               ${
                 isActive
-                  ? 'text-[#ff3e6c] font-semibold'
+                  ? 'bg-white/10 backdrop-blur-sm text-[#ff3e6c] font-semibold shadow-sm'
                   : 'text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer'
               }
             `}
