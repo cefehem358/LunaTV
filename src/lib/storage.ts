@@ -11,6 +11,7 @@ export const storage = {
     }
 
     const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const storageImpl = (db as any).storage;
     if (!storageImpl || storageType === 'localstorage') {
       return {};
@@ -44,6 +45,7 @@ export const storage = {
     }
 
     const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const storageImpl = (db as any).storage;
     if (!storageImpl || storageType === 'localstorage') {
       return;
@@ -57,5 +59,5 @@ export const storage = {
     } else {
       await client.hDel(actualKey, field);
     }
-  }
+  },
 };
