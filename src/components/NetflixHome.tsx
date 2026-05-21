@@ -221,37 +221,39 @@ export default function NetflixHome({
                                 }`
                               )
                             }
-                            className='focus-glow-card glass-panel w-72 shrink-0 rounded-2xl cursor-pointer relative z-0 focus-visible:z-50'
+                            className='vertical-card-container w-48 shrink-0 cursor-pointer'
                           >
-                            <div className='relative aspect-video bg-gray-800 w-full h-auto rounded-t-2xl overflow-hidden'>
-                              <Image
-                                src={
-                                  processImageUrl(record.cover) ||
-                                  '/placeholder.jpg'
-                                }
-                                alt={record.title}
-                                fill
-                                className='object-cover w-full h-full'
-                                unoptimized
-                                referrerPolicy='no-referrer'
-                              />
-                              <div className='absolute bottom-0 left-0 right-0 h-1 bg-zinc-700'>
-                                <div
-                                  className='h-full glow-bar transition-all'
-                                  style={{ width: `${progress}%` }}
+                            <div className='visual-box glass-panel rounded-2xl border border-white/10 flex flex-col h-full'>
+                              <div className='relative aspect-[2/3] w-full rounded-t-2xl overflow-hidden bg-gray-900'>
+                                <Image
+                                  src={
+                                    processImageUrl(record.cover) ||
+                                    '/placeholder.jpg'
+                                  }
+                                  alt={record.title}
+                                  fill
+                                  className='object-cover w-full h-full'
+                                  unoptimized
+                                  referrerPolicy='no-referrer'
                                 />
+                                <div className='absolute bottom-0 left-0 h-1 bg-black/40 w-full'>
+                                  <div
+                                    className='h-full bg-[#ff3e6c] shadow-[0_0_8px_#ff3e6c]'
+                                    style={{ width: `${progress}%` }}
+                                  />
+                                </div>
                               </div>
-                            </div>
-                            <div className='p-4 rounded-b-2xl'>
-                              <p className='text-sm font-medium text-white truncate font-noto'>
-                                {record.title}
-                              </p>
-                              <p className='text-xs text-gray-400 mt-1.5 font-noto'>
-                                看到第 {record.index} 集 ({Math.round(progress)}%)
-                              </p>
-                              <span className='text-[10px] text-accent/80 bg-accent/10 px-1.5 py-0.5 rounded mt-2 inline-block font-noto'>
-                                片源：{record.source_name}
-                              </span>
+                              <div className='p-4 flex flex-col items-center text-center justify-between flex-1'>
+                                <h3 className='text-base font-semibold text-white truncate w-full font-noto'>
+                                  {record.title}
+                                </h3>
+                                <p className='text-xs text-gray-400 mt-1 font-noto'>
+                                  看到第 {record.index} 集 ({Math.round(progress)}%)
+                                </p>
+                                <span className='text-[11px] font-medium text-[#ff3e6c] bg-[#ff3e6c]/10 px-2.5 py-0.5 rounded-full mt-3 border border-[#ff3e6c]/20 tracking-wider font-noto'>
+                                  片源：{record.source_name}
+                                </span>
+                              </div>
                             </div>
                           </button>
                         );
