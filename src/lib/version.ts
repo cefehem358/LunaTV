@@ -4,7 +4,16 @@ export interface ChangelogItem {
   content: string;
 }
 
+export const VERSION = 'v1.4.9';
+export const UPDATE_DATE = '2026-05-21';
+
 export const CHANGELOGS: ChangelogItem[] = [
+  {
+    version: 'v1.4.9',
+    date: '2026-05-21',
+    content:
+      '徹底修復歷史紀錄通訊鏈。校正點擊跳轉之原始 ID 傳遞引數，避免播放頁 404 崩潰；同步補齊 /api/history/delete 路由，實作點擊 X 鈕異步抹除歷史快取與前端卡片實時蒸發。',
+  },
   {
     version: 'v1.4.8',
     date: '2026-05-21',
@@ -119,4 +128,4 @@ export const CHANGELOGS: ChangelogItem[] = [
   },
 ];
 
-export const CURRENT_VERSION = CHANGELOGS[0]?.version || 'v1.0.4';
+export const CURRENT_VERSION = VERSION;

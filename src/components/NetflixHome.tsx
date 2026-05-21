@@ -45,6 +45,7 @@ import {
 import { convertS2T } from '@/lib/s2t';
 import { DoubanItem } from '@/lib/types';
 import { processImageUrl } from '@/lib/utils';
+import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 
 import MobileBottomNav from '@/components/MobileBottomNav';
 import Sidebar from '@/components/Sidebar';
@@ -75,6 +76,66 @@ export default function NetflixHome({
   const [activeNav, setActiveNav] = useState<'home' | 'favorites'>('home');
   const [showAnnouncement, setShowAnnouncement] = useState(false);
 
+  const [continueWatching, setContinueWatching] = useState<any[]>(() =>
+    playRecords.map((r) => ({
+      ...r,
+      vod_name: r.title || (r as any).vod_name || '',
+      vod_id: r.vod_id || r.id || r.key?.split('+')[1] || '',
+      id: r.vod_id || r.id || r.key?.split('+')[1] || '',
+      source: r.source || r.key?.split('+')[0] || '',
+    }))
+  );
+
+  useEffect(() => {
+    setContinueWatching(
+      playRecords.map((r) => ({
+        ...r,
+        vod_name: r.title || (r as any).vod_name || '',
+        vod_id: r.vod_id || r.id || r.key?.split('+')[1] || '',
+        id: r.vod_id || r.id || r.key?.split('+')[1] || '',
+        source: r.source || r.key?.split('+')[0] || '',
+      }))
+    );
+  }, [playRecords]);
+
+  const handleDelete = async (e: React.MouseEvent, item: any) => {
+    e.stopPropagation();
+    e.preventDefault();
+    try {
+      const authInfo = getAuthInfoFromBrowserCookie();
+      const userId = authInfo?.username || 'default_user';
+
+      const res = await fetch('/api/history/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          vod_name: item.title || item.vod_name,
+          userId,
+        }),
+      });
+
+      // 同時呼叫本地資料庫刪除
+      const realSource = item.source || item.key?.split('+')[0] || '';
+      const realId = item.vod_id || item.id || item.key?.split('+')[1] || '';
+      if (realSource && realId) {
+        await deletePlayRecord(realSource, realId);
+      }
+
+      if (res.ok) {
+        setContinueWatching((prev) =>
+          prev.filter((c) => c.vod_name !== item.vod_name)
+        );
+        window.dispatchEvent(new CustomEvent('playRecordsUpdated'));
+      } else {
+        console.error('後端刪除播放記錄失敗');
+      }
+    } catch (err) {
+      console.error('刪除播放記錄錯誤:', err);
+    }
+  };
+
   useEffect(() => {
     if (tab === 'favorites') {
       setActiveNav('favorites');
@@ -95,19 +156,6 @@ export default function NetflixHome({
       if (hasSeen !== announcement) setShowAnnouncement(true);
     }
   }, [announcement]);
-
-  const handleDeleteRecord = async (record: any) => {
-    try {
-      // 這裡直接使用記錄中的 key 進行刪除
-      // record.key 格式為 "source+id"
-      const [source, id] = record.key.split('+');
-      await deletePlayRecord(source, id);
-      // 觸發資料更新事件，讓父組件重新抓取
-      window.dispatchEvent(new CustomEvent('playRecordsUpdated'));
-    } catch (err) {
-      console.error('刪除播放記錄失敗:', err);
-    }
-  };
 
   const handleCloseAnnouncement = useCallback((text: string) => {
     setShowAnnouncement(false);
@@ -174,13 +222,13 @@ export default function NetflixHome({
           {activeNav === 'home' ? (
             <>
               {/* 繼續觀看 */}
-              {playRecords.length > 0 && (
+              {continueWatching.length > 0 && (
                 <section className='mb-8'>
                   <div className='flex items-center gap-3 mb-4'>
                     <CirclePlay className='w-5 h-5 text-[#ff3e6c]' />
-                <h3 className='text-xl font-bold text-white flex items-center gap-2'>
-                  ⏳ 繼續觀看
-                </h3>
+                    <h3 className='text-xl font-bold text-white flex items-center gap-2'>
+                      ⏳ 繼續觀看
+                    </h3>
                   </div>
                   <div className='relative'>
                     <div
@@ -217,32 +265,38 @@ export default function NetflixHome({
                     >
                       {(() => {
                         const uniqueTitleSet = new Set<string>();
-                        return playRecords
+                        return continueWatching
                           .filter((item: any) => {
                             if (!item) return false;
-                            const strictTraditionalName = convertS2T(item.title || '').replace(/[\s\-_,.:：，。！？]/g, '').trim();
+                            const strictTraditionalName = convertS2T(item.title || item.vod_name || '')
+                              .replace(/[\s\-_,.:：，。！？]/g, '')
+                              .trim();
                             if (uniqueTitleSet.has(strictTraditionalName)) return false;
                             uniqueTitleSet.add(strictTraditionalName);
                             return true;
                           })
-                          .map((record) => {
-                            const [source, id] = record.key.split('+');
+                          .map((item) => {
                             const progress =
-                              record.total_time > 0
-                                ? (record.play_time / record.total_time) * 100
+                              item.total_time > 0
+                                ? (item.play_time / item.total_time) * 100
                                 : 0;
                             return (
-                              <div key={record.key} className='relative group vertical-card-container w-48 shrink-0 cursor-pointer'>
+                              <div
+                                key={item.key || `${item.source}+${item.id}`}
+                                className='relative group vertical-card-container w-48 shrink-0 cursor-pointer'
+                              >
                                 <button
                                   onClick={() =>
                                     router.push(
-                                      `/play?id=${id}&source=${source}&title=${encodeURIComponent(
-                                        record.title
+                                      `/play?id=${item.vod_id || item.id}&source=${encodeURIComponent(
+                                        item.source
+                                      )}&title=${encodeURIComponent(
+                                        item.title || item.vod_name
                                       )}${
-                                        record.search_title
+                                        item.search_title
                                           ? `&stitle=${encodeURIComponent(
-                                            record.search_title
-                                          )}`
+                                              item.search_title
+                                            )}`
                                           : ''
                                       }`
                                     )
@@ -254,16 +308,16 @@ export default function NetflixHome({
                                       inline: 'center',
                                     })
                                   }
-                                  className='w-full h-full'
+                                  className='w-full h-full text-left'
                                 >
                                   <div className='visual-box glass-panel rounded-2xl border border-white/10 flex flex-col h-full'>
                                     <div className='relative aspect-[2/3] w-full rounded-t-2xl overflow-hidden bg-gray-900'>
                                       <Image
                                         src={
-                                          processImageUrl(record.cover) ||
+                                          processImageUrl(item.cover) ||
                                           '/placeholder.jpg'
                                         }
-                                        alt={record.title}
+                                        alt={item.title || item.vod_name}
                                         fill
                                         className='object-cover w-full h-full'
                                         unoptimized
@@ -278,33 +332,34 @@ export default function NetflixHome({
                                     </div>
                                     <div className='p-4 flex flex-col items-center text-center justify-between flex-1'>
                                       <h3 className='text-base font-semibold text-white truncate w-full font-noto mb-1'>
-                                        {record.title}
+                                        {item.title || item.vod_name}
                                       </h3>
                                       <p className='text-xs text-gray-400 mt-1.5 font-noto truncate'>
-                                        看到第 {record.index} / 全 {record.total_episodes} 集 ({Math.round(progress)}%)
+                                        看到第 {item.index} / 全 {item.total_episodes} 集 ({Math.round(progress)}%)
                                       </p>
                                       <span className='text-xs font-medium text-[#ff3e6c] bg-[#ff3e6c]/10 px-2.5 py-0.5 rounded-full mt-3 border border-[#ff3e6c]/20 tracking-wider font-noto flex items-center justify-center mx-auto'>
-                                        🎬 {record.source_name.replace(/^🎬\s*/, '').replace(/\s*資源$/, '')}
+                                        🎬{' '}
+                                        {item.source_name
+                                          ? item.source_name
+                                              .replace(/^🎬\s*/, '')
+                                              .replace(/\s*資源$/, '')
+                                          : ''}
                                       </span>
                                     </div>
                                   </div>
                                 </button>
                                 <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                    handleDeleteRecord(record);
-                                  }}
+                                  onClick={(e) => handleDelete(e, item)}
                                   className='absolute top-2 right-2 w-6 h-6 rounded-full bg-black/70 text-gray-300 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-600 hover:text-white transition-all duration-200 z-50 cursor-pointer'
                                 >
                                   <X className='w-3 h-3' />
                                 </button>
                               </div>
                             );
-                          })
-                        })()}
-                      </div>
+                          });
+                      })()}
                     </div>
+                  </div>
                 </section>
               )}
 
@@ -522,7 +577,7 @@ function NetflixScrollCard({
   return (
     <button
       onClick={onClick}
-      className='group relative flex-shrink-0 w-44 aspect-[2/3] rounded-xl overflow-hidden cursor-pointer bg-zinc-800'
+      className='group relative flex-shrink-0 w-44 aspect-[2/3] rounded-xl overflow-hidden cursor-pointer bg-zinc-800 text-left'
     >
       {!imgError ? (
         <Image
@@ -575,7 +630,7 @@ function NetflixGridCard({ item }: { item: DoubanItem }) {
           }&prefer=true`
         )
       }
-      className='group relative aspect-[2/3] rounded-xl overflow-hidden cursor-pointer bg-zinc-800'
+      className='group relative aspect-[2/3] rounded-xl overflow-hidden cursor-pointer bg-zinc-800 text-left'
     >
       {!imgError ? (
         <Image
@@ -675,7 +730,7 @@ function NetflixBangumiRow({
                   }&stype=tv&prefer=true`
                 );
               }}
-              className='group relative flex-shrink-0 w-44 aspect-[2/3] rounded-xl overflow-hidden cursor-pointer'
+              className='group relative flex-shrink-0 w-44 aspect-[2/3] rounded-xl overflow-hidden cursor-pointer text-left'
             >
               <Image
                 src={
@@ -767,21 +822,43 @@ function TagManagerModal({
   if (!open) return null;
 
   return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm' onClick={onClose}>
-      <div className='bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6' onClick={(e) => e.stopPropagation()}>
+    <div
+      className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'
+      onClick={onClose}
+    >
+      <div
+        className='bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6'
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className='flex items-center justify-between mb-6'>
-          <h3 className='text-lg font-bold text-zinc-900 dark:text-white'>管理標籤</h3>
-          <button onClick={onClose} className='text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'>
+          <h3 className='text-lg font-bold text-zinc-900 dark:text-white'>
+            管理標籤
+          </h3>
+          <button
+            onClick={onClose}
+            className='text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'
+          >
             <X className='w-5 h-5' />
           </button>
         </div>
 
         <div className='space-y-3'>
           {tags.map((tag, i) => (
-            <div key={tag.name} className='flex items-center gap-3 px-3 py-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl'>
-              <span className='w-3 h-3 rounded-full flex-shrink-0' style={{ backgroundColor: tag.color }} />
-              <span className='flex-1 text-sm font-medium text-zinc-900 dark:text-white'>{tag.name}</span>
-              <button onClick={() => handleDelete(i)} className='text-zinc-400 hover:text-red-500 transition-colors'>
+            <div
+              key={tag.name}
+              className='flex items-center gap-3 px-3 py-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl'
+            >
+              <span
+                className='w-3 h-3 rounded-full flex-shrink-0'
+                style={{ backgroundColor: tag.color }}
+              />
+              <span className='flex-1 text-sm font-medium text-zinc-900 dark:text-white'>
+                {tag.name}
+              </span>
+              <button
+                onClick={() => handleDelete(i)}
+                className='text-zinc-400 hover:text-red-500 transition-colors'
+              >
                 <Trash2 className='w-4 h-4' />
               </button>
             </div>
@@ -802,7 +879,11 @@ function TagManagerModal({
             className='px-2 py-2 text-xs bg-zinc-100 dark:bg-zinc-800 rounded-xl outline-none text-zinc-900 dark:text-white'
           >
             {Object.entries(TAG_COLORS).map(([name, color]) => (
-              <option key={name} value={name} style={{ backgroundColor: color }}>
+              <option
+                key={name}
+                value={name}
+                style={{ backgroundColor: color }}
+              >
                 {name}
               </option>
             ))}
@@ -981,9 +1062,16 @@ function FavoritesView() {
                     ? 'text-white'
                     : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                 }`}
-                style={activeTag === tag.name ? { backgroundColor: tag.color } : undefined}
+                style={
+                  activeTag === tag.name
+                    ? { backgroundColor: tag.color }
+                    : undefined
+                }
               >
-                <span className='w-2 h-2 rounded-full' style={{ backgroundColor: tag.color }} />
+                <span
+                  className='w-2 h-2 rounded-full'
+                  style={{ backgroundColor: tag.color }}
+                />
                 {tag.name} ({count})
               </button>
             );
@@ -1056,31 +1144,38 @@ function FavoritesView() {
                   from='favorite'
                   type={item.episodes > 1 ? 'tv' : ''}
                 />
-                {(isEditing || editingItemKey === null) && definedTags.length > 0 && (
-                  <div className={`absolute top-2 left-2 right-2 flex flex-wrap gap-1 ${isEditing ? '' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
-                    {definedTags.map((tag) => {
-                      const active = itemTagNames.includes(tag.name);
-                      return (
-                        <button
-                          key={tag.name}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            toggleItemTag(key, tag.name);
-                          }}
-                          className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium transition-all ${
-                            active
-                              ? 'text-white shadow-sm'
-                              : 'bg-black/50 text-white/70 hover:bg-black/70'
-                          }`}
-                          style={active ? { backgroundColor: tag.color } : undefined}
-                        >
-                          {tag.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+                {(isEditing || editingItemKey === null) &&
+                  definedTags.length > 0 && (
+                    <div
+                      className={`absolute top-2 left-2 right-2 flex flex-wrap gap-1 ${
+                        isEditing ? '' : 'opacity-0 group-hover:opacity-100'
+                      } transition-opacity`}
+                    >
+                      {definedTags.map((tag) => {
+                        const active = itemTagNames.includes(tag.name);
+                        return (
+                          <button
+                            key={tag.name}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleItemTag(key, tag.name);
+                            }}
+                            className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium transition-all ${
+                              active
+                                ? 'text-white shadow-sm'
+                                : 'bg-black/50 text-white/70 hover:bg-black/70'
+                            }`}
+                            style={
+                              active ? { backgroundColor: tag.color } : undefined
+                            }
+                          >
+                            {tag.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
               </div>
             );
           })}
@@ -1150,14 +1245,29 @@ export function NetflixHomePage() {
 
         // 處理播放記錄：強制對齊原版 Unique Key 覆蓋邏輯，徹底根治複製人
         const recordsArray = Object.entries(records)
-          .map(([key, record]) => ({ ...record, key }))
+          .map(([key, record]) => {
+            const [keySource, keyId] = key.split('+');
+            const realId = record.vod_id || keyId || '';
+            const realSource = record.source || keySource || '';
+            return {
+              ...record,
+              key,
+              vod_id: realId,
+              id: realId,
+              vod_name: record.title || '',
+              source: realSource,
+            };
+          })
           .sort((a, b) => b.save_time - a.save_time);
 
         const seen = new Map<string, typeof recordsArray[0]>();
         for (const record of recordsArray) {
           // 建立唯一識別碼：繁體劇名 + 純淨片源
-          const uniqueKey = `${convertS2T(record.title)}_${record.source_name.replace(/(資源|片源)/g, '')}`;
-          
+          const uniqueKey = `${convertS2T(record.title)}_${record.source_name.replace(
+            /(資源|片源)/g,
+            ''
+          )}`;
+
           const existing = seen.get(uniqueKey);
           if (!existing || record.save_time > existing.save_time) {
             seen.set(uniqueKey, record);

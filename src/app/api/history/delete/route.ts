@@ -1,36 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
+import { storage } from "@/lib/storage"; 
+import { convertS2T } from "@/lib/searchEngine";
 
-import { getAuthInfoFromCookie } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { convertS2T } from '@/lib/s2t';
-
-export async function DELETE(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const authInfo = getAuthInfoFromCookie(request);
-    if (!authInfo || !authInfo.username) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const body = await req.json();
+    const { vod_name, userId } = body;
+    const mockUserId = userId || "default_user";
+    if (!vod_name) return NextResponse.json({ success: false, error: "缺少劇名" }, { status: 400 });
+
+    const userHistory = await storage.hgetall(`user:history:${mockUserId}`);
+    const targetTitle = convertS2T(vod_name).replace(/[\s\-_,.:：，。！？]/g, "").trim();
+
+    for (const fieldKey of Object.keys(userHistory)) {
+      const cleanFieldKey = convertS2T(fieldKey).replace(/[\s\-_,.:：，。！？]/g, "").trim();
+      if (cleanFieldKey.includes(targetTitle)) {
+        await storage.hdel(`user:history:${mockUserId}`, fieldKey);
+      }
     }
-
-    const { searchParams } = new URL(request.url);
-    const vodName = searchParams.get('vod_name');
-    const source = searchParams.get('source');
-
-    if (!vodName || !source) {
-      return NextResponse.json({ error: 'Missing vod_name or source' }, { status: 400 });
-    }
-
-    // 對齊 v1.4.6/v1.4.7 的儲存金鑰邏輯：繁體劇名 + 純淨片源
-    const traditionalName = convertS2T(vodName);
-    const cleanSource = source.replace(/(資源|片源)/g, '');
-    const historyStorageKey = `${traditionalName}_${cleanSource}`;
-
-    // 直接調用 db 刪除該唯一金鑰紀錄
-    await db.deletePlayRecord(authInfo.username, historyStorageKey);
-
-    return NextResponse.json({ success: true }, { status: 200 });
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('刪除播放記錄失敗:', err);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

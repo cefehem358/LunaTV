@@ -572,12 +572,17 @@ export async function savePlayRecord(
   record: PlayRecord
 ): Promise<void> {
   const key = generateStorageKey(source, id);
+  const enrichedRecord = {
+    ...record,
+    vod_id: id,
+    source: source,
+  };
 
   // 数据库存储模式：乐观更新策略（包括 redis 和 upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     const cachedRecords = cacheManager.getCachedPlayRecords() || {};
-    cachedRecords[key] = record;
+    cachedRecords[key] = enrichedRecord;
     cacheManager.cachePlayRecords(cachedRecords);
 
     // 触发立即更新事件
@@ -594,7 +599,7 @@ export async function savePlayRecord(
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ key, record }),
+        body: JSON.stringify({ key, record: enrichedRecord }),
       });
     } catch (err) {
       await handleDatabaseOperationFailure('playRecords', err);
@@ -612,7 +617,7 @@ export async function savePlayRecord(
 
   try {
     const allRecords = await getAllPlayRecords();
-    allRecords[key] = record;
+    allRecords[key] = enrichedRecord;
     localStorage.setItem(PLAY_RECORDS_KEY, JSON.stringify(allRecords));
     window.dispatchEvent(
       new CustomEvent('playRecordsUpdated', {

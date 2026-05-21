@@ -168,7 +168,13 @@ export class DbManager {
     // 3. 強制使用 `劇名_片源` 作為唯一 Key，確保同一部劇在同一片源下只會有一筆紀錄 (覆蓋更新)
     const historyStorageKey = `${traditionalName}_${cleanSource}`;
     
-    await this.storage.setPlayRecord(userName, historyStorageKey, record);
+    const enrichedRecord = {
+      ...record,
+      vod_id: id,
+      source: source,
+    };
+    
+    await this.storage.setPlayRecord(userName, historyStorageKey, enrichedRecord);
   }
 
   async getAllPlayRecords(userName: string): Promise<{
