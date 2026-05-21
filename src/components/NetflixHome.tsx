@@ -103,10 +103,10 @@ export default function NetflixHome({
     e.stopPropagation();
     e.preventDefault();
     try {
-      const realSource = item.source || item.key?.split('+')[0] || '';
-      const realId = item.id || item.vod_id || item.key?.split('+')[1] || '';
+      // 1. 從唯一金鑰中精確還原當初寫入 IndexedDB 的主鍵組合
+      const [realSource, realId] = item.key ? item.key.split('+') : [item.source, item.id || item.vod_id];
 
-      // 1. 前端立即蒸發
+      // 2. 核心大招：第一時間強制切斷前端渲染狀態，讓卡片無感蒸發，絕不卡頓
       setContinueWatching((prev) =>
         prev.filter((c) => {
           const cName = convertS2T(c.title || c.vod_name || '').replace(/[\s\-_,.:：，。！？]/g, '').trim();
@@ -115,15 +115,14 @@ export default function NetflixHome({
         })
       );
 
-      // 2. 刪除本地 IndexedDB
+      // 3. 實時洗淨本地 IndexedDB 快取，斷絕「重新整理又長出來」的宿命
       if (realSource && realId) {
         await deletePlayRecord(realSource, realId);
       }
 
-      // 3. 通知後端抹除快取
+      // 4. 非同步通知遠端資料庫抹除快取
       const authInfo = getAuthInfoFromBrowserCookie();
       const userId = authInfo?.username || 'default_user';
-
       await fetch('/api/history/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -132,8 +131,9 @@ export default function NetflixHome({
           source: realSource,
           userId,
         }),
-      }).catch(() => {});
+      }).catch(() => console.log("非遠端環境，已忽略 API 通訊失敗"));
 
+      // 5. 派發全域更新事件
       window.dispatchEvent(new CustomEvent('playRecordsUpdated'));
     } catch (err) {
       console.error('刪除播放記錄錯誤:', err);
@@ -275,16 +275,24 @@ export default function NetflixHome({
                               item.total_time > 0
                                 ? (item.play_time / item.total_time) * 100
                                 : 0;
+                            
+                            // 核心修復：精確切出當初 IndexedDB 快取的原始唯一辨識數位 ID 與片源
+                            const targetPlayId = item.key ? item.key.split('+')[1] : (item.id || item.vod_id);
+                            const targetPlaySource = item.key ? item.key.split('+')[0] : item.source;
+
                             return (
                               <div
                                 key={item.key || `${item.source}+${item.id}`}
                                 className='relative group vertical-card-container w-48 shrink-0 cursor-pointer'
                               >
+                                {/* ==========================================
+                                    【核心修正】點擊跳轉：帶入最精確的原始資料庫金鑰參數
+                                   ========================================== */}
                                 <button
                                   onClick={() =>
                                     router.push(
-                                      `/play?id=${encodeURIComponent(item.vod_id || item.id)}&source=${encodeURIComponent(
-                                        item.source
+                                      `/play?id=${encodeURIComponent(targetPlayId)}&source=${encodeURIComponent(
+                                        targetPlaySource
                                       )}&title=${encodeURIComponent(
                                         item.title || item.vod_name
                                       )}${item.url ? `&url=${encodeURIComponent(item.url)}` : ''}${
@@ -306,7 +314,10 @@ export default function NetflixHome({
                                   <div className='visual-box glass-panel rounded-2xl border border-white/10 flex flex-col h-full'>
                                     <div className='relative aspect-[2/3] w-full rounded-t-2xl overflow-hidden bg-gray-900'>
                                       <Image
-                                        src={processImageUrl(item.cover) || '/placeholder.jpg'}
+                                        src={
+                                          processImageUrl(item.cover) ||
+                                          '/placeholder.jpg'
+                                        }
                                         alt={item.title || item.vod_name}
                                         fill
                                         className='object-cover w-full h-full'
@@ -329,18 +340,18 @@ export default function NetflixHome({
                                       </p>
                                       <span className='text-xs font-medium text-[#ff3e6c] bg-[#ff3e6c]/10 px-2.5 py-0.5 rounded-full mt-3 border border-[#ff3e6c]/20 tracking-wider font-noto flex items-center justify-center mx-auto'>
                                         🎬{' '}
-                                        {item.source_name
-                                          ? item.source_name
+                                        {(item.source_name || item.source || '').toUpperCase()
                                               .replace(/^🎬\s*/, '')
                                               .replace(/\s*資源$/, '')
-                                          : (item.source || '').toUpperCase()}
+                                              .replace(/\s*片源$/, '')}
                                       </span>
                                     </div>
                                   </div>
                                 </button>
+                                {/* 右上角 Hover 精緻手動刪除鈕 */}
                                 <button
                                   onClick={(e) => handleDelete(e, item)}
-                                  className='absolute top-2 right-2 w-6 h-6 rounded-full bg-black/70 text-gray-300 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-600 hover:text-white transition-all duration-200 z-50 cursor-pointer'
+                                  className='absolute top-3 right-3 w-6 h-6 rounded-full bg-black/80 text-gray-200 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-600 hover:text-white transition-all duration-200 z-50 cursor-pointer shadow-md'
                                 >
                                   <X className='w-3 h-3' />
                                 </button>
