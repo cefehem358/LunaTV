@@ -4,18 +4,43 @@ import { LogOut, Settings, ShieldCheck, UserRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
+import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import { CURRENT_VERSION } from '@/lib/version';
 
 import { VersionPanel } from './VersionPanel';
+
+interface AuthInfo {
+  username?: string;
+  role?: 'owner' | 'admin' | 'user';
+}
+
+/** 角色 -> 顯示名稱 */
+function getRoleLabel(role?: string): string {
+  switch (role) {
+    case 'owner':
+      return '站長';
+    case 'admin':
+      return '管理員';
+    case 'user':
+      return '用戶';
+    default:
+      return '訪客';
+  }
+}
 
 export function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [showVersion, setShowVersion] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [authInfo, setAuthInfo] = useState<AuthInfo | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== 'undefined') {
+      const auth = getAuthInfoFromBrowserCookie();
+      setAuthInfo(auth);
+    }
   }, []);
 
   // Click-outside detection for dropdown
@@ -28,7 +53,8 @@ export function UserMenu() {
       }
     };
     document.addEventListener('mousedown', handleClickOutside, true);
-    return () => document.removeEventListener('mousedown', handleClickOutside, true);
+    return () =>
+      document.removeEventListener('mousedown', handleClickOutside, true);
   }, [isOpen]);
 
   if (!mounted) return null;
@@ -50,6 +76,9 @@ export function UserMenu() {
     }
   };
 
+  const displayRole = getRoleLabel(authInfo?.role);
+  const displayName = authInfo?.username || '使用者';
+
   return (
     <div className='relative z-[999999] pointer-events-auto block user-menu-container'>
       {/* 頂部頭像按鈕 */}
@@ -66,9 +95,11 @@ export function UserMenu() {
         </div>
         <div className='hidden md:block'>
           <p className='text-sm font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white transition'>
-            站長
+            {displayRole}
           </p>
-          <p className='text-[10px] text-zinc-500 dark:text-zinc-500'>asd0983283925</p>
+          <p className='text-[10px] text-zinc-500 dark:text-zinc-500'>
+            {displayName}
+          </p>
         </div>
       </div>
 
@@ -81,8 +112,19 @@ export function UserMenu() {
           <div className='px-4 py-2.5 border-b border-zinc-200 dark:border-zinc-900 select-none'>
             <p className='text-xs text-zinc-500'>當前用戶</p>
             <p className='text-sm font-bold text-zinc-900 dark:text-white truncate mt-0.5'>
-              asd09832839...
+              {displayName}
             </p>
+            <span
+              className={`inline-flex items-center px-1.5 py-0.5 mt-1 rounded-full text-xs font-medium ${
+                (authInfo?.role || 'user') === 'owner'
+                  ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                  : (authInfo?.role || 'user') === 'admin'
+                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                  : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+              }`}
+            >
+              {displayRole}
+            </span>
           </div>
 
           <div className='p-1 space-y-0.5 relative z-[999999]'>
@@ -95,14 +137,16 @@ export function UserMenu() {
               <span>設置</span>
             </button>
 
-            {/* 管理面板 */}
-            <button
-              onClick={(e) => handleAction(e, 'admin')}
-              className='w-full flex items-center space-x-3 px-3 py-2.5 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white rounded-xl text-sm transition text-left cursor-pointer relative z-[999999]'
-            >
-              <ShieldCheck className='w-4 h-4 text-zinc-500' />
-              <span>管理面板</span>
-            </button>
+            {/* 管理面板（只有 owner / admin 才顯示）*/}
+            {(authInfo?.role === 'owner' || authInfo?.role === 'admin') && (
+              <button
+                onClick={(e) => handleAction(e, 'admin')}
+                className='w-full flex items-center space-x-3 px-3 py-2.5 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white rounded-xl text-sm transition text-left cursor-pointer relative z-[999999]'
+              >
+                <ShieldCheck className='w-4 h-4 text-zinc-500' />
+                <span>管理面板</span>
+              </button>
+            )}
 
             {/* 登出 */}
             <button
