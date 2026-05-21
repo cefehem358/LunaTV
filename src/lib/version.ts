@@ -6,13 +6,13 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
-    version: 'v1.4.7',
+    version: 'v1.4.8',
     date: '2026-05-21',
     content:
-      '修正歷史紀錄儲存漏洞。全方位對齊 MoonTechLab/LunaTV 原版歷史紀錄覆蓋架構，校正 /api/history 路由寫入金鑰，徹底解決點擊影片時重複寫入、前端畫面堆疊複製人的重大缺陷。',
+      '實作「純劇名絕對去重」機制，無視片源差異僅保留最新觀看紀錄；並在繼續觀看卡片右上角新增「手動刪除按鈕」，提升歷史紀錄管理靈活性。',
   },
   {
-    version: 'v1.4.6',
+    version: 'v1.4.7',
     date: '2026-05-21',
     content:
       '修正片源標籤圖標重複與文字冗餘的視覺 Bug；並升級歷史紀錄去重算法，引入「繁簡轉換與模糊劇名相似度識別」機制，完美解決譯名差異導致繼續觀看重複的問題。',

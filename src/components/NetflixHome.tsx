@@ -31,6 +31,7 @@ import {
   clearAllFavorites,
   getAllFavorites,
   getAllPlayRecords,
+  deletePlayRecord,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
 import { titlesMatch } from '@/lib/string-utils';
@@ -95,6 +96,19 @@ export default function NetflixHome({
       if (hasSeen !== announcement) setShowAnnouncement(true);
     }
   }, [announcement]);
+
+  const handleDeleteRecord = async (record: any) => {
+    try {
+      // 這裡直接使用記錄中的 key 進行刪除
+      // record.key 格式為 "source+id"
+      const [source, id] = record.key.split('+');
+      await deletePlayRecord(source, id);
+      // 觸發資料更新事件，讓父組件重新抓取
+      window.dispatchEvent(new CustomEvent('playRecordsUpdated'));
+    } catch (err) {
+      console.error('刪除播放記錄失敗:', err);
+    }
+  };
 
   const handleCloseAnnouncement = useCallback((text: string) => {
     setShowAnnouncement(false);
@@ -202,74 +216,96 @@ export default function NetflixHome({
                       ref={continueRef}
                       className='flex gap-3 overflow-x-auto scroll-smooth flex-nowrap no-scrollbar py-6 px-2 relative'
                     >
-                      {playRecords.map((record) => {
-                        const [source, id] = record.key.split('+');
-                        const progress =
-                          record.total_time > 0
-                            ? (record.play_time / record.total_time) * 100
-                            : 0;
-                        return (
-                          <button
-                            key={record.key}
-                            onClick={() =>
-                              router.push(
-                                `/play?id=${id}&source=${source}&title=${encodeURIComponent(
-                                  record.title
-                                )}${
-                                  record.search_title
-                                    ? `&stitle=${encodeURIComponent(
+                      {(() => {
+                        const uniqueTitleSet = new Set<string>();
+                        return playRecords
+                          .filter((item: any) => {
+                            if (!item) return false;
+                            const strictTraditionalName = convertS2T(item.title || '').replace(/[\s\-_,.:：，。！？]/g, '').trim();
+                            if (uniqueTitleSet.has(strictTraditionalName)) return false;
+                            uniqueTitleSet.add(strictTraditionalName);
+                            return true;
+                          })
+                          .map((record) => {
+                            const [source, id] = record.key.split('+');
+                            const progress =
+                              record.total_time > 0
+                                ? (record.play_time / record.total_time) * 100
+                                : 0;
+                            return (
+                              <div key={record.key} className='relative group vertical-card-container w-48 shrink-0 cursor-pointer'>
+                                <button
+                                  onClick={() =>
+                                    router.push(
+                                      `/play?id=${id}&source=${source}&title=${encodeURIComponent(
+                                        record.title
+                                      )}${
                                         record.search_title
-                                      )}`
-                                    : ''
-                                }`
-                              )
-                            }
-                            onFocus={(e) =>
-                              e.currentTarget.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'nearest',
-                                inline: 'center',
-                              })
-                            }
-                            className='vertical-card-container w-48 shrink-0 cursor-pointer'
-                          >
-                            <div className='visual-box glass-panel rounded-2xl border border-white/10 flex flex-col h-full'>
-                              <div className='relative aspect-[2/3] w-full rounded-t-2xl overflow-hidden bg-gray-900'>
-                                <Image
-                                  src={
-                                    processImageUrl(record.cover) ||
-                                    '/placeholder.jpg'
+                                          ? `&stitle=${encodeURIComponent(
+                                            record.search_title
+                                          )}`
+                                          : ''
+                                      }`
+                                    )
                                   }
-                                  alt={record.title}
-                                  fill
-                                  className='object-cover w-full h-full'
-                                  unoptimized
-                                  referrerPolicy='no-referrer'
-                                />
-                                <div className='absolute bottom-0 left-0 h-1 bg-black/40 w-full'>
-                                  <div
-                                    className='h-full bg-[#ff3e6c] shadow-[0_0_8px_#ff3e6c]'
-                                    style={{ width: `${progress}%` }}
-                                  />
-                                </div>
+                                  onFocus={(e) =>
+                                    e.currentTarget.scrollIntoView({
+                                      behavior: 'smooth',
+                                      block: 'nearest',
+                                      inline: 'center',
+                                    })
+                                  }
+                                  className='w-full h-full'
+                                >
+                                  <div className='visual-box glass-panel rounded-2xl border border-white/10 flex flex-col h-full'>
+                                    <div className='relative aspect-[2/3] w-full rounded-t-2xl overflow-hidden bg-gray-900'>
+                                      <Image
+                                        src={
+                                          processImageUrl(record.cover) ||
+                                          '/placeholder.jpg'
+                                        }
+                                        alt={record.title}
+                                        fill
+                                        className='object-cover w-full h-full'
+                                        unoptimized
+                                        referrerPolicy='no-referrer'
+                                      />
+                                      <div className='absolute bottom-0 left-0 h-1 bg-black/40 w-full'>
+                                        <div
+                                          className='h-full bg-[#ff3e6c] shadow-[0_0_8px_#ff3e6c]'
+                                          style={{ width: `${progress}%` }}
+                                        />
+                                      </div>
+                                    </div>
+                                    <div className='p-4 flex flex-col items-center text-center justify-between flex-1'>
+                                      <h3 className='text-base font-semibold text-white truncate w-full font-noto mb-1'>
+                                        {record.title}
+                                      </h3>
+                                      <p className='text-xs text-gray-400 mt-1.5 font-noto truncate'>
+                                        看到第 {record.index} / 全 {record.total_episodes} 集 ({Math.round(progress)}%)
+                                      </p>
+                                      <span className='text-xs font-medium text-[#ff3e6c] bg-[#ff3e6c]/10 px-2.5 py-0.5 rounded-full mt-3 border border-[#ff3e6c]/20 tracking-wider font-noto flex items-center justify-center mx-auto'>
+                                        🎬 {record.source_name.replace(/^🎬\s*/, '').replace(/\s*資源$/, '')}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    handleDeleteRecord(record);
+                                  }}
+                                  className='absolute top-2 right-2 w-6 h-6 rounded-full bg-black/70 text-gray-300 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-600 hover:text-white transition-all duration-200 z-50 cursor-pointer'
+                                >
+                                  <X className='w-3 h-3' />
+                                </button>
                               </div>
-                              <div className='p-4 flex flex-col items-center text-center justify-between flex-1'>
-                                <h3 className='text-base font-semibold text-white truncate w-full font-noto mb-1'>
-                                  {record.title}
-                                </h3>
-                                <p className='text-xs text-gray-400 mt-1.5 font-noto truncate'>
-                                  看到第 {record.index} / 全 {record.total_episodes} 集 ({Math.round(progress)}%)
-                                </p>
-                                <span className='text-xs font-medium text-[#ff3e6c] bg-[#ff3e6c]/10 px-2.5 py-0.5 rounded-full mt-3 border border-[#ff3e6c]/20 tracking-wider font-noto flex items-center justify-center mx-auto'>
-                                  🎬 {record.source_name.replace(/^🎬\s*/, '').replace(/\s*資源$/, '')}
-                                </span>
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
+                            );
+                          })
+                        })()}
+                      </div>
                     </div>
-                  </div>
                 </section>
               )}
 
