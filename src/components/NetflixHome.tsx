@@ -213,7 +213,7 @@ export default function NetflixHome({
                 <section className='mb-8'>
                   <div className='flex items-center gap-3 mb-4'>
                     <CirclePlay className='w-5 h-5 text-[#e50914]' />
-                    <h3 className='text-xl font-bold text-zinc-900 dark:text-white'>
+                    <h3 className='text-2xl font-bold text-zinc-900 dark:text-white'>
                       繼續觀看
                     </h3>
                   </div>

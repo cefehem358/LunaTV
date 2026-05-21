@@ -6,6 +6,12 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.0.8',
+    date: '2026-05-21',
+    content:
+      '全面 UI/UX 優化：首頁 Netflix 風格調整、主題一致性修復、手機篩選折疊、側欄折疊 tooltip、底部導航加入搜尋、橫向捲動手機提示、繼續觀看字體放大、載入進度條寬度適配。',
+  },
+  {
     version: 'v1.0.7',
     date: '2026-05-20',
     content:
