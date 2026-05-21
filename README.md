@@ -80,7 +80,7 @@
 ```yaml
 services:
   moontv-core:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/lunatv:latest
+    image: ghcr.io/berserker8888/lunatv:latest
     container_name: moontv-core
     restart: on-failure
     ports:
@@ -119,7 +119,7 @@ volumes:
 ```yaml
 services:
   moontv-core:
-    image: ghcr.io/YOUR_GITHUB_USERNAME/lunatv:latest
+    image: ghcr.io/berserker8888/lunatv:latest
     container_name: moontv-core
     restart: on-failure
     ports:
