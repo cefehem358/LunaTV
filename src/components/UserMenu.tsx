@@ -61,7 +61,7 @@ export function UserMenu() {
         }}
         className='flex items-center space-x-3 cursor-pointer group select-none relative z-[999999]'
       >
-        <div className='w-9 h-9 rounded-xl bg-gradient-to-br from-[#e50914] via-purple-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-red-500/20 transition transform group-hover:scale-110 group-hover:rotate-3 duration-200'>
+        <div className='w-9 h-9 rounded-xl bg-gradient-to-br from-[#ff3e6c] via-purple-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-red-500/20 transition transform group-hover:scale-110 group-hover:rotate-3 duration-200'>
           <UserRound className='w-5 h-5' />
         </div>
         <div className='hidden md:block'>
@@ -124,7 +124,7 @@ export function UserMenu() {
             }}
             className='mt-1 border-t border-zinc-200 dark:border-zinc-900/80 pt-2 pb-1 text-center cursor-pointer group flex items-center justify-center select-none relative z-[999999] w-full'
           >
-            <span className='text-[11px] font-medium text-zinc-500 group-hover:text-[#e50914] transition tracking-wider block w-full py-1'>
+            <span className='text-[11px] font-medium text-zinc-500 group-hover:text-[#ff3e6c] transition tracking-wider block w-full py-1'>
               {CURRENT_VERSION}
             </span>
           </div>

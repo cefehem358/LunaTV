@@ -816,7 +816,7 @@ function DoubanPageClient() {
             >
               {isLoadingMore && (
                 <div className='flex items-center gap-2'>
-                  <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-[#e50914]'></div>
+                  <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-[#ff3e6c]'></div>
                   <span className='text-zinc-500 dark:text-zinc-400'>
                     加載中...
                   </span>
@@ -835,13 +835,13 @@ function DoubanPageClient() {
           {/* 錯誤狀態 */}
           {!loading && error && (
             <div className='text-center py-16 flex flex-col items-center justify-center gap-4'>
-              <div className='text-[#e50914] text-4xl'>⚠️</div>
+              <div className='text-[#ff3e6c] text-4xl'>⚠️</div>
               <p className='text-zinc-500 dark:text-zinc-400 text-sm max-w-md'>
                 {error}
               </p>
               <button
                 onClick={() => loadInitialData()}
-                className='px-6 py-2 bg-[#e50914] text-white rounded-md text-sm font-medium hover:bg-[#b80710] transition-colors focus:outline-none focus:ring-2 focus:ring-[#e50914]/50'
+                className='px-6 py-2 bg-[#ff3e6c] text-white rounded-md text-sm font-medium hover:bg-[#b80710] transition-colors focus:outline-none focus:ring-2 focus:ring-[#ff3e6c]/50'
               >
                 重試一次
               </button>

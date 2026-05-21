@@ -520,10 +520,10 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
                 activeCategory === category.key
                   ? isDefaultValue(category.key)
                     ? 'text-zinc-100 cursor-default'
-                    : 'text-[#e50914] cursor-default'
+                    : 'text-[#ff3e6c] cursor-default'
                   : isDefaultValue(category.key)
                   ? 'text-zinc-400 hover:text-zinc-100 cursor-pointer'
-                  : 'text-[#e50914] hover:text-[#b20710] cursor-pointer'
+                  : 'text-[#ff3e6c] hover:text-[#cc3256] cursor-pointer'
               }`}
             >
               <span>{getDisplayText(category.key)}</span>
@@ -575,7 +575,7 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
                       }
                       className={`px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm rounded-lg transition-all duration-200 text-left ${
                         isOptionSelected(activeCategory, option.value)
-                          ? 'bg-[#e50914]/20 text-[#e50914] border border-[#e50914]/40 font-semibold'
+                          ? 'bg-[#ff3e6c]/20 text-[#ff3e6c] border border-[#ff3e6c]/40 font-semibold'
                           : 'text-zinc-300 hover:bg-zinc-800/50 hover:text-white'
                       }`}
                     >

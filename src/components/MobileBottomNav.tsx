@@ -107,13 +107,13 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
               >
                 <item.icon
                   className={`h-6 w-6 ${
-                    active ? 'text-[#e50914]' : 'text-zinc-500'
+                    active ? 'text-[#ff3e6c]' : 'text-zinc-500'
                   }`}
                 />
                 <span
                   className={
                     active
-                      ? 'text-[#e50914] font-medium'
+                      ? 'text-[#ff3e6c] font-medium'
                       : 'text-zinc-500 dark:text-zinc-400'
                   }
                 >

@@ -11,11 +11,11 @@ export default function WarningPage() {
   return (
     <div className='min-h-screen bg-[#040404] flex flex-col'>
       <div className='flex-1 flex items-center justify-center p-4'>
-        <div className='max-w-2xl w-full bg-[#1a1a1a]/90 rounded-2xl shadow-2xl p-6 sm:p-8 border border-[#e50914]/30 backdrop-blur-md'>
+        <div className='max-w-2xl w-full bg-[#1a1a1a]/90 rounded-2xl shadow-2xl p-6 sm:p-8 border border-[#ff3e6c]/30 backdrop-blur-md'>
           <div className='flex justify-center mb-6 sm:mb-8'>
-            <div className='w-16 h-16 sm:w-20 sm:h-20 bg-[#e50914]/10 rounded-full flex items-center justify-center border border-[#e50914]/30'>
+            <div className='w-16 h-16 sm:w-20 sm:h-20 bg-[#ff3e6c]/10 rounded-full flex items-center justify-center border border-[#ff3e6c]/30'>
               <svg
-                className='w-10 h-10 sm:w-12 sm:h-12 text-[#e50914]'
+                className='w-10 h-10 sm:w-12 sm:h-12 text-[#ff3e6c]'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -34,12 +34,12 @@ export default function WarningPage() {
             <h1 className='text-2xl sm:text-3xl font-bold text-white mb-2'>
               安全合規配置警告
             </h1>
-            <div className='w-12 sm:w-16 h-1 bg-[#e50914] mx-auto rounded-full' />
+            <div className='w-12 sm:w-16 h-1 bg-[#ff3e6c] mx-auto rounded-full' />
           </div>
 
           <div className='space-y-4 sm:space-y-6'>
-            <div className='bg-[#e50914]/5 border-l-4 border-[#e50914] p-3 sm:p-4 rounded-r-lg'>
-              <p className='text-base sm:text-lg font-semibold text-[#e50914] mb-2'>
+            <div className='bg-[#ff3e6c]/5 border-l-4 border-[#ff3e6c] p-3 sm:p-4 rounded-r-lg'>
+              <p className='text-base sm:text-lg font-semibold text-[#ff3e6c] mb-2'>
                 ⚠️ 安全風險提示
               </p>
               <p className='text-sm sm:text-base text-gray-300'>
@@ -53,31 +53,31 @@ export default function WarningPage() {
               </h2>
               <ul className='space-y-2 sm:space-y-3 text-sm sm:text-base text-gray-400'>
                 <li className='flex items-start'>
-                  <span className='text-[#e50914] mr-2 mt-0.5'>•</span>
+                  <span className='text-[#ff3e6c] mr-2 mt-0.5'>•</span>
                   <span>未經授權的訪問可能導致內容被惡意傳播</span>
                 </li>
                 <li className='flex items-start'>
-                  <span className='text-[#e50914] mr-2 mt-0.5'>•</span>
+                  <span className='text-[#ff3e6c] mr-2 mt-0.5'>•</span>
                   <span>伺服器資源可能被濫用，影響正常服務</span>
                 </li>
                 <li className='flex items-start'>
-                  <span className='text-[#e50914] mr-2 mt-0.5'>•</span>
+                  <span className='text-[#ff3e6c] mr-2 mt-0.5'>•</span>
                   <span>可能收到相關權利方的法律通知</span>
                 </li>
                 <li className='flex items-start'>
-                  <span className='text-[#e50914] mr-2 mt-0.5'>•</span>
+                  <span className='text-[#ff3e6c] mr-2 mt-0.5'>•</span>
                   <span>服務提供商可能因合規問題終止服務</span>
                 </li>
               </ul>
             </div>
 
-            <div className='bg-[#e50914]/5 border border-[#e50914]/20 rounded-lg p-3 sm:p-4'>
-              <h3 className='text-base sm:text-lg font-semibold text-[#e50914] mb-2'>
+            <div className='bg-[#ff3e6c]/5 border border-[#ff3e6c]/20 rounded-lg p-3 sm:p-4'>
+              <h3 className='text-base sm:text-lg font-semibold text-[#ff3e6c] mb-2'>
                 🔒 安全配置建議
               </h3>
               <p className='text-sm sm:text-base text-gray-300'>
                 請立即配置{' '}
-                <code className='bg-[#1a1a1a] px-1.5 py-0.5 rounded text-xs sm:text-sm font-mono text-[#e50914] border border-[#e50914]/20'>
+                <code className='bg-[#1a1a1a] px-1.5 py-0.5 rounded text-xs sm:text-sm font-mono text-[#ff3e6c] border border-[#ff3e6c]/20'>
                   PASSWORD
                 </code>{' '}
                 環境變量以啟用訪問控制。

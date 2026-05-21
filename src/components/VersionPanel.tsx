@@ -44,7 +44,7 @@ export function VersionPanel({ isOpen = true, onClose }: VersionPanelProps) {
             <h3 className='text-xl font-bold text-white tracking-tight'>
               版本信息
             </h3>
-            <span className='px-2.5 py-0.5 bg-[#e50914] text-xs font-black text-white rounded-full uppercase tracking-wider'>
+            <span className='px-2.5 py-0.5 bg-[#ff3e6c] text-xs font-black text-white rounded-full uppercase tracking-wider'>
               {CURRENT_VERSION}
             </span>
           </div>
@@ -80,14 +80,14 @@ export function VersionPanel({ isOpen = true, onClose }: VersionPanelProps) {
                 key={log.version}
                 className={`p-4 border rounded-2xl transition duration-300 ${
                   index === 0
-                    ? 'bg-zinc-900/50 border-[#e50914]/30'
+                    ? 'bg-zinc-900/50 border-[#ff3e6c]/30'
                     : 'bg-zinc-900/10 border-zinc-900'
                 }`}
               >
                 <div className='flex justify-between items-center'>
                   <span
                     className={`text-sm font-black ${
-                      index === 0 ? 'text-[#e50914]' : 'text-zinc-300'
+                      index === 0 ? 'text-[#ff3e6c]' : 'text-zinc-300'
                     }`}
                   >
                     {log.version}

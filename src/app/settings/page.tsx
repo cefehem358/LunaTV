@@ -42,7 +42,7 @@ function SettingToggle({
       <button
         onClick={() => onChange(!checked)}
         className={`relative w-12 h-7 rounded-full transition-all duration-300 flex-shrink-0 ${
-          checked ? 'bg-[#e50914]' : 'bg-zinc-300 dark:bg-zinc-700'
+          checked ? 'bg-[#ff3e6c]' : 'bg-zinc-300 dark:bg-zinc-700'
         }`}
       >
         <span
@@ -142,7 +142,7 @@ export default function SettingsPage() {
           </div>
           <button
             onClick={handleReset}
-            className='text-xs text-zinc-500 hover:text-[#e50914] transition-colors px-3 py-1.5 rounded-lg hover:bg-red-500/10 font-medium'
+            className='text-xs text-zinc-500 hover:text-[#ff3e6c] transition-colors px-3 py-1.5 rounded-lg hover:bg-red-500/10 font-medium'
           >
             恢復默認
           </button>
@@ -153,8 +153,8 @@ export default function SettingsPage() {
         {/* 豆瓣數據代理 */}
         <div className='bg-white dark:bg-zinc-900/60 backdrop-blur-sm rounded-2xl border border-zinc-200 dark:border-white/5 p-6'>
           <div className='flex items-center gap-3 mb-5'>
-            <div className='w-10 h-10 rounded-xl bg-[#e50914]/20 flex items-center justify-center'>
-              <Globe className='w-5 h-5 text-[#e50914]' />
+            <div className='w-10 h-10 rounded-xl bg-[#ff3e6c]/20 flex items-center justify-center'>
+              <Globe className='w-5 h-5 text-[#ff3e6c]' />
             </div>
             <div>
               <h2 className='font-bold text-base'>豆瓣數據代理</h2>
@@ -170,7 +170,7 @@ export default function SettingsPage() {
                 key={opt.value}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 ${
                   doubanSource === opt.value
-                    ? 'bg-[#e50914]/10 border border-[#e50914]/30'
+                    ? 'bg-[#ff3e6c]/10 border border-[#ff3e6c]/30'
                     : 'bg-zinc-100 dark:bg-zinc-800/30 border border-transparent hover:bg-zinc-200 dark:hover:bg-zinc-800/50'
                 }`}
               >
@@ -185,12 +185,12 @@ export default function SettingsPage() {
                 <div
                   className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                     doubanSource === opt.value
-                      ? 'border-[#e50914]'
+                      ? 'border-[#ff3e6c]'
                       : 'border-zinc-300 dark:border-zinc-600'
                   }`}
                 >
                   {doubanSource === opt.value && (
-                    <div className='w-2 h-2 rounded-full bg-[#e50914]' />
+                    <div className='w-2 h-2 rounded-full bg-[#ff3e6c]' />
                   )}
                 </div>
                 <span className='text-sm text-zinc-700 dark:text-zinc-200'>{opt.label}</span>
@@ -208,7 +208,7 @@ export default function SettingsPage() {
                 value={proxyUrl}
                 onChange={(e) => setProxyUrl(e.target.value)}
                 placeholder='https://your-proxy.com/'
-                className='w-full rounded-xl border border-zinc-300 dark:border-zinc-800 py-3 px-4 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-[#e50914]/50 focus:border-[#e50914]/50 focus:outline-none bg-white dark:bg-black/40 text-sm transition-all'
+                className='w-full rounded-xl border border-zinc-300 dark:border-zinc-800 py-3 px-4 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-[#ff3e6c]/50 focus:border-[#ff3e6c]/50 focus:outline-none bg-white dark:bg-black/40 text-sm transition-all'
               />
             </div>
           )}
@@ -217,8 +217,8 @@ export default function SettingsPage() {
         {/* 豆瓣圖片代理 */}
         <div className='bg-white dark:bg-zinc-900/60 backdrop-blur-sm rounded-2xl border border-zinc-200 dark:border-white/5 p-6'>
           <div className='flex items-center gap-3 mb-5'>
-            <div className='w-10 h-10 rounded-xl bg-[#e50914]/20 flex items-center justify-center'>
-              <ImageIcon className='w-5 h-5 text-[#e50914]' />
+            <div className='w-10 h-10 rounded-xl bg-[#ff3e6c]/20 flex items-center justify-center'>
+              <ImageIcon className='w-5 h-5 text-[#ff3e6c]' />
             </div>
             <div>
               <h2 className='font-bold text-base'>豆瓣圖片代理</h2>
@@ -234,7 +234,7 @@ export default function SettingsPage() {
                 key={opt.value}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 ${
                   imageProxyType === opt.value
-                    ? 'bg-[#e50914]/10 border border-[#e50914]/30'
+                    ? 'bg-[#ff3e6c]/10 border border-[#ff3e6c]/30'
                     : 'bg-zinc-100 dark:bg-zinc-800/30 border border-transparent hover:bg-zinc-200 dark:hover:bg-zinc-800/50'
                 }`}
               >
@@ -249,12 +249,12 @@ export default function SettingsPage() {
                 <div
                   className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                     imageProxyType === opt.value
-                      ? 'border-[#e50914]'
+                      ? 'border-[#ff3e6c]'
                       : 'border-zinc-300 dark:border-zinc-600'
                   }`}
                 >
                   {imageProxyType === opt.value && (
-                    <div className='w-2 h-2 rounded-full bg-[#e50914]' />
+                    <div className='w-2 h-2 rounded-full bg-[#ff3e6c]' />
                   )}
                 </div>
                 <span className='text-sm text-zinc-700 dark:text-zinc-200'>{opt.label}</span>
@@ -272,7 +272,7 @@ export default function SettingsPage() {
                 value={imageProxyUrl}
                 onChange={(e) => setImageProxyUrl(e.target.value)}
                 placeholder='https://your-proxy.com/'
-                className='w-full rounded-xl border border-zinc-300 dark:border-zinc-800 py-3 px-4 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-[#e50914]/50 focus:border-[#e50914]/50 focus:outline-none bg-white dark:bg-black/40 text-sm transition-all'
+                className='w-full rounded-xl border border-zinc-300 dark:border-zinc-800 py-3 px-4 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-[#ff3e6c]/50 focus:border-[#ff3e6c]/50 focus:outline-none bg-white dark:bg-black/40 text-sm transition-all'
               />
             </div>
           )}
@@ -281,8 +281,8 @@ export default function SettingsPage() {
         {/* 開關設置 */}
         <div className='bg-white dark:bg-zinc-900/60 backdrop-blur-sm rounded-2xl border border-zinc-200 dark:border-white/5 p-6 divide-y divide-zinc-200 dark:divide-zinc-800/50'>
           <div className='flex items-center gap-3 mb-2'>
-            <div className='w-10 h-10 rounded-xl bg-[#e50914]/20 flex items-center justify-center'>
-              <Search className='w-5 h-5 text-[#e50914]' />
+            <div className='w-10 h-10 rounded-xl bg-[#ff3e6c]/20 flex items-center justify-center'>
+              <Search className='w-5 h-5 text-[#ff3e6c]' />
             </div>
             <div>
               <h2 className='font-bold text-base'>搜索與播放</h2>
@@ -322,7 +322,7 @@ export default function SettingsPage() {
         {/* 儲存按鈕 */}
         <button
           onClick={handleSave}
-          className='w-full py-4 bg-gradient-to-r from-[#e50914] to-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 tracking-wide'
+          className='w-full py-4 bg-gradient-to-r from-[#ff3e6c] to-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 tracking-wide'
         >
           儲存設定
         </button>
@@ -334,7 +334,7 @@ export default function SettingsPage() {
 
       {/* 儲存提示 */}
       {saveMessage && (
-        <div className='fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#e50914]/90 text-white px-6 py-3 rounded-xl text-sm font-medium shadow-2xl backdrop-blur-sm z-50'>
+        <div className='fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#ff3e6c]/90 text-white px-6 py-3 rounded-xl text-sm font-medium shadow-2xl backdrop-blur-sm z-50'>
           {saveMessage}
         </div>
       )}

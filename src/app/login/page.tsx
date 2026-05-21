@@ -129,8 +129,8 @@ function LoginPageClient() {
     <div className='relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-black'>
       {/* 動態背景 */}
       <div className='absolute inset-0'>
-        <div className='absolute inset-0 bg-gradient-to-br from-[#e50914]/10 via-black to-purple-900/10' />
-        <div className='absolute top-[-30%] left-[-20%] w-[80%] h-[80%] rounded-full bg-[#e50914]/5 blur-[120px]' />
+        <div className='absolute inset-0 bg-gradient-to-br from-[#ff3e6c]/10 via-black to-purple-900/10' />
+        <div className='absolute top-[-30%] left-[-20%] w-[80%] h-[80%] rounded-full bg-[#ff3e6c]/5 blur-[120px]' />
         <div className='absolute bottom-[-30%] right-[-20%] w-[80%] h-[80%] rounded-full bg-purple-900/5 blur-[120px]' />
         <div className='absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-black/60 to-black' />
       </div>
@@ -154,7 +154,7 @@ function LoginPageClient() {
       <div className='relative z-10 w-full max-w-sm'>
         {/* Logo 區域 */}
         <div className='text-center mb-10'>
-          <div className='inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#e50914] to-red-700 shadow-lg shadow-red-500/25 mb-5'>
+          <div className='inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#ff3e6c] to-red-700 shadow-lg shadow-red-500/25 mb-5'>
             <Film className='w-8 h-8 text-white' />
           </div>
           <h1 className='text-4xl font-black text-white tracking-[0.15em] mb-2 drop-shadow-lg'>
@@ -167,7 +167,7 @@ function LoginPageClient() {
 
         {/* 登入卡片 */}
         <div className='relative bg-zinc-900/60 backdrop-blur-xl rounded-2xl p-8 border border-zinc-800/50 shadow-2xl'>
-          <div className='absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-[#e50914]/50 to-transparent' />
+          <div className='absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-[#ff3e6c]/50 to-transparent' />
 
           <form onSubmit={handleSubmit} className='space-y-5'>
             {shouldAskUsername && (
@@ -182,7 +182,7 @@ function LoginPageClient() {
                   id='username'
                   type='text'
                   autoComplete='username'
-                  className='block w-full rounded-xl border border-zinc-800 py-3.5 px-4 text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-[#e50914]/50 focus:border-[#e50914]/50 focus:outline-none bg-black/40 transition-all duration-200 text-sm'
+                  className='block w-full rounded-xl border border-zinc-800 py-3.5 px-4 text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-[#ff3e6c]/50 focus:border-[#ff3e6c]/50 focus:outline-none bg-black/40 transition-all duration-200 text-sm'
                   placeholder='請輸入用戶名'
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -202,7 +202,7 @@ function LoginPageClient() {
                 ref={passwordRef}
                 type='password'
                 autoComplete='current-password'
-                className='block w-full rounded-xl border border-zinc-800 py-3.5 px-4 text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-[#e50914]/50 focus:border-[#e50914]/50 focus:outline-none bg-black/40 transition-all duration-200 text-sm'
+                className='block w-full rounded-xl border border-zinc-800 py-3.5 px-4 text-white placeholder:text-zinc-600 focus:ring-2 focus:ring-[#ff3e6c]/50 focus:border-[#ff3e6c]/50 focus:outline-none bg-black/40 transition-all duration-200 text-sm'
                 placeholder='請輸入訪問密碼'
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -210,7 +210,7 @@ function LoginPageClient() {
             </div>
 
             {error && (
-              <div className='flex items-center gap-2 text-sm text-[#e50914] bg-red-500/10 rounded-xl px-4 py-3 border border-red-500/20'>
+              <div className='flex items-center gap-2 text-sm text-[#ff3e6c] bg-red-500/10 rounded-xl px-4 py-3 border border-red-500/20'>
                 <AlertCircle className='w-4 h-4 flex-shrink-0' />
                 <span>{error}</span>
               </div>
@@ -221,7 +221,7 @@ function LoginPageClient() {
               disabled={
                 !password || loading || (shouldAskUsername && !username)
               }
-              className='relative w-full rounded-xl bg-gradient-to-r from-[#e50914] to-red-600 py-3.5 text-base font-bold text-white shadow-lg shadow-red-500/25 transition-all duration-200 hover:shadow-red-500/40 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 disabled:shadow-none overflow-hidden group'
+              className='relative w-full rounded-xl bg-gradient-to-r from-[#ff3e6c] to-red-600 py-3.5 text-base font-bold text-white shadow-lg shadow-red-500/25 transition-all duration-200 hover:shadow-red-500/40 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 disabled:shadow-none overflow-hidden group'
             >
               <span className='relative z-10 tracking-wider'>
                 {loading ? (
@@ -248,7 +248,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <div className='min-h-screen bg-black flex items-center justify-center'>
-          <div className='w-8 h-8 border-[3px] border-[#e50914] border-t-transparent rounded-full animate-spin' />
+          <div className='w-8 h-8 border-[3px] border-[#ff3e6c] border-t-transparent rounded-full animate-spin' />
         </div>
       }
     >

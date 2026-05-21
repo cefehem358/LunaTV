@@ -8,15 +8,15 @@ import {
   Clover,
   Film,
   Home,
-  Menu,
+  Radio,
   Search,
+  Star,
   Tv,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useState,
@@ -34,18 +34,12 @@ const SidebarContext = createContext<SidebarContextType>({
 
 export const useSidebar = () => useContext(SidebarContext);
 
-// 可替換為你自己的 logo 圖片
 const Logo = () => {
   const { siteName } = useSite();
   return (
-    <Link
-      href='/'
-      className='flex items-center justify-center h-16 select-none hover:opacity-80 transition-opacity duration-200'
-    >
-      <span className='text-2xl font-black text-[#e50914] font-[Impact] tracking-wider'>
-        {siteName}
-      </span>
-    </Link>
+    <span className='text-2xl font-black text-[#ff3e6c] font-[Impact] tracking-wider whitespace-nowrap'>
+      {siteName}
+    </span>
   );
 };
 
@@ -54,301 +48,134 @@ interface SidebarProps {
   activePath?: string;
 }
 
-// 在瀏覽器環境下通過全局變量緩存摺疊狀態，避免組件重新掛載時出現初始值閃爍
-declare global {
-  interface Window {
-    __sidebarCollapsed?: boolean;
-  }
-}
-
-const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
+const Sidebar = ({ activePath = '/' }: SidebarProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  // 若同一次 SPA 會話中已經讀取過摺疊狀態，則直接復用，避免閃爍
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
-    if (
-      typeof window !== 'undefined' &&
-      typeof window.__sidebarCollapsed === 'boolean'
-    ) {
-      return window.__sidebarCollapsed;
-    }
-    return false; // 默認展開
-  });
-
-  // 首次掛載時讀取 localStorage，以便刷新後仍保持上次的摺疊狀態
-  useEffect(() => {
-    const saved = localStorage.getItem('sidebarCollapsed');
-    if (saved !== null) {
-      const val = JSON.parse(saved);
-      setIsCollapsed(val);
-      window.__sidebarCollapsed = val;
-    }
-  }, []);
-
-  // 當摺疊狀態變化時，同步到 <html> data 屬性，供首屏 CSS 使用
-  useEffect(() => {
-    if (typeof document !== 'undefined') {
-      if (isCollapsed) {
-        document.documentElement.dataset.sidebarCollapsed = 'true';
-      } else {
-        delete document.documentElement.dataset.sidebarCollapsed;
-      }
-    }
-  }, [isCollapsed]);
-
   const [active, setActive] = useState(activePath);
 
   useEffect(() => {
-    // 優先使用傳入的 activePath
     if (activePath) {
       setActive(activePath);
     } else {
-      // 否則使用當前路徑
       const getCurrentFullPath = () => {
         const queryString = searchParams.toString();
         return queryString ? `${pathname}?${queryString}` : pathname;
       };
-      const fullPath = getCurrentFullPath();
-      setActive(fullPath);
+      setActive(getCurrentFullPath());
     }
   }, [activePath, pathname, searchParams]);
 
-  const handleToggle = useCallback(() => {
-    const newState = !isCollapsed;
-    setIsCollapsed(newState);
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(newState));
-    if (typeof window !== 'undefined') {
-      window.__sidebarCollapsed = newState;
-    }
-    onToggle?.(newState);
-  }, [isCollapsed, onToggle]);
-
-  const handleSearchClick = useCallback(() => {
+  const handleSearchClick = () => {
     router.push('/search');
-  }, [router]);
-
-  const contextValue = {
-    isCollapsed,
   };
 
+  const contextValue = { isCollapsed: true };
+
   const [menuItems, setMenuItems] = useState([
-    {
-      icon: Film,
-      label: '電影',
-      href: '/douban?type=movie',
-    },
-    {
-      icon: Tv,
-      label: '劇集',
-      href: '/douban?type=tv',
-    },
-    {
-      icon: Cat,
-      label: '動漫',
-      href: '/douban?type=anime',
-    },
-    {
-      icon: Clover,
-      label: '綜藝',
-      href: '/douban?type=show',
-    },
+    { icon: Film, label: '電影', href: '/douban?type=movie' },
+    { icon: Tv, label: '劇集', href: '/douban?type=tv' },
+    { icon: Cat, label: '動漫', href: '/douban?type=anime' },
+    { icon: Clover, label: '綜藝', href: '/douban?type=show' },
   ]);
+
+  useEffect(() => {
+    const rc = (window as any).RUNTIME_CONFIG;
+    if (rc?.ENABLE_WEB_LIVE) {
+      setMenuItems((p) => p.some((i) => i.href === '/live') ? p : [...p, { icon: Radio, label: '直播', href: '/live' }]);
+    }
+    if (rc?.CUSTOM_CATEGORIES?.length > 0) {
+      setMenuItems((p) => p.some((i) => i.href === '/douban?type=custom') ? p : [...p, { icon: Star, label: '自定義', href: '/douban?type=custom' }]);
+    }
+  }, []);
+
+  const NavLink = ({
+    href,
+    icon: Icon,
+    label,
+    isActive,
+    onClick,
+  }: {
+    href: string;
+    icon: any;
+    label: string;
+    isActive: boolean;
+    onClick?: (e: any) => void;
+  }) => (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`group/sideitem relative flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+        isActive
+          ? 'bg-gradient-to-r from-[#ff3e6c]/20 to-transparent border-l-4 border-[#ff3e6c] text-white'
+          : 'text-zinc-400 hover:text-white hover:bg-white/5 border-l-4 border-transparent'
+      }`}
+    >
+      <div className='w-6 h-6 flex items-center justify-center'>
+        <Icon className={`w-5 h-5 ${isActive ? 'text-white' : ''}`} />
+      </div>
+      <span className='opacity-0 group-hover/sideitem:opacity-100 transition-opacity duration-200 whitespace-nowrap'>
+        {label}
+      </span>
+    </Link>
+  );
 
   return (
     <SidebarContext.Provider value={contextValue}>
-      {/* 在移動端隱藏側邊欄 */}
-      <div className='hidden md:flex'>
-        <aside
-          data-sidebar
-          className={`fixed top-0 left-0 h-screen bg-white dark:bg-[#08080a] border-r border-zinc-200 dark:border-white/5 transition-all duration-300 z-10 shadow-lg text-zinc-900 dark:text-white ${
-            isCollapsed ? 'w-16' : 'w-64'
-          }`}
-        >
-          <div className='flex h-full flex-col'>
-            {/* 頂部 Logo 區域 */}
-            <div className='relative h-16'>
-              <div
-                className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${
-                  isCollapsed ? 'opacity-0' : 'opacity-100'
-                }`}
-              >
-                <div className='w-[calc(100%-4rem)] flex justify-center'>
-                  {!isCollapsed && <Logo />}
-                </div>
-              </div>
-              <button
-                onClick={handleToggle}
-                className={`absolute top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors duration-200 z-10 ${
-                  isCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-2'
-                }`}
-              >
-                <Menu className='h-4 w-4' />
-              </button>
-            </div>
-
-            {/* 首頁和搜索導航 */}
-            <nav className='px-2 mt-4 space-y-1'>
-              <Link
-                href='/'
-                onClick={() => setActive('/')}
-                className={`group relative flex items-center rounded-lg px-2 py-2 pl-4 transition-colors duration-200 min-h-[40px] ${
-                  isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
-                } gap-3 justify-start ${
-                  active === '/'
-                    ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white font-semibold'
-                    : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-white'
-                }`}
-              >
-                <div className='w-4 h-4 flex items-center justify-center'>
-                  <Home
-                    className={`h-4 w-4 ${
-                      active === '/'
-                        ? 'text-zinc-900 dark:text-white'
-                        : 'text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white'
-                    }`}
-                  />
-                </div>
-                {!isCollapsed && (
-                  <span className='whitespace-nowrap transition-opacity duration-200 opacity-100'>
-                    首頁
-                  </span>
-                )}
-                {isCollapsed && (
-                  <div className='absolute left-full ml-2 px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg'>
-                    首頁
-                  </div>
-                )}
-              </Link>
-              <Link
-                href='/search'
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleSearchClick();
-                  setActive('/search');
-                }}
-                className={`group relative flex items-center rounded-lg px-2 py-2 pl-4 transition-colors duration-200 min-h-[40px] ${
-                  isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
-                } gap-3 justify-start ${
-                  active === '/search'
-                    ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white font-semibold'
-                    : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-white'
-                }`}
-              >
-                <div className='w-4 h-4 flex items-center justify-center'>
-                  <Search
-                    className={`h-4 w-4 ${
-                      active === '/search'
-                        ? 'text-zinc-900 dark:text-white'
-                        : 'text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white'
-                    }`}
-                  />
-                </div>
-                {!isCollapsed && (
-                  <span className='whitespace-nowrap transition-opacity duration-200 opacity-100'>
-                    搜索
-                  </span>
-                )}
-                {isCollapsed && (
-                  <div className='absolute left-full ml-2 px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg'>
-                    搜索
-                  </div>
-                )}
-              </Link>
-
-              <Link
-                href='/?tab=favorites'
-                onClick={() => setActive('/?tab=favorites')}
-                className={`group relative flex items-center rounded-lg px-2 py-2 pl-4 transition-colors duration-200 min-h-[40px] ${
-                  isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
-                } gap-3 justify-start ${
-                  active === '/?tab=favorites'
-                    ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white font-semibold'
-                    : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-white'
-                }`}
-              >
-                <div className='w-4 h-4 flex items-center justify-center'>
-                  <BookMarked
-                    className={`h-4 w-4 ${
-                      active === '/?tab=favorites'
-                        ? 'text-zinc-900 dark:text-white'
-                        : 'text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white'
-                    }`}
-                  />
-                </div>
-                {!isCollapsed && (
-                  <span className='whitespace-nowrap transition-opacity duration-200 opacity-100'>
-                    收藏夾
-                  </span>
-                )}
-                {isCollapsed && (
-                  <div className='absolute left-full ml-2 px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg'>
-                    收藏夾
-                  </div>
-                )}
-              </Link>
-            </nav>
-
-            {/* 菜單項 */}
-            <div className='flex-1 overflow-y-auto px-2 pt-4'>
-              <div className='space-y-1'>
-                {menuItems.map((item) => {
-                  // 檢查當前路徑是否匹配這個菜單項
-                  const typeMatch = item.href.match(/type=([^&]+)/)?.[1];
-
-                  // 解碼URL以進行正確的比較
-                  const decodedActive = decodeURIComponent(active);
-                  const decodedItemHref = decodeURIComponent(item.href);
-
-                  const isActive =
-                    decodedActive === decodedItemHref ||
-                    (decodedActive.startsWith('/douban') &&
-                      decodedActive.includes(`type=${typeMatch}`));
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      onClick={() => setActive(item.href)}
-                      className={`group relative flex items-center rounded-lg px-2 py-2 pl-4 text-sm transition-colors duration-200 min-h-[40px] ${
-                        isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
-                      } gap-3 justify-start ${
-                        isActive
-                          ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white font-semibold'
-                          : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-white'
-                      }`}
-                    >
-                      <div className='w-4 h-4 flex items-center justify-center'>
-                        <Icon
-                          className={`h-4 w-4 ${
-                            isActive
-                              ? 'text-zinc-900 dark:text-white'
-                              : 'text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white'
-                          }`}
-                        />
-                      </div>
-                      {!isCollapsed && (
-                        <span className='whitespace-nowrap transition-opacity duration-200 opacity-100'>
-                          {item.label}
-                        </span>
-                      )}
-                      {isCollapsed && (
-                        <div className='absolute left-full ml-2 px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg'>
-                          {item.label}
-                        </div>
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
+      <div className='group/sidewrap hidden md:flex'>
+        <aside className='fixed top-0 left-0 h-screen z-50 flex flex-col items-center py-8 glass-panel border-r border-white/5 dark:border-white/5 transition-all duration-300 w-24 group-hover/sidewrap:w-64 bg-white/90 dark:bg-transparent'>
+          <div className='flex items-center gap-3 mb-12 px-4 w-full'>
+            <span className='flex-shrink-0 text-xl'>📺</span>
+            <span className='opacity-0 group-hover/sidewrap:opacity-100 transition-opacity duration-200 whitespace-nowrap'>
+              <Logo />
+            </span>
           </div>
+
+          <nav className='flex-1 w-full px-3 space-y-2'>
+            <NavLink href='/' icon={Home} label='首頁' isActive={active === '/'} onClick={() => setActive('/')} />
+            <NavLink
+              href='/search'
+              icon={Search}
+              label='搜索'
+              isActive={active === '/search'}
+              onClick={(e) => { e.preventDefault(); handleSearchClick(); setActive('/search'); }}
+            />
+            <NavLink
+              href='/?tab=favorites'
+              icon={BookMarked}
+              label='收藏夾'
+              isActive={active === '/?tab=favorites'}
+              onClick={() => setActive('/?tab=favorites')}
+            />
+
+            <div className='border-t border-white/10 my-4' />
+
+            {menuItems.map((item) => {
+              const typeMatch = item.href.match(/type=([^&]+)/)?.[1];
+              const decodedActive = decodeURIComponent(active);
+              const decodedItemHref = decodeURIComponent(item.href);
+              const isActive =
+                decodedActive === decodedItemHref ||
+                (decodedActive.startsWith('/douban') &&
+                  decodedActive.includes(`type=${typeMatch}`));
+              return (
+                <NavLink
+                  key={item.label}
+                  href={item.href}
+                  icon={item.icon}
+                  label={item.label}
+                  isActive={isActive}
+                  onClick={() => setActive(item.href)}
+                />
+              );
+            })}
+          </nav>
+
+          <span className='opacity-0 group-hover/sidewrap:opacity-100 transition-opacity duration-200 text-[10px] text-zinc-600 mt-auto'>
+            v1.1.0
+          </span>
         </aside>
-        <div
-          className={`transition-all duration-300 sidebar-offset ${
-            isCollapsed ? 'w-16' : 'w-64'
-          }`}
-        ></div>
+        <div className='w-24 group-hover/sidewrap:w-64 transition-all duration-300' />
       </div>
     </SidebarContext.Provider>
   );

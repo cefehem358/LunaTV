@@ -7,7 +7,6 @@ import {
   CirclePlay,
   Clapperboard,
   Film,
-  Home,
   Plus,
   Search,
   Settings2,
@@ -16,7 +15,6 @@ import {
   Tag,
   Trash2,
   Tv,
-  Watch,
   X,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -47,6 +45,7 @@ import { DoubanItem } from '@/lib/types';
 import { processImageUrl } from '@/lib/utils';
 
 import MobileBottomNav from '@/components/MobileBottomNav';
+import Sidebar from '@/components/Sidebar';
 import { useSite } from '@/components/SiteProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { UserMenu } from '@/components/UserMenu';
@@ -68,7 +67,7 @@ export default function NetflixHome({
   const router = useRouter();
   const searchParams = useSearchParams();
   const tab = searchParams?.get('tab');
-  const { siteName, announcement } = useSite();
+  const { announcement } = useSite();
   const [searchQuery, setSearchQuery] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeNav, setActiveNav] = useState<'home' | 'favorites'>('home');
@@ -119,71 +118,11 @@ export default function NetflixHome({
 
   return (
     <div className='min-h-screen bg-transparent text-zinc-900 dark:text-zinc-100'>
-      {/* ========== A. 固定側邊導覽列 ========== */}
-      <aside className='hidden md:flex fixed top-0 left-0 h-screen w-64 bg-white dark:bg-[#08080a] z-50 flex flex-col border-r border-zinc-200 dark:border-white/5'>
-        {/* Logo */}
-        <div className='p-6'>
-          <h1 className='text-3xl font-black text-[#e50914] font-[Impact] tracking-wider'>
-            {siteName || 'LunaTV'}
-          </h1>
-        </div>
+      <div className='hidden md:block'>
+        <Sidebar activePath='/' />
+      </div>
 
-        {/* 主導航 */}
-        <nav className='px-3 space-y-1'>
-          <p className='px-4 pt-2 pb-1 text-xs font-semibold text-zinc-500 uppercase tracking-wider'>
-            導覽
-          </p>
-          <NavButton
-            active={activeNav === 'home'}
-            onClick={() => {
-              setActiveNav('home');
-              router.replace('/');
-            }}
-            icon={<Home className='w-5 h-5' />}
-            label='首頁'
-          />
-          <NavButton
-            active={false}
-            onClick={() => router.push('/douban?type=movie')}
-            icon={<Film className='w-5 h-5' />}
-            label='電影'
-          />
-          <NavButton
-            active={false}
-            onClick={() => router.push('/douban?type=tv')}
-            icon={<Tv className='w-5 h-5' />}
-            label='劇集'
-          />
-          <NavButton
-            active={false}
-            onClick={() => router.push('/douban?type=anime')}
-            icon={<Clapperboard className='w-5 h-5' />}
-            label='動漫'
-          />
-          <NavButton
-            active={false}
-            onClick={() => router.push('/douban?type=show')}
-            icon={<Star className='w-5 h-5' />}
-            label='綜藝'
-          />
-
-          <p className='px-4 pt-5 pb-1 text-xs font-semibold text-zinc-500 uppercase tracking-wider'>
-            我的
-          </p>
-          <NavButton
-            active={activeNav === 'favorites'}
-            onClick={() => {
-              setActiveNav('favorites');
-              router.replace('/?tab=favorites');
-            }}
-            icon={<BookMarked className='w-5 h-5' />}
-            label='收藏夾'
-          />
-        </nav>
-      </aside>
-
-      {/* ========== 主內容區域 ========== */}
-      <div className='pl-0 md:pl-64'>
+      <div className='pl-0 md:pl-24'>
         {/* ========== B. 頂部毛玻璃搜尋列 ========== */}
         <header
           className={`sticky top-0 z-40 h-16 md:h-20 flex items-center justify-between px-4 md:px-8 transition-all duration-300 ${
@@ -200,7 +139,7 @@ export default function NetflixHome({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder='搜尋電影、電視劇、動漫...'
-                className='w-full md:w-96 h-11 pl-12 pr-4 bg-zinc-100 dark:bg-zinc-900/80 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-500 border border-zinc-200 dark:border-transparent focus:border-[#e50914] focus:outline-none transition-all duration-200'
+                className='w-full md:w-96 h-11 pl-12 pr-4 bg-zinc-100 dark:bg-zinc-900/80 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-500 border border-zinc-200 dark:border-transparent focus:border-[#ff3e6c] focus:outline-none transition-all duration-200'
               />
             </div>
           </form>
@@ -223,10 +162,10 @@ export default function NetflixHome({
               {playRecords.length > 0 && (
                 <section className='mb-8'>
                   <div className='flex items-center gap-3 mb-4'>
-                    <CirclePlay className='w-5 h-5 text-[#e50914]' />
-                    <h3 className='text-2xl font-bold text-zinc-900 dark:text-white'>
-                      繼續觀看
-                    </h3>
+                    <CirclePlay className='w-5 h-5 text-[#ff3e6c]' />
+                <h3 className='text-xl font-bold text-white flex items-center gap-2'>
+                  ⏳ 繼續觀看
+                </h3>
                   </div>
                   <div className='relative group'>
                     <button
@@ -282,46 +221,33 @@ export default function NetflixHome({
                                 }`
                               )
                             }
-                            className='group relative flex-shrink-0 w-44 aspect-[2/3] rounded-xl overflow-hidden cursor-pointer'
+                            className='focus-glow-card glass-panel w-56 shrink-0 rounded-2xl overflow-hidden cursor-pointer'
                           >
-                            <Image
-                              src={
-                                processImageUrl(record.cover) ||
-                                '/placeholder.jpg'
-                              }
-                              alt={record.title}
-                              fill
-                              className='object-cover transition-transform duration-300 group-hover:scale-105'
-                              unoptimized
-                              referrerPolicy='no-referrer'
-                            />
-                            <div className='absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent' />
-                            {/* 進度條 */}
-                            <div className='absolute bottom-0 left-0 right-0 h-1.5 bg-zinc-700'>
-                              <div
-                                className='h-full bg-[#e50914] transition-all'
-                                style={{ width: `${progress}%` }}
+                            <div className='relative aspect-video bg-gray-800'>
+                              <Image
+                                src={
+                                  processImageUrl(record.cover) ||
+                                  '/placeholder.jpg'
+                                }
+                                alt={record.title}
+                                fill
+                                className='object-cover'
+                                unoptimized
+                                referrerPolicy='no-referrer'
                               />
+                              <div className='absolute bottom-0 left-0 right-0 h-1 bg-zinc-700'>
+                                <div
+                                  className='h-full glow-bar transition-all'
+                                  style={{ width: `${progress}%` }}
+                                />
+                              </div>
                             </div>
-                            {/* 集數標籤 */}
-                            <div className='absolute top-2 left-2 px-2 py-0.5 bg-black/75 backdrop-blur-sm text-white text-xs font-medium rounded-md'>
-                              {record.index}/{record.total_episodes}
-                            </div>
-                            {/* 底部訊息區 */}
-                            <div className='absolute inset-x-0 bottom-0 p-3'>
-                              <p className='text-white text-xs sm:text-sm font-semibold line-clamp-1 group-hover:text-[#e50914] transition-colors leading-tight'>
+                            <div className='p-3'>
+                              <p className='text-sm font-medium text-white truncate'>
                                 {record.title}
                               </p>
-                              {/* 片源標籤 */}
-                              <div className='mt-1'>
-                                <span className='inline-block px-1.5 py-0.5 bg-zinc-800/60 backdrop-blur text-zinc-400 text-[10px] sm:text-xs rounded'>
-                                  {record.source_name || 'unknown'}
-                                </span>
-                              </div>
-                              {/* 時間進度 */}
-                              <p className='text-zinc-500 text-[10px] sm:text-xs mt-1 flex items-center gap-1'>
-                                <Watch className='w-3 h-3' />
-                                {Math.floor(record.play_time / 60)}分鐘
+                              <p className='text-xs text-zinc-400 mt-1'>
+                                看到第 {record.index} 集 ({Math.round(progress)}%)
                               </p>
                             </div>
                           </button>
@@ -336,7 +262,7 @@ export default function NetflixHome({
               <section className='mb-10'>
                 <SectionTitle
                   title='最新上架'
-                  icon={<Clapperboard className='w-5 h-5 text-[#e50914]' />}
+                  icon={<Clapperboard className='w-5 h-5 text-[#ff3e6c]' />}
                   viewAllHref='/douban?type=movie'
                 />
                 <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4'>
@@ -351,7 +277,7 @@ export default function NetflixHome({
               {/* 熱門電影 */}
               <NetflixSectionRow
                 title='熱門電影'
-                icon={<Film className='w-5 h-5 text-[#e50914]' />}
+                icon={<Film className='w-5 h-5 text-[#ff3e6c]' />}
                 items={hotMovies}
                 viewAllHref='/douban?type=movie'
                 scrollRow={scrollRow}
@@ -360,7 +286,7 @@ export default function NetflixHome({
               {/* 熱門劇集 */}
               <NetflixSectionRow
                 title='熱門劇集'
-                icon={<Tv className='w-5 h-5 text-[#e50914]' />}
+                icon={<Tv className='w-5 h-5 text-[#ff3e6c]' />}
                 items={hotTvShows}
                 viewAllHref='/douban?type=tv'
                 scrollRow={scrollRow}
@@ -375,7 +301,7 @@ export default function NetflixHome({
               {/* 熱門綜藝 */}
               <NetflixSectionRow
                 title='熱門綜藝'
-                icon={<Star className='w-5 h-5 text-[#e50914]' />}
+                icon={<Star className='w-5 h-5 text-[#ff3e6c]' />}
                 items={hotVarietyShows}
                 viewAllHref='/douban?type=show'
                 scrollRow={scrollRow}
@@ -400,7 +326,7 @@ export default function NetflixHome({
                 <h3 className='text-xl font-bold text-zinc-900 dark:text-white mb-1'>
                   系統公告
                 </h3>
-                <div className='w-8 h-1 bg-[#e50914] rounded-full' />
+                <div className='w-8 h-1 bg-[#ff3e6c] rounded-full' />
               </div>
               <button
                 onClick={() => handleCloseAnnouncement(announcement)}
@@ -410,7 +336,7 @@ export default function NetflixHome({
               </button>
             </div>
             <div className='mb-8'>
-              <div className='bg-zinc-50 dark:bg-[#141414] rounded-xl p-5 border-l-4 border-[#e50914]'>
+              <div className='bg-zinc-50 dark:bg-[#141414] rounded-xl p-5 border-l-4 border-[#ff3e6c]'>
                 <p className='text-zinc-650 dark:text-zinc-300 leading-relaxed'>
                   {announcement}
                 </p>
@@ -418,7 +344,7 @@ export default function NetflixHome({
             </div>
             <button
               onClick={() => handleCloseAnnouncement(announcement)}
-              className='w-full py-3 bg-[#e50914] hover:bg-[#b8070f] text-white font-bold rounded-xl transition-colors'
+              className='w-full py-3 bg-[#ff3e6c] hover:bg-[#ff557e] text-white font-bold rounded-xl transition-colors'
             >
               確定
             </button>
@@ -436,32 +362,6 @@ export default function NetflixHome({
 }
 
 /* ========== 內部子元件 ========== */
-
-function NavButton({
-  active,
-  onClick,
-  icon,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl mb-0.5 transition-all duration-200 ${
-        active
-          ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium'
-          : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-white'
-      }`}
-    >
-      {icon}
-      <span className='font-medium'>{label}</span>
-    </button>
-  );
-}
 
 function SectionTitle({
   title,
@@ -641,14 +541,14 @@ function NetflixGridCard({ item }: { item: DoubanItem }) {
         </div>
       )}
       <div className='absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all' />
-      <div className='absolute inset-0 border-2 border-transparent group-hover:border-[#e50914] rounded-xl transition-all' />
+      <div className='absolute inset-0 border-2 border-transparent group-hover:border-[#ff3e6c] rounded-xl transition-all' />
       {item.rate && (
         <div className='absolute top-2 right-2 px-2 py-1 bg-black/70 backdrop-blur-sm text-yellow-400 text-xs font-bold rounded flex items-center gap-0.5'>
           ★ {item.rate}
         </div>
       )}
       <div className='absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent'>
-        <p className='text-white text-sm font-medium line-clamp-2 group-hover:text-[#e50914] transition-colors'>
+        <p className='text-white text-sm font-medium line-clamp-2 group-hover:text-[#ff3e6c] transition-colors'>
           {item.title}
         </p>
         {item.year && <p className='text-zinc-400 text-xs mt-1'>{item.year}</p>}
@@ -681,7 +581,7 @@ function NetflixBangumiRow({
     <section className='mb-10'>
       <SectionTitle
         title='今日新番'
-        icon={<Clapperboard className='w-5 h-5 text-[#e50914]' />}
+        icon={<Clapperboard className='w-5 h-5 text-[#ff3e6c]' />}
         viewAllHref='/douban?type=anime'
       />
       <div className='relative group'>
@@ -764,7 +664,8 @@ function NetflixBangumiRow({
 }
 
 const TAG_COLORS: Record<string, string> = {
-  red: '#e50914',
+  red: '#ff3e6c',
+  accent: '#ff3e6c',
   orange: '#f97316',
   yellow: '#eab308',
   green: '#22c55e',
@@ -839,7 +740,7 @@ function TagManagerModal({
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
             placeholder='新增標籤名稱...'
-            className='flex-1 px-3 py-2 text-sm bg-zinc-100 dark:bg-zinc-800 rounded-xl outline-none focus:ring-2 focus:ring-[#e50914]/50 text-zinc-900 dark:text-white placeholder-zinc-400'
+            className='flex-1 px-3 py-2 text-sm bg-zinc-100 dark:bg-zinc-800 rounded-xl outline-none focus:ring-2 focus:ring-[#ff3e6c]/50 text-zinc-900 dark:text-white placeholder-zinc-400'
           />
           <select
             value={newColor}
@@ -854,7 +755,7 @@ function TagManagerModal({
           </select>
           <button
             onClick={handleAdd}
-            className='px-3 py-2 bg-[#e50914] text-white text-sm font-medium rounded-xl hover:bg-[#f6121d] transition-colors'
+            className='px-3 py-2 bg-[#ff3e6c] text-white text-sm font-medium rounded-xl hover:bg-[#ff557e] transition-colors'
           >
             <Plus className='w-4 h-4' />
           </button>
@@ -974,7 +875,7 @@ function FavoritesView() {
     <div>
       <div className='flex items-center justify-between mb-4'>
         <div className='flex items-center gap-3'>
-          <BookMarked className='w-6 h-6 text-[#e50914]' />
+          <BookMarked className='w-6 h-6 text-[#ff3e6c]' />
           <h2 className='text-2xl font-bold text-zinc-900 dark:text-white'>
             我的收藏
           </h2>
@@ -1006,7 +907,7 @@ function FavoritesView() {
             onClick={() => setActiveTag(null)}
             className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               activeTag === null
-                ? 'bg-[#e50914] text-white'
+                ? 'bg-[#ff3e6c] text-white'
                 : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
             }`}
           >
@@ -1211,7 +1112,7 @@ export function NetflixHomePage() {
     return (
       <div className='min-h-screen bg-slate-50 dark:bg-[#040404] flex items-center justify-center'>
         <div className='flex flex-col items-center gap-4'>
-          <div className='w-16 h-16 border-4 border-[#e50914] border-t-transparent rounded-full animate-spin' />
+          <div className='w-16 h-16 border-4 border-[#ff3e6c] border-t-transparent rounded-full animate-spin' />
           <p className='text-zinc-500 dark:text-zinc-400'>載入中...</p>
         </div>
       </div>

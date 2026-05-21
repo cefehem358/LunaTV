@@ -51,7 +51,7 @@ const MobileHeader = ({ showBackButton = false }: MobileHeaderProps) => {
       <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
         <Link
           href='/'
-          className='text-2xl font-black text-[#e50914] font-[Impact] tracking-wider hover:opacity-80 transition-opacity'
+          className='text-2xl font-black text-[#ff3e6c] font-[Impact] tracking-wider hover:opacity-80 transition-opacity'
         >
           {siteName}
         </Link>

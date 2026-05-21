@@ -17,6 +17,7 @@ const config: Config = {
       },
       fontFamily: {
         primary: ['Inter', ...defaultTheme.fontFamily.sans],
+        noto: ['"Noto Sans TC"', ...defaultTheme.fontFamily.sans],
       },
       colors: {
         primary: {
@@ -31,7 +32,9 @@ const config: Config = {
           800: '#075985',
           900: '#0c4a6e',
         },
+        accent: '#ff3e6c',
         dark: '#222222',
+        deep: '#0b0c10',
       },
       keyframes: {
         flicker: {

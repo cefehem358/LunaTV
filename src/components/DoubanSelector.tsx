@@ -320,7 +320,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
         {/* 滑動的白色背景指示器 */}
         {indicatorStyle.width > 0 && (
           <div
-            className='absolute top-0.5 bottom-0.5 sm:top-1 sm:bottom-1 bg-[#e50914] rounded-full shadow-sm transition-all duration-300 ease-out'
+            className='absolute top-0.5 bottom-0.5 sm:top-1 sm:bottom-1 bg-[#ff3e6c] rounded-full shadow-sm transition-all duration-300 ease-out'
             style={{
               left: `${indicatorStyle.left}px`,
               width: `${indicatorStyle.width}px`,
