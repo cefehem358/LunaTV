@@ -1158,7 +1158,7 @@ function LivePageClient() {
             </div>
 
             {/* 進度指示器 */}
-            <div className='mb-6 w-80 mx-auto'>
+            <div className='mb-6 w-64 sm:w-80 mx-auto'>
               <div className='flex justify-center space-x-2 mb-4'>
                 <div
                   className={`w-3 h-3 rounded-full transition-all duration-500 ${

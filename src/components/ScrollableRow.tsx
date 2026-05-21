@@ -13,6 +13,7 @@ export default function ScrollableRow({
   const containerRef = useRef<HTMLDivElement>(null);
   const [showLeftScroll, setShowLeftScroll] = useState(false);
   const [showRightScroll, setShowRightScroll] = useState(false);
+  const [showLeftFade, setShowLeftFade] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
   const checkScroll = () => {
@@ -27,6 +28,7 @@ export default function ScrollableRow({
 
       setShowRightScroll(canScrollRight);
       setShowLeftScroll(canScrollLeft);
+      setShowLeftFade(scrollLeft > 10); // 手機 fade 控制
     }
   };
 
@@ -104,9 +106,21 @@ export default function ScrollableRow({
         ref={containerRef}
         className='flex space-x-6 overflow-x-auto scrollbar-hide py-1 sm:py-2 pb-12 sm:pb-14 px-4 sm:px-6'
         onScroll={checkScroll}
+        style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {children}
       </div>
+      {/* 手機端 fade-out 提示左右可滑動 */}
+      <div
+        className={`sm:hidden pointer-events-none absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-white/60 dark:from-[#040404]/60 to-transparent transition-opacity duration-300 ${
+          showRightScroll ? 'opacity-100' : 'opacity-0'
+        }`}
+      />
+      <div
+        className={`sm:hidden pointer-events-none absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-white/60 dark:from-[#040404]/60 to-transparent transition-opacity duration-300 ${
+          showLeftFade ? 'opacity-100' : 'opacity-0'
+        }`}
+      />
       {showLeftScroll && (
         <div
           className={`hidden sm:flex absolute left-0 top-0 bottom-0 w-16 items-center justify-center z-[600] transition-opacity duration-200 ${

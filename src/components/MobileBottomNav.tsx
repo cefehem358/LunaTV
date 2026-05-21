@@ -2,16 +2,7 @@
 
 'use client';
 
-import {
-  BookMarked,
-  Cat,
-  Clover,
-  Film,
-  Home,
-  Radio,
-  Star,
-  Tv,
-} from 'lucide-react';
+import { Cat, Clover, Film, Home, Radio, Search, Star, Tv } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -31,6 +22,11 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
 
   const [navItems, setNavItems] = useState([
     { icon: Home, label: '首頁', href: '/' },
+    {
+      icon: Search,
+      label: '搜尋',
+      href: '/search',
+    },
     {
       icon: Film,
       label: '電影',
@@ -55,11 +51,6 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
       icon: Radio,
       label: '直播',
       href: '/live',
-    },
-    {
-      icon: BookMarked,
-      label: '收藏',
-      href: '/?tab=favorites',
     },
   ]);
 
@@ -121,7 +112,9 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                 />
                 <span
                   className={
-                    active ? 'text-[#e50914] font-medium' : 'text-zinc-500 dark:text-zinc-400'
+                    active
+                      ? 'text-[#e50914] font-medium'
+                      : 'text-zinc-500 dark:text-zinc-400'
                   }
                 >
                   {item.label}

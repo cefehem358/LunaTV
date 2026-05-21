@@ -199,6 +199,51 @@ export default function NetflixHome({
           </div>
         </header>
 
+        {/* ========== Hero Banner ========== */}
+        {activeNav === 'home' &&
+          hotMovies.length > 0 &&
+          (() => {
+            const hero = hotMovies[0];
+            return (
+              <section className='relative w-full h-[50vh] sm:h-[65vh] md:h-[70vh] lg:h-[75vh] overflow-hidden'>
+                <Image
+                  src={processImageUrl(hero.poster) || '/placeholder.jpg'}
+                  alt={hero.title}
+                  fill
+                  className='object-cover'
+                  unoptimized
+                  referrerPolicy='no-referrer'
+                  priority
+                />
+                <div className='absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent dark:from-[#040404] dark:via-[#040404]/60 to-transparent' />
+                <div className='absolute inset-0 bg-gradient-to-r from-white/80 via-white/40 to-transparent dark:from-[#040404]/90 dark:via-[#040404]/40 to-transparent' />
+                <div className='absolute bottom-0 left-0 right-0 p-6 md:p-12 lg:p-16'>
+                  <h2 className='text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-zinc-900 dark:text-white mb-3 max-w-2xl leading-tight'>
+                    {hero.title}
+                  </h2>
+                  <div className='flex items-center gap-4 mb-4 text-sm sm:text-base text-zinc-600 dark:text-zinc-400'>
+                    {hero.rate && (
+                      <span className='flex items-center gap-1'>
+                        <Star className='w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 fill-yellow-500' />
+                        {hero.rate}
+                      </span>
+                    )}
+                    {hero.year && <span>{hero.year}</span>}
+                  </div>
+                  <Link
+                    href={`/play?id=${hero.id}&title=${encodeURIComponent(
+                      hero.title
+                    )}`}
+                    className='inline-flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-3.5 bg-[#e50914] hover:bg-[#f6121d] text-white font-bold rounded-lg transition-all duration-200 shadow-lg shadow-[#e50914]/25 hover:shadow-[#e50914]/40 text-sm sm:text-base'
+                  >
+                    <CirclePlay className='w-5 h-5 sm:w-6 sm:h-6' />
+                    立即播放
+                  </Link>
+                </div>
+              </section>
+            );
+          })()}
+
         {/* ========== 主頁內容 ========== */}
         <main
           className='px-4 md:px-6'
@@ -213,7 +258,9 @@ export default function NetflixHome({
                 <section className='mb-8'>
                   <div className='flex items-center gap-3 mb-4'>
                     <CirclePlay className='w-5 h-5 text-[#e50914]' />
-                    <h3 className='text-xl font-bold text-zinc-900 dark:text-white'>繼續觀看</h3>
+                    <h3 className='text-xl font-bold text-zinc-900 dark:text-white'>
+                      繼續觀看
+                    </h3>
                   </div>
                   <div className='relative group'>
                     <button
@@ -335,8 +382,6 @@ export default function NetflixHome({
                 </div>
               </section>
 
-              {/* Hero Banner removed */}
-
               {/* 熱門電影 */}
               <NetflixSectionRow
                 title='熱門電影'
@@ -386,7 +431,9 @@ export default function NetflixHome({
           <div className='w-full max-w-md rounded-2xl bg-white dark:bg-[#1a1a1a] border border-zinc-200 dark:border-white/10 p-8 shadow-2xl'>
             <div className='flex items-start justify-between mb-6'>
               <div>
-                <h3 className='text-xl font-bold text-zinc-900 dark:text-white mb-1'>系統公告</h3>
+                <h3 className='text-xl font-bold text-zinc-900 dark:text-white mb-1'>
+                  系統公告
+                </h3>
                 <div className='w-8 h-1 bg-[#e50914] rounded-full' />
               </div>
               <button
@@ -398,7 +445,9 @@ export default function NetflixHome({
             </div>
             <div className='mb-8'>
               <div className='bg-zinc-50 dark:bg-[#141414] rounded-xl p-5 border-l-4 border-[#e50914]'>
-                <p className='text-zinc-650 dark:text-zinc-300 leading-relaxed'>{announcement}</p>
+                <p className='text-zinc-650 dark:text-zinc-300 leading-relaxed'>
+                  {announcement}
+                </p>
               </div>
             </div>
             <button
@@ -461,7 +510,9 @@ function SectionTitle({
     <div className='flex items-center justify-between mb-5'>
       <div className='flex items-center gap-3'>
         {icon}
-        <h3 className='text-xl font-bold text-zinc-900 dark:text-white'>{title}</h3>
+        <h3 className='text-xl font-bold text-zinc-900 dark:text-white'>
+          {title}
+        </h3>
       </div>
       {viewAllHref && (
         <Link
@@ -825,7 +876,9 @@ function FavoritesView() {
       <div className='flex items-center justify-between mb-6'>
         <div className='flex items-center gap-3'>
           <BookMarked className='w-6 h-6 text-[#e50914]' />
-          <h2 className='text-2xl font-bold text-zinc-900 dark:text-white'>我的收藏</h2>
+          <h2 className='text-2xl font-bold text-zinc-900 dark:text-white'>
+            我的收藏
+          </h2>
         </div>
         {favoriteItems.length > 0 && (
           <button

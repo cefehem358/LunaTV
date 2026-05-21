@@ -25,6 +25,7 @@ function DoubanPageClient() {
   const searchParams = useSearchParams();
   const [doubanData, setDoubanData] = useState<DoubanItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -704,38 +705,65 @@ function DoubanPageClient() {
         <div className='mb-6 sm:mb-8 space-y-4 sm:space-y-6'>
           {/* 頁面標題 */}
           <div>
-            <h1 className='text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2'>
+            <h1 className='text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white mb-1 sm:mb-2'>
               {getPageTitle()}
             </h1>
-            <p className='text-sm sm:text-base text-zinc-400'>
+            <p className='text-sm sm:text-base text-zinc-500 dark:text-zinc-400'>
               {getPageDescription()}
             </p>
           </div>
 
+          {/* 手機端篩選切換按鈕 */}
+          <div className='sm:hidden'>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className='w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-zinc-900/60 rounded-xl border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-700 dark:text-zinc-300'
+            >
+              <span>篩選條件</span>
+              <svg
+                className={`w-4 h-4 transition-transform ${
+                  showFilters ? 'rotate-180' : ''
+                }`}
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M19 9l-7 7-7-7'
+                />
+              </svg>
+            </button>
+          </div>
+
           {/* 選擇器組件 */}
-          {type !== 'custom' ? (
-            <div className='bg-zinc-900/60 rounded-2xl p-4 sm:p-6 border border-white/5 backdrop-blur-sm'>
-              <DoubanSelector
-                type={type as 'movie' | 'tv' | 'show' | 'anime'}
-                primarySelection={primarySelection}
-                secondarySelection={secondarySelection}
-                onPrimaryChange={handlePrimaryChange}
-                onSecondaryChange={handleSecondaryChange}
-                onMultiLevelChange={handleMultiLevelChange}
-                onWeekdayChange={handleWeekdayChange}
-              />
-            </div>
-          ) : (
-            <div className='bg-zinc-900/60 rounded-2xl p-4 sm:p-6 border border-white/5 backdrop-blur-sm'>
-              <DoubanCustomSelector
-                customCategories={customCategories}
-                primarySelection={primarySelection}
-                secondarySelection={secondarySelection}
-                onPrimaryChange={handlePrimaryChange}
-                onSecondaryChange={handleSecondaryChange}
-              />
-            </div>
-          )}
+          <div className={`${showFilters ? 'block' : 'hidden'} sm:block`}>
+            {type !== 'custom' ? (
+              <div className='bg-white dark:bg-zinc-900/60 rounded-2xl p-4 sm:p-6 border border-zinc-200 dark:border-white/5 backdrop-blur-sm'>
+                <DoubanSelector
+                  type={type as 'movie' | 'tv' | 'show' | 'anime'}
+                  primarySelection={primarySelection}
+                  secondarySelection={secondarySelection}
+                  onPrimaryChange={handlePrimaryChange}
+                  onSecondaryChange={handleSecondaryChange}
+                  onMultiLevelChange={handleMultiLevelChange}
+                  onWeekdayChange={handleWeekdayChange}
+                />
+              </div>
+            ) : (
+              <div className='bg-white dark:bg-zinc-900/60 rounded-2xl p-4 sm:p-6 border border-zinc-200 dark:border-white/5 backdrop-blur-sm'>
+                <DoubanCustomSelector
+                  customCategories={customCategories}
+                  primarySelection={primarySelection}
+                  secondarySelection={secondarySelection}
+                  onPrimaryChange={handlePrimaryChange}
+                  onSecondaryChange={handleSecondaryChange}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 內容展示區域 */}
@@ -789,7 +817,9 @@ function DoubanPageClient() {
               {isLoadingMore && (
                 <div className='flex items-center gap-2'>
                   <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-[#e50914]'></div>
-                  <span className='text-zinc-400'>加載中...</span>
+                  <span className='text-zinc-500 dark:text-zinc-400'>
+                    加載中...
+                  </span>
                 </div>
               )}
             </div>
@@ -797,14 +827,18 @@ function DoubanPageClient() {
 
           {/* 沒有更多數據提示 */}
           {!hasMore && doubanData.length > 0 && (
-            <div className='text-center text-zinc-500 py-8'>已加載全部內容</div>
+            <div className='text-center text-zinc-400 dark:text-zinc-500 py-8'>
+              已加載全部內容
+            </div>
           )}
 
           {/* 錯誤狀態 */}
           {!loading && error && (
             <div className='text-center py-16 flex flex-col items-center justify-center gap-4'>
               <div className='text-[#e50914] text-4xl'>⚠️</div>
-              <p className='text-zinc-400 text-sm max-w-md'>{error}</p>
+              <p className='text-zinc-500 dark:text-zinc-400 text-sm max-w-md'>
+                {error}
+              </p>
               <button
                 onClick={() => loadInitialData()}
                 className='px-6 py-2 bg-[#e50914] text-white rounded-md text-sm font-medium hover:bg-[#b80710] transition-colors focus:outline-none focus:ring-2 focus:ring-[#e50914]/50'
@@ -816,7 +850,9 @@ function DoubanPageClient() {
 
           {/* 空狀態 */}
           {!loading && !error && doubanData.length === 0 && (
-            <div className='text-center text-zinc-500 py-8'>暂无相关内容</div>
+            <div className='text-center text-zinc-400 dark:text-zinc-500 py-8'>
+              暂无相关内容
+            </div>
           )}
         </div>
       </div>

@@ -225,7 +225,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
               <Link
                 href='/'
                 onClick={() => setActive('/')}
-                className={`group flex items-center rounded-lg px-2 py-2 pl-4 transition-colors duration-200 min-h-[40px] ${
+                className={`group relative flex items-center rounded-lg px-2 py-2 pl-4 transition-colors duration-200 min-h-[40px] ${
                   isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
                 } gap-3 justify-start ${
                   active === '/'
@@ -247,6 +247,11 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                     首頁
                   </span>
                 )}
+                {isCollapsed && (
+                  <div className='absolute left-full ml-2 px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg'>
+                    首頁
+                  </div>
+                )}
               </Link>
               <Link
                 href='/search'
@@ -255,7 +260,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                   handleSearchClick();
                   setActive('/search');
                 }}
-                className={`group flex items-center rounded-lg px-2 py-2 pl-4 transition-colors duration-200 min-h-[40px] ${
+                className={`group relative flex items-center rounded-lg px-2 py-2 pl-4 transition-colors duration-200 min-h-[40px] ${
                   isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
                 } gap-3 justify-start ${
                   active === '/search'
@@ -277,11 +282,16 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                     搜索
                   </span>
                 )}
+                {isCollapsed && (
+                  <div className='absolute left-full ml-2 px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg'>
+                    搜索
+                  </div>
+                )}
               </Link>
               <Link
                 href='/?tab=favorites'
                 onClick={() => setActive('/?tab=favorites')}
-                className={`group flex items-center rounded-lg px-2 py-2 pl-4 transition-colors duration-200 min-h-[40px] ${
+                className={`group relative flex items-center rounded-lg px-2 py-2 pl-4 transition-colors duration-200 min-h-[40px] ${
                   isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
                 } gap-3 justify-start ${
                   active === '/?tab=favorites'
@@ -302,6 +312,11 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                   <span className='whitespace-nowrap transition-opacity duration-200 opacity-100'>
                     收藏夾
                   </span>
+                )}
+                {isCollapsed && (
+                  <div className='absolute left-full ml-2 px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg'>
+                    收藏夾
+                  </div>
                 )}
               </Link>
             </nav>
@@ -327,7 +342,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                       key={item.label}
                       href={item.href}
                       onClick={() => setActive(item.href)}
-                      className={`group flex items-center rounded-lg px-2 py-2 pl-4 text-sm transition-colors duration-200 min-h-[40px] ${
+                      className={`group relative flex items-center rounded-lg px-2 py-2 pl-4 text-sm transition-colors duration-200 min-h-[40px] ${
                         isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
                       } gap-3 justify-start ${
                         isActive
@@ -348,6 +363,11 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                         <span className='whitespace-nowrap transition-opacity duration-200 opacity-100'>
                           {item.label}
                         </span>
+                      )}
+                      {isCollapsed && (
+                        <div className='absolute left-full ml-2 px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg'>
+                          {item.label}
+                        </div>
                       )}
                     </Link>
                   );
