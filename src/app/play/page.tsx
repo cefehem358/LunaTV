@@ -81,6 +81,22 @@ function PlayPageClient() {
     skipConfig.outro_time,
   ]);
 
+  // 自動連播開關（從 localStorage 繼承，默認開啟）
+  const [autoNext, setAutoNext] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const v = localStorage.getItem('enable_autonext');
+      if (v !== null) return v === 'true';
+    }
+    return true;
+  });
+  const autoNextRef = useRef(autoNext);
+  useEffect(() => {
+    autoNextRef.current = autoNext;
+  }, [autoNext]);
+
+  // 快捷鍵幫助面板
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
   // 跳过检查的时间间隔控制
   const lastSkipCheckRef = useRef(0);
 
@@ -1137,6 +1153,12 @@ function PlayPageClient() {
         e.preventDefault();
       }
     }
+
+    // ? 或 h 鍵 = 顯示快捷鍵幫助
+    if (e.key === '?' || e.key === 'h' || e.key === 'H') {
+      setShowShortcuts((prev) => !prev);
+      e.preventDefault();
+    }
   };
 
   // ---------------------------------------------------------------------------
@@ -1688,10 +1710,10 @@ function PlayPageClient() {
       artPlayerRef.current.on('video:ended', () => {
         const d = detailRef.current;
         const idx = currentEpisodeIndexRef.current;
-        if (d && d.episodes && idx < d.episodes.length - 1) {
+        if (d && d.episodes && idx < d.episodes.length - 1 && autoNextRef.current) {
           setTimeout(() => {
             setCurrentEpisodeIndex(idx + 1);
-          }, 1000);
+          }, 2000);
         }
       });
 
@@ -2040,9 +2062,60 @@ function PlayPageClient() {
                 sourceSearchError={sourceSearchError}
                 precomputedVideoInfo={precomputedVideoInfo}
               />
+              {/* 自動連播 + 快捷鍵幫助 */}
+              <div className='flex items-center justify-between px-3 py-2 mt-2 bg-black/40 dark:bg-white/5 rounded-lg border border-white/5'>
+                <label className='flex items-center gap-2 cursor-pointer select-none'>
+                  <span className='text-xs text-zinc-400'>自動連播</span>
+                  <div
+                    className={`relative w-8 h-4 rounded-full transition-colors cursor-pointer ${autoNext ? 'bg-[#e50914]' : 'bg-zinc-600'}`}
+                    onClick={() => {
+                      const newVal = !autoNext;
+                      setAutoNext(newVal);
+                      localStorage.setItem('enable_autonext', String(newVal));
+                    }}
+                  >
+                    <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${autoNext ? 'translate-x-4' : ''}`} />
+                  </div>
+                </label>
+                <button
+                  onClick={() => setShowShortcuts(!showShortcuts)}
+                  className='text-xs text-zinc-500 hover:text-zinc-300 transition-colors'
+                >
+                  快捷鍵 ?
+                </button>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* 快捷鍵幫助面板 */}
+        {showShortcuts && (
+          <div
+            className='fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4'
+            onClick={() => setShowShortcuts(false)}
+          >
+            <div
+              className='bg-zinc-900 border border-zinc-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl'
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className='text-white font-bold text-lg mb-4'>快捷鍵幫助</h3>
+              <div className='space-y-2.5 text-sm'>
+                <div className='flex justify-between'><span className='text-zinc-400'>空白鍵</span><span className='text-white'>播放 / 暫停</span></div>
+                <div className='flex justify-between'><span className='text-zinc-400'>F</span><span className='text-white'>切換全螢幕</span></div>
+                <div className='flex justify-between'><span className='text-zinc-400'>← / →</span><span className='text-white'>快退 / 快進 10 秒</span></div>
+                <div className='flex justify-between'><span className='text-zinc-400'>↑ / ↓</span><span className='text-white'>增減音量</span></div>
+                <div className='flex justify-between'><span className='text-zinc-400'>Alt + ← / →</span><span className='text-white'>上 / 下一集</span></div>
+                <div className='flex justify-between'><span className='text-zinc-400'>? / H</span><span className='text-white'>快捷鍵幫助</span></div>
+              </div>
+              <button
+                onClick={() => setShowShortcuts(false)}
+                className='w-full mt-5 py-2.5 bg-[#e50914] hover:bg-[#b20710] text-white font-medium rounded-xl transition-colors text-sm'
+              >
+                關閉
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* 詳情展示 */}
         <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>

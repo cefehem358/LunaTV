@@ -6,10 +6,16 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.0.9',
+    date: '2026-05-21',
+    content:
+      '播放器增強：自動連播開關（可記憶）、快捷鍵幫助面板（?/H 鍵顯示）、繼續觀看卡牌文字縮小。',
+  },
+  {
     version: 'v1.0.8',
     date: '2026-05-21',
     content:
-      '全面 UI/UX 優化：首頁 Netflix 風格調整、主題一致性修復、手機篩選折疊、側欄折疊 tooltip、底部導航加入搜尋、橫向捲動手機提示、繼續觀看字體放大、載入進度條寬度適配。',
+      '全面 UI/UX 優化：主題一致性修復、手機篩選折疊、側欄折疊 tooltip、底部導航加入搜尋、橫向捲動手機提示。',
   },
   {
     version: 'v1.0.7',
