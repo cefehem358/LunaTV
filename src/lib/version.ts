@@ -6,6 +6,12 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.3.4',
+    date: '2026-05-21',
+    content:
+      '重構橫向 Slider 滾動架構，將控制項全面升級為「大尺寸高對比純白按鈕 (bg-white text-black)」，徹底解決網頁端滑鼠找不到按鍵、難以點擊翻頁的問題；並將 README 重構為通用變數版本，導入 Kvrocks 與 Redis 雙方案 Docker 部署規範。',
+  },
+  {
     version: 'v1.3.3',
     date: '2026-05-21',
     content:

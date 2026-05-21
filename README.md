@@ -2,7 +2,6 @@
 
 ### 專為大螢幕與電視盒子打造的「磨砂玻璃微光風」極致流媒體播放器
 
-- **當前穩定版本：** v1.3.3
 - **核心架構：** Next.js | Tailwind CSS | TypeScript
 - **資料庫支援：** Apache Kvrocks (推薦) / Redis
 
@@ -10,34 +9,34 @@
 
 ## 📖 專案簡介
 
-LunaTV 是一款現代化影視配置與播放終端。專為電視盒子、平板與大螢幕深度優化。在 v1.3.3 中，我們引進了標準的縱向海報比例（aspect-[2/3]），並全面支援後端資料庫快取機制，徹底修復電視遙控器（D-Pad）在電視端導航卡死、海報擠壓變形與觀看進度無法保存的問題。
+LunaTV 是一款現代化影視配置與播放終端。專為網頁端、電視盒子與大螢幕深度優化。我們引進了標準的縱向海報比例（aspect-[2/3]），並全面支援後端資料庫快取機制與全新設計的高顯性純白 Slider 控制器，徹底修復網頁端滑鼠點擊不便、海報擠壓變形與觀看進度無法保存的問題。
 
 ---
 
 ## ✨ 特色功能
 
 - **Stellar Glass 視覺語彙：** 採用高斯模糊與 #ff3e6c 霓虹粉紅作為核心焦點色，配合 1.08x 的優雅放大與外發光呼吸燈動效。
-- **D-Pad 完美滑動：** 繼續觀看區導入與熱門電影一致的橫向滑動 Slider，配合左右實體控制箭頭，焦點移動時自動滾動，不切邊。
+- **高顯性純白控制按鈕：** 淘汰傳統難瞄準的隱蔽半透明箭頭，全域引入大尺寸純白底色控制按鈕（text-black bg-white shadow-2xl），在暗色主題下具備極致清晰的網頁點擊辨識度。
 - **縱向標準海報牆：** 全面採用標準 2:3 直立比例，徹底杜絕影劇封面橫向變形。
 - **後端快取同步：** 支援綁定 Kvrocks/Redis，流暢保存您的「繼續觀看」播放進度、快取時間與標籤資料。
-- **子母畫面 (PiP)：** 播放頁面支援一鍵懸浮畫中畫模式（支援遙控器快捷鍵 P 鍵觸發）。
-- **台灣在地化視認性：** 全域載入 `Noto Sans TC` 字體，大幅提升繁體中文字元在大螢幕上的清晰度。
+- **子母畫面 (PiP)：** 播放頁面支援一鍵懸浮畫中畫模式（支援快捷鍵 P 鍵觸發）。
+- **台灣在地化視認性：** 全域載入 `Noto Sans TC` 字體，大幅提升繁體中文字元在螢幕上的清晰度。
 
 ---
 
 ## 🐳 Docker Compose 一鍵部署
 
-為了確保「繼續觀看」進度保存與全域快取功能正常運作，LunaTV 必須搭配後端儲存服務。請根據您的需求選擇以下其中一種方案建立 `docker-compose.yml`：
+為了確保「繼續觀看」進度保存與全域快取功能正常運作，LunaTV 必須搭配後端儲存服務。請建立 `docker-compose.yml`，並將其中的 `YOUR_GITHUB_USERNAME` 替換為您的 GitHub 帳號名稱：
 
 ### 方案 A：Kvrocks 儲存架構（官方推薦 🌟）
-> **優點：** 基於 RocksDB 的高興能鍵值資料庫，硬碟儲存，重啟或升級時資料絕對不丟失，適合電視盒子長期穩定追劇。
+> **優點：** 基於 RocksDB 的高興能鍵值資料庫，硬碟儲存，重啟或升級時資料絕對不丟失，適合長期穩定追劇。
 
 ```yaml
 version: '3.8'
 
 services:
   moontv-core:
-    image: ghcr.io/berserker8888/lunatv:latest
+    image: ghcr.io/YOUR_GITHUB_USERNAME/lunatv:latest
     container_name: moontv-core
     restart: on-failure
     ports:
@@ -77,7 +76,7 @@ version: '3.8'
 
 services:
   moontv-core:
-    image: ghcr.io/berserker8888/lunatv:latest
+    image: ghcr.io/YOUR_GITHUB_USERNAME/lunatv:latest
     container_name: moontv-core
     restart: on-failure
     ports:
@@ -126,7 +125,7 @@ volumes:
 ## 🚀 本地開發
 
 ```bash
-git clone https://github.com/Berserker8888/LunaTV.git
+git clone https://github.com/YOUR_GITHUB_USERNAME/LunaTV.git
 cd LunaTV
 pnpm install
 pnpm dev
@@ -140,6 +139,7 @@ pnpm dev
 
 | 版本 | 日期 | 內容 |
 |------|------|------|
+| v1.3.4 | 2026-05-21 | 重構橫向 Slider 滾動架構，將控制項全面升級為「大尺寸高對比純白按鈕 (bg-white text-black)」，徹底解決網頁端滑鼠找不到按鍵、難以點擊翻頁的問題；並將 README 重構為通用變數版本，導入 Kvrocks 與 Redis 雙方案 Docker 部署規範 |
 | v1.3.3 | 2026-05-21 | 重構繼續觀看區塊的滾動架構，引進與熱門電影相同的橫向 Slider 控制器與實體箭頭，徹底修復電視端遙控器左右導航卡死問題；並於 README 導入個人倉庫之 Kvrocks 與 Redis 雙版本 Docker 部署規範 |
 | v1.3.2 | 2026-05-21 | 重構繼續觀看區塊的滾動架構，引進與熱門電影相同的橫向 Slider 控制器與實體箭頭，徹底修復電視端遙控器左右導航卡死問題 |
 | v1.3.1 | 2026-05-21 | 修正繼續觀看區塊的遙控器 D-pad 橫向滾動邊界與焦點移動邏輯 |

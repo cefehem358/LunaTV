@@ -167,7 +167,7 @@ export default function NetflixHome({
                   ⏳ 繼續觀看
                 </h3>
                   </div>
-                  <div className='relative group'>
+                  <div className='relative'>
                     <button
                       onClick={() =>
                         scrollRow(
@@ -175,9 +175,9 @@ export default function NetflixHome({
                           'left'
                         )
                       }
-                      className='absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80'
+                      className='w-12 h-12 rounded-full bg-white text-black shadow-[0_4px_20px_rgba(255,255,255,0.25)] flex items-center justify-center text-xl font-black transition-all duration-200 opacity-95 hover:opacity-100 hover:scale-110 active:scale-95 z-50 absolute top-1/2 -translate-y-1/2 left-2'
                     >
-                      <ChevronLeft className='w-5 h-5 text-white' />
+                      <ChevronLeft className='w-6 h-6' />
                     </button>
                     <button
                       onClick={() =>
@@ -186,19 +186,14 @@ export default function NetflixHome({
                           'right'
                         )
                       }
-                      className='absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80'
+                      className='w-12 h-12 rounded-full bg-white text-black shadow-[0_4px_20px_rgba(255,255,255,0.25)] flex items-center justify-center text-xl font-black transition-all duration-200 opacity-95 hover:opacity-100 hover:scale-110 active:scale-95 z-50 absolute top-1/2 -translate-y-1/2 right-2'
                     >
-                      <ChevronRight className='w-5 h-5 text-white' />
+                      <ChevronRight className='w-6 h-6' />
                     </button>
                     <div
                       ref={continueRef}
-                      className='flex gap-3 overflow-x-auto scroll-smooth flex-nowrap scrollbar-hide py-6 px-4'
-                      style={{
-                        scrollbarWidth: 'none',
-                        msOverflowStyle: 'none',
-                      }}
+                      className='flex gap-3 overflow-x-auto scroll-smooth flex-nowrap no-scrollbar py-6 px-2'
                     >
-                      <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
                       {playRecords.map((record) => {
                         const [source, id] = record.key.split('+');
                         const progress =
@@ -426,29 +421,27 @@ function NetflixSectionRow({
   return (
     <section className='mb-10'>
       <SectionTitle title={title} icon={icon} viewAllHref={viewAllHref} />
-      <div className='relative group'>
+      <div className='relative'>
         <button
           onClick={() =>
             scrollRow(scrollRef as React.RefObject<HTMLDivElement>, 'left')
           }
-          className='absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80'
+          className='w-12 h-12 rounded-full bg-white text-black shadow-[0_4px_20px_rgba(255,255,255,0.25)] flex items-center justify-center text-xl font-black transition-all duration-200 opacity-95 hover:opacity-100 hover:scale-110 active:scale-95 z-50 absolute top-1/2 -translate-y-1/2 left-2'
         >
-          <ChevronLeft className='w-5 h-5 text-white' />
+          <ChevronLeft className='w-6 h-6' />
         </button>
         <button
           onClick={() =>
             scrollRow(scrollRef as React.RefObject<HTMLDivElement>, 'right')
           }
-          className='absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80'
+          className='w-12 h-12 rounded-full bg-white text-black shadow-[0_4px_20px_rgba(255,255,255,0.25)] flex items-center justify-center text-xl font-black transition-all duration-200 opacity-95 hover:opacity-100 hover:scale-110 active:scale-95 z-50 absolute top-1/2 -translate-y-1/2 right-2'
         >
-          <ChevronRight className='w-5 h-5 text-white' />
+          <ChevronRight className='w-6 h-6' />
         </button>
         <div
           ref={scrollRef}
-          className='flex gap-3 overflow-x-auto scrollbar-hide pb-2'
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          className='flex gap-3 overflow-x-auto scroll-smooth flex-nowrap no-scrollbar py-6 px-2'
         >
-          <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
           {items.map((item, idx) => (
             <NetflixScrollCard
               key={`${item.id}-${idx}`}
