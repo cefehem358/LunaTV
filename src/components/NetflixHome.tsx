@@ -34,6 +34,7 @@ import {
   subscribeToDataUpdates,
 } from '@/lib/db.client';
 import { titlesMatch } from '@/lib/string-utils';
+import { convertS2T } from '@/lib/s2t';
 import { getDoubanCategories } from '@/lib/douban.client';
 import {
   type FavoriteTag,
@@ -1112,25 +1113,19 @@ export function NetflixHomePage() {
         if (varietyData.code === 200) setHotVarietyShows(varietyData.list);
         setBangumiData(bangumi);
 
-        // 處理播放記錄：繁簡對齊 + 模糊去重 + 按 save_time 降序
+        // 處理播放記錄：強制對齊原版 Unique Key 覆蓋邏輯，徹底根治複製人
         const recordsArray = Object.entries(records)
           .map(([key, record]) => ({ ...record, key }))
           .sort((a, b) => b.save_time - a.save_time);
 
-        // 模糊去重：同一部劇只保留最後觀看或進度最前面的那筆
         const seen = new Map<string, typeof recordsArray[0]>();
         for (const record of recordsArray) {
-          const match = Array.from(seen.values()).find((r) =>
-            titlesMatch(r.title, record.title)
-          );
-          if (!match) {
-            seen.set(record.key, record);
-          } else {
-            const keep =
-              record.index > match.index ||
-              (record.index === match.index && record.save_time > match.save_time);
-            if (keep) seen.delete(match.key);
-            seen.set(record.key, keep ? record : match);
+          // 建立唯一識別碼：繁體劇名 + 純淨片源
+          const uniqueKey = `${convertS2T(record.title)}_${record.source_name.replace(/(資源|片源)/g, '')}`;
+          
+          const existing = seen.get(uniqueKey);
+          if (!existing || record.save_time > existing.save_time) {
+            seen.set(uniqueKey, record);
           }
         }
         const deduplicated = Array.from(seen.values()).sort(

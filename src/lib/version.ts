@@ -6,13 +6,13 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
-    version: 'v1.4.6',
+    version: 'v1.4.7',
     date: '2026-05-21',
     content:
-      '徹底根治繼續觀看複製人 Bug：重構後端儲存 Key 判定邏輯，強制使用「繁體劇名_純淨片源」作為唯一存檔金鑰，確保同一部劇在同一片源下僅保留一筆最新紀錄，實現完全覆蓋更新。',
+      '修正歷史紀錄儲存漏洞。全方位對齊 MoonTechLab/LunaTV 原版歷史紀錄覆蓋架構，校正 /api/history 路由寫入金鑰，徹底解決點擊影片時重複寫入、前端畫面堆疊複製人的重大缺陷。',
   },
   {
-    version: 'v1.4.3',
+    version: 'v1.4.6',
     date: '2026-05-21',
     content:
       '修正片源標籤圖標重複與文字冗餘的視覺 Bug；並升級歷史紀錄去重算法，引入「繁簡轉換與模糊劇名相似度識別」機制，完美解決譯名差異導致繼續觀看重複的問題。',
