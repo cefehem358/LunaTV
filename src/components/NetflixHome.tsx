@@ -199,51 +199,6 @@ export default function NetflixHome({
           </div>
         </header>
 
-        {/* ========== Hero Banner ========== */}
-        {activeNav === 'home' &&
-          hotMovies.length > 0 &&
-          (() => {
-            const hero = hotMovies[0];
-            return (
-              <section className='relative w-full h-[50vh] sm:h-[65vh] md:h-[70vh] lg:h-[75vh] overflow-hidden'>
-                <Image
-                  src={processImageUrl(hero.poster) || '/placeholder.jpg'}
-                  alt={hero.title}
-                  fill
-                  className='object-cover'
-                  unoptimized
-                  referrerPolicy='no-referrer'
-                  priority
-                />
-                <div className='absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent dark:from-[#040404] dark:via-[#040404]/60 to-transparent' />
-                <div className='absolute inset-0 bg-gradient-to-r from-white/80 via-white/40 to-transparent dark:from-[#040404]/90 dark:via-[#040404]/40 to-transparent' />
-                <div className='absolute bottom-0 left-0 right-0 p-6 md:p-12 lg:p-16'>
-                  <h2 className='text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-zinc-900 dark:text-white mb-3 max-w-2xl leading-tight'>
-                    {hero.title}
-                  </h2>
-                  <div className='flex items-center gap-4 mb-4 text-sm sm:text-base text-zinc-600 dark:text-zinc-400'>
-                    {hero.rate && (
-                      <span className='flex items-center gap-1'>
-                        <Star className='w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 fill-yellow-500' />
-                        {hero.rate}
-                      </span>
-                    )}
-                    {hero.year && <span>{hero.year}</span>}
-                  </div>
-                  <Link
-                    href={`/play?id=${hero.id}&title=${encodeURIComponent(
-                      hero.title
-                    )}`}
-                    className='inline-flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-3.5 bg-[#e50914] hover:bg-[#f6121d] text-white font-bold rounded-lg transition-all duration-200 shadow-lg shadow-[#e50914]/25 hover:shadow-[#e50914]/40 text-sm sm:text-base'
-                  >
-                    <CirclePlay className='w-5 h-5 sm:w-6 sm:h-6' />
-                    立即播放
-                  </Link>
-                </div>
-              </section>
-            );
-          })()}
-
         {/* ========== 主頁內容 ========== */}
         <main
           className='px-4 md:px-6'
