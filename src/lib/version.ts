@@ -6,6 +6,12 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.3.7',
+    date: '2026-05-21',
+    content:
+      '完美校正繼續觀看卡片的細節樣式，修復片源膠囊標籤內部置中問題，並優化字體垂直行距與視覺呼吸感。',
+  },
+  {
     version: 'v1.3.6',
     date: '2026-05-21',
     content:

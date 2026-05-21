@@ -252,13 +252,13 @@ export default function NetflixHome({
                                 </div>
                               </div>
                               <div className='p-4 flex flex-col items-center text-center justify-between flex-1'>
-                                <h3 className='text-base font-semibold text-white truncate w-full font-noto'>
+                                <h3 className='text-base font-semibold text-white truncate w-full font-noto mb-1'>
                                   {record.title}
                                 </h3>
-                                <p className='text-xs text-gray-400 mt-1 font-noto truncate'>
+                                <p className='text-xs text-gray-400 mt-1.5 font-noto truncate'>
                                   看到第 {record.index} / 全 {record.total_episodes} 集 ({Math.round(progress)}%)
                                 </p>
-                                <span className='text-[11px] font-medium text-[#ff3e6c] bg-[#ff3e6c]/10 px-2.5 py-0.5 rounded-full mt-3 border border-[#ff3e6c]/20 tracking-wider font-noto'>
+                                <span className='text-[11px] font-medium text-[#ff3e6c] bg-[#ff3e6c]/10 px-3 py-0.5 rounded-full mt-3 border border-[#ff3e6c]/20 tracking-wider font-noto flex items-center justify-center mx-auto'>
                                   🎬 {record.source_name}
                                 </span>
                               </div>
