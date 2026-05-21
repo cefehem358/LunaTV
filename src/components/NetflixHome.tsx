@@ -221,6 +221,13 @@ export default function NetflixHome({
                                 }`
                               )
                             }
+                            onFocus={(e) =>
+                              e.currentTarget.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'nearest',
+                                inline: 'center',
+                              })
+                            }
                             className='vertical-card-container w-48 shrink-0 cursor-pointer'
                           >
                             <div className='visual-box glass-panel rounded-2xl border border-white/10 flex flex-col h-full'>

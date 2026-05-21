@@ -6,6 +6,12 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.3.2',
+    date: '2026-05-21',
+    content:
+      '重構繼續觀看區塊的滾動架構，引進與熱門電影相同的橫向 Slider 控制器與實體箭頭，徹底修復電視端遙控器左右導航卡死問題。',
+  },
+  {
     version: 'v1.3.1',
     date: '2026-05-21',
     content:
