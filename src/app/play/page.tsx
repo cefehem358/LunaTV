@@ -148,6 +148,7 @@ function PlayPageClient() {
   const videoYearRef = useRef(videoYear);
   const detailRef = useRef<SearchResult | null>(detail);
   const currentEpisodeIndexRef = useRef(currentEpisodeIndex);
+  const pipKeyHandlerRef = useRef<((e: KeyboardEvent) => void) | null>(null);
 
   // 同步最新值到 refs
   useEffect(() => {
@@ -1627,6 +1628,28 @@ function PlayPageClient() {
         pipVideoEl.addEventListener('leavepictureinpicture', onPiPChange);
       }
 
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (e.key.toLowerCase() === 'p' && !e.ctrlKey && !e.metaKey) {
+          const active = document.activeElement?.tagName;
+          if (active === 'INPUT' || active === 'TEXTAREA') return;
+          (async () => {
+            try {
+              if (document.pictureInPictureElement) {
+                await document.exitPictureInPicture();
+                setIsPiP(false);
+              } else if (artPlayerRef.current?.video) {
+                await artPlayerRef.current.video.requestPictureInPicture();
+                setIsPiP(true);
+              }
+            } catch {
+              setIsPiP(false);
+            }
+          })();
+        }
+      };
+      document.addEventListener('keydown', onKeyDown);
+      pipKeyHandlerRef.current = onKeyDown;
+
       // 監聽視頻可播放事件，這時恢復播放進度更可靠
       artPlayerRef.current.on('video:canplay', () => {
         // 若存在需要恢復的播放進度，則跳轉
@@ -1759,15 +1782,16 @@ function PlayPageClient() {
   // 當組件解除安裝時清理定時器、Wake Lock 和播放器資源
   useEffect(() => {
     return () => {
-      // 清理定時器
+      if (pipKeyHandlerRef.current) {
+        document.removeEventListener('keydown', pipKeyHandlerRef.current);
+      }
+
       if (saveIntervalRef.current) {
         clearInterval(saveIntervalRef.current);
       }
 
-      // 釋放 Wake Lock
       releaseWakeLock();
 
-      // 銷燬播放器實例
       cleanupPlayer();
     };
   }, []);
