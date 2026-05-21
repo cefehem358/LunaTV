@@ -168,31 +168,37 @@ export default function NetflixHome({
                 </h3>
                   </div>
                   <div className='relative'>
-                    <button
-                      onClick={() =>
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
                         scrollRow(
                           continueRef as React.RefObject<HTMLDivElement>,
                           'left'
-                        )
-                      }
-                      className='w-12 h-12 rounded-full bg-white text-black shadow-[0_4px_20px_rgba(255,255,255,0.25)] flex items-center justify-center text-xl font-black transition-all duration-200 opacity-95 hover:opacity-100 hover:scale-110 active:scale-95 z-50 absolute top-1/2 -translate-y-1/2 left-2'
+                        );
+                      }}
+                      className='absolute left-0 top-0 h-full w-14 bg-gradient-to-r from-black/80 to-transparent flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200 z-50 cursor-pointer'
                     >
-                      <ChevronLeft className='w-6 h-6' />
-                    </button>
-                    <button
-                      onClick={() =>
+                      <div className='w-10 h-10 rounded-full bg-white text-black flex items-center justify-center font-black shadow-lg'>
+                        <ChevronLeft className='w-6 h-6' />
+                      </div>
+                    </div>
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
                         scrollRow(
                           continueRef as React.RefObject<HTMLDivElement>,
                           'right'
-                        )
-                      }
-                      className='w-12 h-12 rounded-full bg-white text-black shadow-[0_4px_20px_rgba(255,255,255,0.25)] flex items-center justify-center text-xl font-black transition-all duration-200 opacity-95 hover:opacity-100 hover:scale-110 active:scale-95 z-50 absolute top-1/2 -translate-y-1/2 right-2'
+                        );
+                      }}
+                      className='absolute right-0 top-0 h-full w-14 bg-gradient-to-l from-black/80 to-transparent flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200 z-50 cursor-pointer'
                     >
-                      <ChevronRight className='w-6 h-6' />
-                    </button>
+                      <div className='w-10 h-10 rounded-full bg-white text-black flex items-center justify-center font-black shadow-lg'>
+                        <ChevronRight className='w-6 h-6' />
+                      </div>
+                    </div>
                     <div
                       ref={continueRef}
-                      className='flex gap-3 overflow-x-auto scroll-smooth flex-nowrap no-scrollbar py-6 px-2'
+                      className='flex gap-3 overflow-x-auto scroll-smooth flex-nowrap no-scrollbar py-6 px-2 relative'
                     >
                       {playRecords.map((record) => {
                         const [source, id] = record.key.split('+');
@@ -422,25 +428,31 @@ function NetflixSectionRow({
     <section className='mb-10'>
       <SectionTitle title={title} icon={icon} viewAllHref={viewAllHref} />
       <div className='relative'>
-        <button
-          onClick={() =>
-            scrollRow(scrollRef as React.RefObject<HTMLDivElement>, 'left')
-          }
-          className='w-12 h-12 rounded-full bg-white text-black shadow-[0_4px_20px_rgba(255,255,255,0.25)] flex items-center justify-center text-xl font-black transition-all duration-200 opacity-95 hover:opacity-100 hover:scale-110 active:scale-95 z-50 absolute top-1/2 -translate-y-1/2 left-2'
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            scrollRow(scrollRef as React.RefObject<HTMLDivElement>, 'left');
+          }}
+          className='absolute left-0 top-0 h-full w-14 bg-gradient-to-r from-black/80 to-transparent flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200 z-50 cursor-pointer'
         >
-          <ChevronLeft className='w-6 h-6' />
-        </button>
-        <button
-          onClick={() =>
-            scrollRow(scrollRef as React.RefObject<HTMLDivElement>, 'right')
-          }
-          className='w-12 h-12 rounded-full bg-white text-black shadow-[0_4px_20px_rgba(255,255,255,0.25)] flex items-center justify-center text-xl font-black transition-all duration-200 opacity-95 hover:opacity-100 hover:scale-110 active:scale-95 z-50 absolute top-1/2 -translate-y-1/2 right-2'
+          <div className='w-10 h-10 rounded-full bg-white text-black flex items-center justify-center font-black shadow-lg'>
+            <ChevronLeft className='w-6 h-6' />
+          </div>
+        </div>
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            scrollRow(scrollRef as React.RefObject<HTMLDivElement>, 'right');
+          }}
+          className='absolute right-0 top-0 h-full w-14 bg-gradient-to-l from-black/80 to-transparent flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200 z-50 cursor-pointer'
         >
-          <ChevronRight className='w-6 h-6' />
-        </button>
+          <div className='w-10 h-10 rounded-full bg-white text-black flex items-center justify-center font-black shadow-lg'>
+            <ChevronRight className='w-6 h-6' />
+          </div>
+        </div>
         <div
           ref={scrollRef}
-          className='flex gap-3 overflow-x-auto scroll-smooth flex-nowrap no-scrollbar py-6 px-2'
+          className='flex gap-3 overflow-x-auto scroll-smooth flex-nowrap no-scrollbar py-6 px-2 relative'
         >
           {items.map((item, idx) => (
             <NetflixScrollCard

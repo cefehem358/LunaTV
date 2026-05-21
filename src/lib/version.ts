@@ -6,6 +6,12 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.3.5',
+    date: '2026-05-21',
+    content:
+      '參考 Netflix 佈局重構橫向 Slider，引入「全高度垂直防誤觸邊緣遮罩欄」，徹底根治網頁端滑鼠點擊控制項時誤觸影片卡牌跳轉的 Bug。',
+  },
+  {
     version: 'v1.3.4',
     date: '2026-05-21',
     content:
