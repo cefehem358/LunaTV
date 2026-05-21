@@ -131,6 +131,13 @@ html.dark .glass-panel {
   box-shadow: 0 0 20px rgba(255, 62, 108, 0.4);
   background: rgba(255, 255, 255, 0.06);
 }
+.focus-glow-card:focus-visible {
+  transform: scale(1.06);
+  border-color: #ff3e6c;
+  box-shadow: 0 0 30px #ff3e6c;
+  background: rgba(255, 255, 255, 0.06);
+  outline: none;
+}
 
 /* Glow accent border for active elements */
 .glow-border {

@@ -221,9 +221,9 @@ export default function NetflixHome({
                                 }`
                               )
                             }
-                            className='focus-glow-card glass-panel w-72 shrink-0 rounded-2xl overflow-hidden cursor-pointer'
+                            className='focus-glow-card glass-panel w-72 shrink-0 rounded-2xl cursor-pointer relative z-0 focus-visible:z-50'
                           >
-                            <div className='relative aspect-video bg-gray-800 w-full h-auto'>
+                            <div className='relative aspect-video bg-gray-800 w-full h-auto rounded-t-2xl overflow-hidden'>
                               <Image
                                 src={
                                   processImageUrl(record.cover) ||
@@ -242,7 +242,7 @@ export default function NetflixHome({
                                 />
                               </div>
                             </div>
-                            <div className='p-4'>
+                            <div className='p-4 rounded-b-2xl'>
                               <p className='text-sm font-medium text-white truncate font-noto'>
                                 {record.title}
                               </p>

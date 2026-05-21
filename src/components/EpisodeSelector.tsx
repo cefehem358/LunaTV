@@ -356,7 +356,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                       onClick={() => handleCategoryClick(idx)}
                       className={`relative px-5 py-2 text-sm font-semibold rounded-full transition-all duration-200 whitespace-nowrap ${
                         isActive
-                          ? 'bg-[#ff3e6c] text-white shadow-lg shadow-red-500/25'
+                          ? 'bg-[#ff3e6c] text-white shadow-lg shadow-[#ff3e6c]/25'
                           : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'
                       }`}
                     >
@@ -406,7 +406,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                     onClick={() => handleEpisodeClick(episodeNumber - 1)}
                     className={`relative aspect-square flex flex-col items-center justify-center text-sm font-bold rounded-xl transition-all duration-200 ${
                       isActive
-                        ? 'bg-gradient-to-br from-[#ff3e6c] to-red-700 text-white shadow-lg shadow-red-500/30 scale-105'
+                        ? 'bg-gradient-to-br from-[#ff3e6c] to-[#cc3256] text-white shadow-lg shadow-[#ff3e6c]/30 scale-105'
                         : 'bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700 hover:text-white hover:scale-105 border border-transparent hover:border-zinc-600'
                     }`}
                   >
@@ -587,7 +587,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                         {/* 當前標記 */}
                         {isCurrentSource && (
                           <div className='absolute top-2 right-2'>
-                            <span className='px-2.5 py-0.5 bg-[#ff3e6c] text-white text-[10px] font-bold rounded-full shadow-lg shadow-red-500/30'>
+                             <span className='px-2.5 py-0.5 bg-[#ff3e6c] text-white text-[10px] font-bold rounded-full shadow-lg shadow-[#ff3e6c]/30'>
                               當前
                             </span>
                           </div>
