@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console, @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -81,8 +81,11 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
 
   // 從 key 中解析 source 和 id
   const parseKey = (key: string) => {
-    const [source, id] = key.split('+');
-    return { source, id };
+    if (key && key.includes('+')) {
+      const [source, id] = key.split('+');
+      return { source, id };
+    }
+    return { source: '', id: '' };
   };
 
   return (
@@ -120,7 +123,10 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
             ))
           : // 顯示真實數據
             playRecords.map((record) => {
-              const { source, id } = parseKey(record.key);
+              const parsed = parseKey(record.key);
+              const source = record.source || parsed.source;
+              const id =
+                record.vod_id || (record as { id?: string }).id || parsed.id;
               return (
                 <div
                   key={record.key}

@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: '缺少必要參數' }, { status: 400 });
   }
 
-  if (!/^[\w-]+$/.test(id)) {
+  if (!/^[a-zA-Z0-9_\-./%+=$?&]+$/.test(id)) {
     return NextResponse.json({ error: '無效的視頻ID格式' }, { status: 400 });
   }
 

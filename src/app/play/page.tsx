@@ -896,7 +896,19 @@ function PlayPageClient() {
       try {
         const allRecords = await getAllPlayRecords();
         const key = generateStorageKey(currentSource, currentId);
-        const record = allRecords[key];
+        let record = allRecords[key];
+        if (!record) {
+          record = Object.values(allRecords).find(
+            (r: any) =>
+              r &&
+              (r.vod_id === currentId ||
+                r.id === currentId ||
+                (r.key &&
+                  r.key.includes('+') &&
+                  r.key.split('+')[1] === currentId)) &&
+              r.source === currentSource
+          );
+        }
 
         if (record) {
           const targetIndex = record.index - 1;
@@ -1744,7 +1756,12 @@ function PlayPageClient() {
       artPlayerRef.current.on('video:ended', () => {
         const d = detailRef.current;
         const idx = currentEpisodeIndexRef.current;
-        if (d && d.episodes && idx < d.episodes.length - 1 && autoNextRef.current) {
+        if (
+          d &&
+          d.episodes &&
+          idx < d.episodes.length - 1 &&
+          autoNextRef.current
+        ) {
           setTimeout(() => {
             setCurrentEpisodeIndex(idx + 1);
           }, 2000);
@@ -2074,30 +2091,43 @@ function PlayPageClient() {
                 )}
 
                 {/* 子母畫面按鈕 */}
-                {typeof document !== 'undefined' && 'pictureInPictureEnabled' in document && document.pictureInPictureEnabled && (
-                  <button
-                    onClick={async () => {
-                      try {
-                        if (document.pictureInPictureElement) {
-                          await document.exitPictureInPicture();
+                {typeof document !== 'undefined' &&
+                  'pictureInPictureEnabled' in document &&
+                  document.pictureInPictureEnabled && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          if (document.pictureInPictureElement) {
+                            await document.exitPictureInPicture();
+                            setIsPiP(false);
+                          } else if (artPlayerRef.current?.video) {
+                            await artPlayerRef.current.video.requestPictureInPicture();
+                            setIsPiP(true);
+                          }
+                        } catch {
                           setIsPiP(false);
-                        } else if (artPlayerRef.current?.video) {
-                          await artPlayerRef.current.video.requestPictureInPicture();
-                          setIsPiP(true);
                         }
-                      } catch {
-                        setIsPiP(false);
-                      }
-                    }}
-                    className='absolute top-3 right-3 z-10 w-9 h-9 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100'
-                    title={isPiP ? '退出子母畫面' : '子母畫面'}
-                  >
-                    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' className='text-white'>
-                      <rect x='2' y='3' width='20' height='14' rx='2' />
-                      <rect x='11' y='10' width='9' height='5' rx='1' />
-                    </svg>
-                  </button>
-                )}
+                      }}
+                      className='absolute top-3 right-3 z-10 w-9 h-9 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100'
+                      title={isPiP ? '退出子母畫面' : '子母畫面'}
+                    >
+                      <svg
+                        xmlns='http://www.w3.org/2000/svg'
+                        width='16'
+                        height='16'
+                        viewBox='0 0 24 24'
+                        fill='none'
+                        stroke='currentColor'
+                        strokeWidth='2'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        className='text-white'
+                      >
+                        <rect x='2' y='3' width='20' height='14' rx='2' />
+                        <rect x='11' y='10' width='9' height='5' rx='1' />
+                      </svg>
+                    </button>
+                  )}
               </div>
             </div>
 
@@ -2128,14 +2158,20 @@ function PlayPageClient() {
                 <label className='flex items-center gap-2 cursor-pointer select-none'>
                   <span className='text-xs text-zinc-400'>自動連播</span>
                   <div
-                    className={`relative w-8 h-4 rounded-full transition-colors cursor-pointer ${autoNext ? 'bg-[#ff3e6c]' : 'bg-zinc-600'}`}
+                    className={`relative w-8 h-4 rounded-full transition-colors cursor-pointer ${
+                      autoNext ? 'bg-[#ff3e6c]' : 'bg-zinc-600'
+                    }`}
                     onClick={() => {
                       const newVal = !autoNext;
                       setAutoNext(newVal);
                       localStorage.setItem('enable_autonext', String(newVal));
                     }}
                   >
-                    <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${autoNext ? 'translate-x-4' : ''}`} />
+                    <div
+                      className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${
+                        autoNext ? 'translate-x-4' : ''
+                      }`}
+                    />
                   </div>
                 </label>
                 <button
@@ -2161,12 +2197,30 @@ function PlayPageClient() {
             >
               <h3 className='text-white font-bold text-lg mb-4'>快捷鍵幫助</h3>
               <div className='space-y-2.5 text-sm'>
-                <div className='flex justify-between'><span className='text-zinc-400'>空白鍵</span><span className='text-white'>播放 / 暫停</span></div>
-                <div className='flex justify-between'><span className='text-zinc-400'>F</span><span className='text-white'>切換全螢幕</span></div>
-                <div className='flex justify-between'><span className='text-zinc-400'>← / →</span><span className='text-white'>快退 / 快進 10 秒</span></div>
-                <div className='flex justify-between'><span className='text-zinc-400'>↑ / ↓</span><span className='text-white'>增減音量</span></div>
-                <div className='flex justify-between'><span className='text-zinc-400'>Alt + ← / →</span><span className='text-white'>上 / 下一集</span></div>
-                <div className='flex justify-between'><span className='text-zinc-400'>? / H</span><span className='text-white'>快捷鍵幫助</span></div>
+                <div className='flex justify-between'>
+                  <span className='text-zinc-400'>空白鍵</span>
+                  <span className='text-white'>播放 / 暫停</span>
+                </div>
+                <div className='flex justify-between'>
+                  <span className='text-zinc-400'>F</span>
+                  <span className='text-white'>切換全螢幕</span>
+                </div>
+                <div className='flex justify-between'>
+                  <span className='text-zinc-400'>← / →</span>
+                  <span className='text-white'>快退 / 快進 10 秒</span>
+                </div>
+                <div className='flex justify-between'>
+                  <span className='text-zinc-400'>↑ / ↓</span>
+                  <span className='text-white'>增減音量</span>
+                </div>
+                <div className='flex justify-between'>
+                  <span className='text-zinc-400'>Alt + ← / →</span>
+                  <span className='text-white'>上 / 下一集</span>
+                </div>
+                <div className='flex justify-between'>
+                  <span className='text-zinc-400'>? / H</span>
+                  <span className='text-white'>快捷鍵幫助</span>
+                </div>
               </div>
               <button
                 onClick={() => setShowShortcuts(false)}

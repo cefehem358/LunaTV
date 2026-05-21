@@ -28,7 +28,7 @@ import SearchResultFilter, {
   SearchFilterCategory,
 } from '@/components/SearchResultFilter';
 import SearchSuggestions from '@/components/SearchSuggestions';
-import VideoCard, { VideoCardHndle } from '@/components/VideoCard';
+import VideoCard, { VideoCardHandle } from '@/components/VideoCard';
 import VirtualGrid from '@/components/VirtualGrid';
 
 function SearchPageClient() {
@@ -49,7 +49,7 @@ function SearchPageClient() {
   const pendingResultsRef = useRef<SearchResult[]>([]);
   const flushTimerRef = useRef<number | null>(null);
   const [useFluidSearch, setUseFluidSearch] = useState(true);
-  const groupRefs = useRef<Map<string, React.RefObject<VideoCardHndle>>>(
+  const groupRefs = useRef<Map<string, React.RefObject<VideoCardHandle>>>(
     new Map()
   );
   const groupStatsRef = useRef<
@@ -62,7 +62,7 @@ function SearchPageClient() {
   const getGroupRef = (key: string) => {
     let ref = groupRefs.current.get(key);
     if (!ref) {
-      ref = React.createRef<VideoCardHndle>();
+      ref = React.createRef<VideoCardHandle>();
       groupRefs.current.set(key, ref);
     }
     return ref;
@@ -512,8 +512,8 @@ function SearchPageClient() {
               const results: SearchResult[] =
                 activeYearOrder === 'none'
                   ? sortBatchForNoOrder(data.results as SearchResult[])
-                   : (data.results as SearchResult[]);
-              
+                  : (data.results as SearchResult[]);
+
               setSearchResults(results);
               setTotalSources(1);
               setCompletedSources(1);
