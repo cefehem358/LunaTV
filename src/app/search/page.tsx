@@ -20,6 +20,8 @@ import {
   subscribeToDataUpdates,
 } from '@/lib/db.client';
 import { SearchResult } from '@/lib/types';
+import { isFuzzyMatch } from '@/lib/searchEngine';
+import { convertS2T, convertT2S } from '@/lib/s2t';
 
 import PageLayout from '@/components/PageLayout';
 import SearchResultFilter, {
@@ -28,6 +30,59 @@ import SearchResultFilter, {
 import SearchSuggestions from '@/components/SearchSuggestions';
 import VideoCard, { VideoCardHandle } from '@/components/VideoCard';
 import VirtualGrid from '@/components/VirtualGrid';
+
+const FUZZY_SUFFIXES = [
+  '的故事', '第一季', '第二季', '第三季', '第四季', '第五季',
+  '第六季', '第七季', '第八季', '第九季', '第十季',
+  '動畫版', '電影版', '真人版', '劇場版',
+  'Season 1', 'Season 2', 'Part 1',
+  '（僅限）', '（全）', '（完）',
+  '國語', '英語', '日語', '粵語',
+];
+
+function extractCoreKeywords(query: string): string[] {
+  let trimmed = query.trim();
+  for (const suffix of FUZZY_SUFFIXES) {
+    if (trimmed.endsWith(suffix)) {
+      trimmed = trimmed.slice(0, -suffix.length).trim();
+    }
+  }
+  const chars = trimmed.replace(/[^\p{L}\p{N}\u4e00-\u9fff]/gu, '').split('');
+  const keywords: string[] = [];
+  for (let len = Math.min(chars.length, 6); len >= 2; len--) {
+    for (let i = 0; i <= chars.length - len; i++) {
+      const chunk = chars.slice(i, i + len).join('');
+      if (chunk.length >= 2) keywords.push(chunk);
+    }
+  }
+  return Array.from(new Set(keywords));
+}
+
+function normalizeForMatch(text: string): string {
+  return convertS2T(convertT2S(text).toLowerCase());
+}
+
+function titleMatchesQuery(title: string, query: string): boolean {
+  const normTitle = normalizeForMatch(title);
+  const normQuery = normalizeForMatch(query);
+  if (normTitle.includes(normQuery)) return true;
+  const keywords = extractCoreKeywords(query);
+  return keywords.some((kw) => {
+    const normKw = normalizeForMatch(kw);
+    return normTitle.includes(normKw);
+  });
+}
+
+function fuzzyFilterResults(results: SearchResult[], query: string): SearchResult[] {
+  if (!query.trim()) return results;
+  const exact = results.filter((r) => normalizeForMatch(r.title).includes(normalizeForMatch(query)));
+  const fuzzy = results.filter(
+    (r) =>
+      !exact.some((e) => `${e.source}_${e.id}` === `${r.source}_${r.id}`) &&
+      titleMatchesQuery(r.title, query)
+  );
+  return [...exact, ...fuzzy];
+}
 
 function SearchPageClient() {
   // 搜索歷史
@@ -42,6 +97,12 @@ function SearchPageClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+
+  // 智慧模糊搜尋結果：雙向繁簡容錯 + 分詞匹配，確保任何譯名差異都能命中
+  const fuzzySearchResults = useMemo(() => {
+    if (!searchQuery.trim()) return searchResults;
+    return searchResults.filter((item) => isFuzzyMatch(item.title, searchQuery));
+  }, [searchResults, searchQuery]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const [totalSources, setTotalSources] = useState(0);
@@ -198,7 +259,7 @@ function SearchPageClient() {
     const map = new Map<string, SearchResult[]>();
     const keyOrder: string[] = []; // 記錄鍵出現的順序
 
-    searchResults.forEach((item) => {
+    fuzzySearchResults.forEach((item) => {
       // 使用 title + year + type 作為鍵，year 必然存在，但依然兜底 'unknown'
       const key = `${item.title.replaceAll(' ', '')}-${
         item.year || 'unknown'
@@ -218,7 +279,7 @@ function SearchPageClient() {
     return keyOrder.map(
       (key) => [key, map.get(key)!] as [string, SearchResult[]]
     );
-  }, [searchResults]);
+  }, [fuzzySearchResults]);
 
   // 當聚合結果變化時，如果某個聚合已存在，則調用其卡片 ref 的 set 方法增量更新
   useEffect(() => {
@@ -255,7 +316,7 @@ function SearchPageClient() {
     const titlesSet = new Set<string>();
     const yearsSet = new Set<string>();
 
-    searchResults.forEach((item) => {
+    fuzzySearchResults.forEach((item) => {
       if (item.source && item.source_name) {
         sourcesSet.set(item.source, item.source_name);
       }
@@ -302,12 +363,12 @@ function SearchPageClient() {
     ];
 
     return { categoriesAll, categoriesAgg };
-  }, [searchResults]);
+  }, [fuzzySearchResults]);
 
   // 非聚合：應用篩選與排序
   const filteredAllResults = useMemo(() => {
     const { source, title, year, yearOrder } = filterAll;
-    const filtered = searchResults.filter((item) => {
+    const filtered = fuzzySearchResults.filter((item) => {
       if (source !== 'all' && item.source !== source) return false;
       if (title !== 'all' && item.title !== title) return false;
       if (year !== 'all' && item.year !== year) return false;
@@ -336,7 +397,7 @@ function SearchPageClient() {
         ? a.title.localeCompare(b.title)
         : b.title.localeCompare(a.title);
     });
-  }, [searchResults, filterAll, searchQuery]);
+  }, [fuzzySearchResults, filterAll, searchQuery]);
 
   // 聚合：應用篩選與排序
   const filteredAggResults = useMemo(() => {
@@ -815,7 +876,7 @@ function SearchPageClient() {
                   </div>
                 </label>
               </div>
-              {searchResults.length === 0 ? (
+               {fuzzySearchResults.length === 0 ? (
                 isLoading ? (
                   <div className='flex justify-center items-center h-40'>
                     <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff3e6c]'></div>

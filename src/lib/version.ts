@@ -6,7 +6,13 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
-    version: 'v1.3.8',
+    version: 'v1.4.2',
+    date: '2026-05-21',
+    content:
+      '重大版本升級！全域重構搜尋引擎（searchFromApi），實作背景雙向繁簡併發請求與核心分詞模糊包含演算法，徹底根治因各採集站譯名差異（如木頭與廢柴、和與與）導致的動漫/影視劇搜尋不到的致命問題。',
+  },
+  {
+    version: 'v1.4.1',
     date: '2026-05-21',
     content:
       '修正片源標籤圖標重複與文字冗餘的視覺 Bug；並升級歷史紀錄去重算法，引入「繁簡轉換與模糊劇名相似度識別」機制，完美解決譯名差異導致繼續觀看重複的問題。',

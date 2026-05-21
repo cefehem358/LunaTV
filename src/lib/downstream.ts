@@ -5,6 +5,7 @@ import { getCachedSearchPage, setCachedSearchPage } from '@/lib/search-cache';
 import { SearchResult } from '@/lib/types';
 import { cleanHtmlTags } from '@/lib/utils';
 
+import { convertS2T, convertT2S } from './s2t';
 import { generateSearchVariants, toDisplayLanguage } from './chinese';
 import { deduplicateRequest } from './request-dedupe';
 
@@ -149,11 +150,17 @@ export async function searchFromApi(
       const stcasc = (await import('switch-chinese')).default;
       const converter = stcasc();
       const simplifiedQuery = converter.simplized(query);
+      const queryTraditional = convertS2T(query);
+      const querySimplified = convertT2S(query);
       const searchVariantsSet = new Set<string>();
       generateSearchVariants(simplifiedQuery).forEach((v) =>
         searchVariantsSet.add(v)
       );
       generateSearchVariants(query).forEach((v) => searchVariantsSet.add(v));
+      if (queryTraditional !== query) searchVariantsSet.add(queryTraditional);
+      if (querySimplified !== query && querySimplified !== simplifiedQuery) {
+        searchVariantsSet.add(querySimplified);
+      }
       searchVariants = Array.from(searchVariantsSet);
     }
 
