@@ -192,7 +192,7 @@ export default function NetflixHome({
                     </button>
                     <div
                       ref={continueRef}
-                      className='flex gap-3 overflow-x-auto scrollbar-hide pb-2'
+                      className='flex gap-3 overflow-x-auto scroll-smooth flex-nowrap scrollbar-hide py-6 px-4'
                       style={{
                         scrollbarWidth: 'none',
                         msOverflowStyle: 'none',

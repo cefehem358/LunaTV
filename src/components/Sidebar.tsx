@@ -22,6 +22,8 @@ import {
   useState,
 } from 'react';
 
+import { CURRENT_VERSION } from '@/lib/version';
+
 import { useSite } from './SiteProvider';
 
 interface SidebarContextType {
@@ -172,7 +174,7 @@ const Sidebar = ({ activePath = '/' }: SidebarProps) => {
           </nav>
 
           <span className='opacity-0 group-hover/sidewrap:opacity-100 transition-opacity duration-200 text-[10px] text-zinc-600 mt-auto'>
-            v1.1.0
+            {CURRENT_VERSION}
           </span>
         </aside>
         <div className='w-24 group-hover/sidewrap:w-64 transition-all duration-300' />

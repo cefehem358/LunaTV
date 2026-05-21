@@ -6,6 +6,12 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.3.1',
+    date: '2026-05-21',
+    content:
+      '修正繼續觀看區塊的遙控器 D-pad 橫向滾動邊界與焦點移動邏輯，全面優化 10-Foot UI 電視端導航體驗。',
+  },
+  {
     version: 'v1.1.0',
     date: '2026-05-21',
     content:
