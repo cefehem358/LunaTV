@@ -221,9 +221,9 @@ export default function NetflixHome({
                                 }`
                               )
                             }
-                            className='focus-glow-card glass-panel w-56 shrink-0 rounded-2xl overflow-hidden cursor-pointer'
+                            className='focus-glow-card glass-panel w-72 shrink-0 rounded-2xl overflow-hidden cursor-pointer'
                           >
-                            <div className='relative aspect-video bg-gray-800'>
+                            <div className='relative aspect-video bg-gray-800 w-full h-auto'>
                               <Image
                                 src={
                                   processImageUrl(record.cover) ||
@@ -231,7 +231,7 @@ export default function NetflixHome({
                                 }
                                 alt={record.title}
                                 fill
-                                className='object-cover'
+                                className='object-cover w-full h-full'
                                 unoptimized
                                 referrerPolicy='no-referrer'
                               />
@@ -242,13 +242,16 @@ export default function NetflixHome({
                                 />
                               </div>
                             </div>
-                            <div className='p-3'>
-                              <p className='text-sm font-medium text-white truncate'>
+                            <div className='p-4'>
+                              <p className='text-sm font-medium text-white truncate font-noto'>
                                 {record.title}
                               </p>
-                              <p className='text-xs text-zinc-400 mt-1'>
+                              <p className='text-xs text-gray-400 mt-1.5 font-noto'>
                                 看到第 {record.index} 集 ({Math.round(progress)}%)
                               </p>
+                              <span className='text-[10px] text-accent/80 bg-accent/10 px-1.5 py-0.5 rounded mt-2 inline-block font-noto'>
+                                片源：{record.source_name}
+                              </span>
                             </div>
                           </button>
                         );

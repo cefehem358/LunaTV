@@ -105,16 +105,16 @@ const Sidebar = ({ activePath = '/' }: SidebarProps) => {
     <Link
       href={href}
       onClick={onClick}
-      className={`group/sideitem relative flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+      className={`relative flex items-center transition-all duration-300 rounded-xl ${
         isActive
-          ? 'bg-gradient-to-r from-[#ff3e6c]/20 to-transparent border-l-4 border-[#ff3e6c] text-white'
-          : 'text-zinc-400 hover:text-white hover:bg-white/5 border-l-4 border-transparent'
-      }`}
+          ? 'bg-gradient-to-r from-[#ff3e6c]/20 to-transparent border-[#ff3e6c] text-white'
+          : 'text-zinc-400 hover:text-white hover:bg-white/5 border-transparent'
+      } flex-col group-hover/sidewrap:flex-row group-hover/sidewrap:px-4 px-2 py-2 group-hover/sidewrap:py-3 group-hover/sidewrap:border-l-4 border-l-2 group-hover/sidewrap:justify-start justify-center gap-1 group-hover/sidewrap:gap-4`}
     >
-      <div className='w-6 h-6 flex items-center justify-center'>
+      <div className='w-6 h-6 flex items-center justify-center flex-shrink-0'>
         <Icon className={`w-5 h-5 ${isActive ? 'text-white' : ''}`} />
       </div>
-      <span className='opacity-0 group-hover/sideitem:opacity-100 transition-opacity duration-200 whitespace-nowrap'>
+      <span className='text-[10px] text-gray-400 text-center transition-all duration-200 whitespace-nowrap group-hover/sidewrap:text-base group-hover/sidewrap:text-white group-hover/sidewrap:text-left group-hover/sidewrap:ml-3'>
         {label}
       </span>
     </Link>
@@ -124,14 +124,14 @@ const Sidebar = ({ activePath = '/' }: SidebarProps) => {
     <SidebarContext.Provider value={contextValue}>
       <div className='group/sidewrap hidden md:flex'>
         <aside className='fixed top-0 left-0 h-screen z-50 flex flex-col items-center py-8 glass-panel border-r border-white/5 dark:border-white/5 transition-all duration-300 w-24 group-hover/sidewrap:w-64 bg-white/90 dark:bg-transparent'>
-          <div className='flex items-center gap-3 mb-12 px-4 w-full'>
+          <div className='flex items-center justify-center group-hover/sidewrap:justify-start gap-3 mb-12 px-4 w-full'>
             <span className='flex-shrink-0 text-xl'>📺</span>
-            <span className='opacity-0 group-hover/sidewrap:opacity-100 transition-opacity duration-200 whitespace-nowrap'>
+            <span className='hidden group-hover/sidewrap:inline transition-opacity duration-200 whitespace-nowrap'>
               <Logo />
             </span>
           </div>
 
-          <nav className='flex-1 w-full px-3 space-y-2'>
+          <nav className='flex-1 w-full px-3 space-y-2 flex flex-col items-center group-hover/sidewrap:items-stretch'>
             <NavLink href='/' icon={Home} label='首頁' isActive={active === '/'} onClick={() => setActive('/')} />
             <NavLink
               href='/search'
