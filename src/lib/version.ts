@@ -9,7 +9,7 @@ export const CHANGELOGS: ChangelogItem[] = [
     version: 'v1.1.0',
     date: '2026-05-21',
     content:
-      '本季番表頁面、我的片單分類標籤系統、播放器子母畫面按鈕、書籤收藏標籤管理。',
+      '番劇日曆整合至動漫頻道、我的片單分類標籤系統、播放器子母畫面按鈕。',
   },
   {
     version: 'v1.0.9',
