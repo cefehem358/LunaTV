@@ -71,7 +71,7 @@
 
 本專案**僅支援 Docker 或其他基於 Docker 的平台**部署。
 
-請將以下設定檔中的 `YOUR_GITHUB_USERNAME` 替換為您的 GitHub 帳號名稱。
+請將以下設定檔中的 `berserker8888` 替換為您的 GitHub 帳號名稱。
 
 ### Kvrocks 儲存（推薦）
 
@@ -239,7 +239,7 @@ dockge/komodo 等 Docker Compose UI 也有自動更新功能。
 ## 🚀 本地開發
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/LunaTV.git
+git clone https://github.com/berserker8888/LunaTV.git
 cd LunaTV
 pnpm install
 pnpm dev
@@ -282,4 +282,4 @@ pnpm dev
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=YOUR_GITHUB_USERNAME/LunaTV&type=Date)](https://www.star-history.com/#YOUR_GITHUB_USERNAME/LunaTV&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=berserker8888/LunaTV&type=Date)](https://www.star-history.com/#berserker8888/LunaTV&Date)
