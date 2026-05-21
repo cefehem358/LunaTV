@@ -175,7 +175,7 @@ export default function NetflixHome({
                           'left'
                         )
                       }
-                      className='absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80'
+                      className='absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity hover:bg-black/80'
                     >
                       <ChevronLeft className='w-5 h-5 text-white' />
                     </button>
@@ -186,13 +186,13 @@ export default function NetflixHome({
                           'right'
                         )
                       }
-                      className='absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80'
+                      className='absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity hover:bg-black/80'
                     >
                       <ChevronRight className='w-5 h-5 text-white' />
                     </button>
                     <div
                       ref={continueRef}
-                      className='flex gap-3 overflow-x-auto scroll-smooth flex-nowrap scrollbar-hide py-6 px-4'
+                      className='flex gap-3 overflow-x-auto scrollbar-hide py-6'
                       style={{
                         scrollbarWidth: 'none',
                         msOverflowStyle: 'none',
