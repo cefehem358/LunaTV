@@ -29,13 +29,11 @@ import {
 import type { PlayRecord } from '@/lib/db.client';
 import {
   clearAllFavorites,
+  deletePlayRecord,
   getAllFavorites,
   getAllPlayRecords,
-  deletePlayRecord,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
-import { titlesMatch } from '@/lib/string-utils';
-import { convertS2T } from '@/lib/s2t';
 import { getDoubanCategories } from '@/lib/douban.client';
 import {
   type FavoriteTag,
@@ -44,6 +42,7 @@ import {
   saveFavoriteTags,
   setItemTags,
 } from '@/lib/favorite-tags.client';
+import { convertS2T } from '@/lib/s2t';
 import { DoubanItem } from '@/lib/types';
 import { processImageUrl } from '@/lib/utils';
 

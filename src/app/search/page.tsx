@@ -19,75 +19,20 @@ import {
   getSearchHistory,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
-import { SearchResult } from '@/lib/types';
+import { cleanQueryForApi } from '@/lib/downstream';
 import { isFuzzyMatch } from '@/lib/searchEngine';
-import { convertS2T, convertT2S } from '@/lib/s2t';
+import { SearchResult } from '@/lib/types';
 
 import PageLayout from '@/components/PageLayout';
 import SearchResultFilter, {
   SearchFilterCategory,
 } from '@/components/SearchResultFilter';
 import SearchSuggestions from '@/components/SearchSuggestions';
-import VideoCard, { VideoCardHandle } from '@/components/VideoCard';
+import VideoCard, { VideoCardHndle } from '@/components/VideoCard';
 import VirtualGrid from '@/components/VirtualGrid';
 
-const FUZZY_SUFFIXES = [
-  '的故事', '第一季', '第二季', '第三季', '第四季', '第五季',
-  '第六季', '第七季', '第八季', '第九季', '第十季',
-  '動畫版', '電影版', '真人版', '劇場版',
-  'Season 1', 'Season 2', 'Part 1',
-  '（僅限）', '（全）', '（完）',
-  '國語', '英語', '日語', '粵語',
-];
-
-function extractCoreKeywords(query: string): string[] {
-  let trimmed = query.trim();
-  for (const suffix of FUZZY_SUFFIXES) {
-    if (trimmed.endsWith(suffix)) {
-      trimmed = trimmed.slice(0, -suffix.length).trim();
-    }
-  }
-  const chars = trimmed.replace(/[^\p{L}\p{N}\u4e00-\u9fff]/gu, '').split('');
-  const keywords: string[] = [];
-  for (let len = Math.min(chars.length, 6); len >= 2; len--) {
-    for (let i = 0; i <= chars.length - len; i++) {
-      const chunk = chars.slice(i, i + len).join('');
-      if (chunk.length >= 2) keywords.push(chunk);
-    }
-  }
-  return Array.from(new Set(keywords));
-}
-
-function normalizeForMatch(text: string): string {
-  return convertS2T(convertT2S(text).toLowerCase());
-}
-
-function titleMatchesQuery(title: string, query: string): boolean {
-  const normTitle = normalizeForMatch(title);
-  const normQuery = normalizeForMatch(query);
-  if (normTitle.includes(normQuery)) return true;
-  const keywords = extractCoreKeywords(query);
-  return keywords.some((kw) => {
-    const normKw = normalizeForMatch(kw);
-    return normTitle.includes(normKw);
-  });
-}
-
-function fuzzyFilterResults(results: SearchResult[], query: string): SearchResult[] {
-  if (!query.trim()) return results;
-  const exact = results.filter((r) => normalizeForMatch(r.title).includes(normalizeForMatch(query)));
-  const fuzzy = results.filter(
-    (r) =>
-      !exact.some((e) => `${e.source}_${e.id}` === `${r.source}_${r.id}`) &&
-      titleMatchesQuery(r.title, query)
-  );
-  return [...exact, ...fuzzy];
-}
-
 function SearchPageClient() {
-  // 搜索歷史
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
-  // 返回頂部按鈕顯示狀態
   const [showBackToTop, setShowBackToTop] = useState(false);
 
   const router = useRouter();
@@ -97,12 +42,6 @@ function SearchPageClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-
-  // 智慧模糊搜尋結果：雙向繁簡容錯 + 分詞匹配，確保任何譯名差異都能命中
-  const fuzzySearchResults = useMemo(() => {
-    if (!searchQuery.trim()) return searchResults;
-    return searchResults.filter((item) => isFuzzyMatch(item.title, searchQuery));
-  }, [searchResults, searchQuery]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const [totalSources, setTotalSources] = useState(0);
@@ -110,8 +49,7 @@ function SearchPageClient() {
   const pendingResultsRef = useRef<SearchResult[]>([]);
   const flushTimerRef = useRef<number | null>(null);
   const [useFluidSearch, setUseFluidSearch] = useState(true);
-  // 聚合卡片 refs 與聚合統計緩存
-  const groupRefs = useRef<Map<string, React.RefObject<VideoCardHandle>>>(
+  const groupRefs = useRef<Map<string, React.RefObject<VideoCardHndle>>>(
     new Map()
   );
   const groupStatsRef = useRef<
@@ -124,7 +62,7 @@ function SearchPageClient() {
   const getGroupRef = (key: string) => {
     let ref = groupRefs.current.get(key);
     if (!ref) {
-      ref = React.createRef<VideoCardHandle>();
+      ref = React.createRef<VideoCardHndle>();
       groupRefs.current.set(key, ref);
     }
     return ref;
@@ -171,7 +109,7 @@ function SearchPageClient() {
 
     return { episodes, source_names, douban_id };
   };
-  // 過濾器：非聚合與聚合
+
   const [filterAll, setFilterAll] = useState<{
     source: string;
     title: string;
@@ -195,7 +133,6 @@ function SearchPageClient() {
     yearOrder: 'none',
   });
 
-  // 獲取默認聚合設置：只讀取用戶本地設置，默認為 true
   const getDefaultAggregate = () => {
     if (typeof window !== 'undefined') {
       const userSetting = localStorage.getItem('defaultAggregateSearch');
@@ -203,14 +140,13 @@ function SearchPageClient() {
         return JSON.parse(userSetting);
       }
     }
-    return true; // 默認啟用聚合
+    return true;
   };
 
   const [viewMode, setViewMode] = useState<'agg' | 'all'>(() => {
     return getDefaultAggregate() ? 'agg' : 'all';
   });
 
-  // 在“無排序”場景用於每個源批次的預排序：完全匹配標題優先，其次年份倒序，未知年份最後
   const sortBatchForNoOrder = (items: SearchResult[]) => {
     const q = currentQueryRef.current.trim();
     return items.slice().sort((a, b) => {
@@ -225,73 +161,61 @@ function SearchPageClient() {
       const bValid = !Number.isNaN(bNum);
       if (aValid && !bValid) return -1;
       if (!aValid && bValid) return 1;
-      if (aValid && bValid) return bNum - aNum; // 年份倒序
+      if (aValid && bValid) return bNum - aNum;
       return 0;
     });
   };
 
-  // 簡化的年份排序：unknown/空值始終在最後
   const compareYear = (
     aYear: string,
     bYear: string,
     order: 'none' | 'asc' | 'desc'
   ) => {
-    // 如果是無排序狀態，返回0（保持原順序）
     if (order === 'none') return 0;
-
-    // 處理空值和unknown
     const aIsEmpty = !aYear || aYear === 'unknown';
     const bIsEmpty = !bYear || bYear === 'unknown';
-
     if (aIsEmpty && bIsEmpty) return 0;
-    if (aIsEmpty) return 1; // a 在後
-    if (bIsEmpty) return -1; // b 在後
-
-    // 都是有效年份，按數字比較
+    if (aIsEmpty) return 1;
+    if (bIsEmpty) return -1;
     const aNum = parseInt(aYear, 10);
     const bNum = parseInt(bYear, 10);
-
     return order === 'asc' ? aNum - bNum : bNum - aNum;
   };
 
-  // 聚合後的結果（按標題和年份分組）
+  // 核心更新：對 API 返回的結果進行模糊匹配過濾，根治譯名差異導致的空畫面
+  const fuzzySearchResults = useMemo(() => {
+    const query = searchQuery.trim();
+    if (!query) return searchResults;
+    return searchResults.filter((item) => isFuzzyMatch(item.title, query));
+  }, [searchResults, searchQuery]);
+
   const aggregatedResults = useMemo(() => {
     const map = new Map<string, SearchResult[]>();
-    const keyOrder: string[] = []; // 記錄鍵出現的順序
+    const keyOrder: string[] = [];
 
     fuzzySearchResults.forEach((item) => {
-      // 使用 title + year + type 作為鍵，year 必然存在，但依然兜底 'unknown'
       const key = `${item.title.replaceAll(' ', '')}-${
         item.year || 'unknown'
       }-${item.episodes.length === 1 ? 'movie' : 'tv'}`;
       const arr = map.get(key) || [];
-
-      // 如果是新的鍵，記錄其順序
-      if (arr.length === 0) {
-        keyOrder.push(key);
-      }
-
+      if (arr.length === 0) keyOrder.push(key);
       arr.push(item);
       map.set(key, arr);
     });
 
-    // 按出現順序返回聚合結果
     return keyOrder.map(
       (key) => [key, map.get(key)!] as [string, SearchResult[]]
     );
   }, [fuzzySearchResults]);
 
-  // 當聚合結果變化時，如果某個聚合已存在，則調用其卡片 ref 的 set 方法增量更新
   useEffect(() => {
     aggregatedResults.forEach(([mapKey, group]) => {
       const stats = computeGroupStats(group);
       const prev = groupStatsRef.current.get(mapKey);
       if (!prev) {
-        // 第一次出現，記錄初始值，不調用 ref（由初始 props 渲染）
         groupStatsRef.current.set(mapKey, stats);
         return;
       }
-      // 對比變化並調用對應的 set 方法
       const ref = groupRefs.current.get(mapKey);
       if (ref && ref.current) {
         if (prev.episodes !== stats.episodes) {
@@ -310,7 +234,6 @@ function SearchPageClient() {
     });
   }, [aggregatedResults]);
 
-  // 構建篩選選項
   const filterOptions = useMemo(() => {
     const sourcesSet = new Map<string, string>();
     const titlesSet = new Set<string>();
@@ -338,7 +261,6 @@ function SearchPageClient() {
         .map((t) => ({ label: t, value: t })),
     ];
 
-    // 年份: 將 unknown 放末尾
     const years = Array.from(yearsSet.values());
     const knownYears = years
       .filter((y) => y !== 'unknown')
@@ -365,7 +287,6 @@ function SearchPageClient() {
     return { categoriesAll, categoriesAgg };
   }, [fuzzySearchResults]);
 
-  // 非聚合：應用篩選與排序
   const filteredAllResults = useMemo(() => {
     const { source, title, year, yearOrder } = filterAll;
     const filtered = fuzzySearchResults.filter((item) => {
@@ -375,80 +296,29 @@ function SearchPageClient() {
       return true;
     });
 
-    // 如果是無排序狀態，直接返回過濾後的原始順序
     if (yearOrder === 'none') {
       return filtered;
     }
 
-    // 簡化排序：1. 年份排序，2. 年份相同時精確匹配在前，3. 標題排序
     return filtered.sort((a, b) => {
-      // 首先按年份排序
       const yearComp = compareYear(a.year, b.year, yearOrder);
       if (yearComp !== 0) return yearComp;
 
-      // 年份相同時，精確匹配在前
       const aExactMatch = a.title === searchQuery.trim();
       const bExactMatch = b.title === searchQuery.trim();
       if (aExactMatch && !bExactMatch) return -1;
       if (!aExactMatch && bExactMatch) return 1;
 
-      // 最後按標題排序，正序時字母序，倒序時反字母序
       return yearOrder === 'asc'
         ? a.title.localeCompare(b.title)
         : b.title.localeCompare(a.title);
     });
   }, [fuzzySearchResults, filterAll, searchQuery]);
 
-  // 聚合：應用篩選與排序
-  const filteredAggResults = useMemo(() => {
-    const { source, title, year, yearOrder } = filterAgg as any;
-    const filtered = aggregatedResults.filter(([_, group]) => {
-      const gTitle = group[0]?.title ?? '';
-      const gYear = group[0]?.year ?? 'unknown';
-      const hasSource =
-        source === 'all' ? true : group.some((item) => item.source === source);
-      if (!hasSource) return false;
-      if (title !== 'all' && gTitle !== title) return false;
-      if (year !== 'all' && gYear !== year) return false;
-      return true;
-    });
-
-    // 如果是無排序狀態，保持按關鍵字+年份+類型出現的原始順序
-    if (yearOrder === 'none') {
-      return filtered;
-    }
-
-    // 簡化排序：1. 年份排序，2. 年份相同時精確匹配在前，3. 標題排序
-    return filtered.sort((a, b) => {
-      // 首先按年份排序
-      const aYear = a[1][0].year;
-      const bYear = b[1][0].year;
-      const yearComp = compareYear(aYear, bYear, yearOrder);
-      if (yearComp !== 0) return yearComp;
-
-      // 年份相同時，精確匹配在前
-      const aExactMatch = a[1][0].title === searchQuery.trim();
-      const bExactMatch = b[1][0].title === searchQuery.trim();
-      if (aExactMatch && !bExactMatch) return -1;
-      if (!aExactMatch && bExactMatch) return 1;
-
-      // 最後按標題排序，正序時字母序，倒序時反字母序
-      const aTitle = a[1][0].title;
-      const bTitle = b[1][0].title;
-      return yearOrder === 'asc'
-        ? aTitle.localeCompare(bTitle)
-        : bTitle.localeCompare(aTitle);
-    });
-  }, [aggregatedResults, filterAgg, searchQuery]);
-
   useEffect(() => {
-    // 無搜索參數時聚焦搜索框
     !searchParams.get('q') && document.getElementById('searchInput')?.focus();
-
-    // 初始加載搜索歷史
     getSearchHistory().then(setSearchHistory);
 
-    // 讀取流式搜索設置
     if (typeof window !== 'undefined') {
       const savedFluidSearch = localStorage.getItem('fluidSearch');
       const defaultFluidSearch =
@@ -460,7 +330,6 @@ function SearchPageClient() {
       }
     }
 
-    // 監聽搜索歷史更新事件
     const unsubscribe = subscribeToDataUpdates(
       'searchHistoryUpdated',
       (newHistory: string[]) => {
@@ -468,28 +337,19 @@ function SearchPageClient() {
       }
     );
 
-    // 獲取滾動位置的函數 - 專門針對 body 滾動
-    const getScrollTop = () => {
-      return document.body.scrollTop || 0;
-    };
-
-    // 使用 requestAnimationFrame 持續檢測滾動位置
+    const getScrollTop = () => document.body.scrollTop || 0;
     let isRunning = false;
     const checkScrollPosition = () => {
       if (!isRunning) return;
-
       const scrollTop = getScrollTop();
       const shouldShow = scrollTop > 300;
       setShowBackToTop(shouldShow);
-
       requestAnimationFrame(checkScrollPosition);
     };
 
-    // 啟動持續檢測
     isRunning = true;
     checkScrollPosition();
 
-    // 監聽 body 元素的滾動事件
     const handleScroll = () => {
       const scrollTop = getScrollTop();
       setShowBackToTop(scrollTop > 300);
@@ -499,21 +359,17 @@ function SearchPageClient() {
 
     return () => {
       unsubscribe();
-      isRunning = false; // 停止 requestAnimationFrame 循環
-
-      // 移除 body 滾動事件監聽器
+      isRunning = false;
       document.body.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
   useEffect(() => {
-    // 當搜索參數變化時更新搜索狀態
     const query = searchParams.get('q') || '';
     currentQueryRef.current = query.trim();
 
     if (query) {
       setSearchQuery(query);
-      // 新搜索：關閉舊連接並清空結果
       if (eventSourceRef.current) {
         try {
           eventSourceRef.current.close();
@@ -523,7 +379,6 @@ function SearchPageClient() {
       setSearchResults([]);
       setTotalSources(0);
       setCompletedSources(0);
-      // 清理緩衝
       pendingResultsRef.current = [];
       if (flushTimerRef.current) {
         clearTimeout(flushTimerRef.current);
@@ -533,8 +388,6 @@ function SearchPageClient() {
       setShowResults(true);
 
       const trimmed = query.trim();
-
-      // 每次搜索時重新讀取設置，確保使用最新的配置
       let currentFluidSearch = useFluidSearch;
       if (typeof window !== 'undefined') {
         const savedFluidSearch = localStorage.getItem('fluidSearch');
@@ -547,15 +400,15 @@ function SearchPageClient() {
         }
       }
 
-      // 如果讀取的配置與當前狀態不同，更新狀態
       if (currentFluidSearch !== useFluidSearch) {
         setUseFluidSearch(currentFluidSearch);
       }
 
       if (currentFluidSearch) {
-        // 流式搜索：打開新的流式連接
+        // 核心修正：在發起請求前，將查詢詞極簡化以提升採集站命中率
+        const cleanedQuery = cleanQueryForApi(trimmed);
         const es = new EventSource(
-          `/api/search/ws?q=${encodeURIComponent(trimmed)}`
+          `/api/search/ws?q=${encodeURIComponent(cleanedQuery)}`
         );
         eventSourceRef.current = es;
 
@@ -575,7 +428,6 @@ function SearchPageClient() {
                   Array.isArray(payload.results) &&
                   payload.results.length > 0
                 ) {
-                  // 緩衝新增結果，節流刷入，避免頻繁重渲染導致閃爍
                   const activeYearOrder =
                     viewMode === 'agg'
                       ? filterAgg.yearOrder
@@ -603,7 +455,6 @@ function SearchPageClient() {
                 break;
               case 'complete':
                 setCompletedSources(payload.completedSources || totalSources);
-                // 完成前確保將緩衝寫入
                 if (pendingResultsRef.current.length > 0) {
                   const toAppend = pendingResultsRef.current;
                   pendingResultsRef.current = [];
@@ -629,7 +480,6 @@ function SearchPageClient() {
 
         es.onerror = () => {
           setIsLoading(false);
-          // 錯誤時也清空緩衝
           if (pendingResultsRef.current.length > 0) {
             const toAppend = pendingResultsRef.current;
             pendingResultsRef.current = [];
@@ -649,11 +499,12 @@ function SearchPageClient() {
           }
         };
       } else {
-        // 傳統搜索：使用普通接口
-        fetch(`/api/search?q=${encodeURIComponent(trimmed)}`)
+        const trimmedQuery = query.trim();
+        const cleanedQuery = cleanQueryForApi(trimmedQuery);
+        fetch(`/api/search?q=${encodeURIComponent(cleanedQuery)}`)
           .then((response) => response.json())
           .then((data) => {
-            if (currentQueryRef.current !== trimmed) return;
+            if (currentQueryRef.current !== trimmedQuery) return;
 
             if (data.results && Array.isArray(data.results)) {
               const activeYearOrder =
@@ -661,8 +512,8 @@ function SearchPageClient() {
               const results: SearchResult[] =
                 activeYearOrder === 'none'
                   ? sortBatchForNoOrder(data.results as SearchResult[])
-                  : (data.results as SearchResult[]);
-
+                   : (data.results as SearchResult[]);
+              
               setSearchResults(results);
               setTotalSources(1);
               setCompletedSources(1);
@@ -674,8 +525,6 @@ function SearchPageClient() {
           });
       }
       setShowSuggestions(false);
-
-      // 保存到搜索歷史 (事件監聽會自動更新界面)
       addSearchHistory(query);
     } else {
       setShowResults(false);
@@ -683,7 +532,6 @@ function SearchPageClient() {
     }
   }, [searchParams]);
 
-  // 組件解除安裝時，關閉可能存在的連接
   useEffect(() => {
     return () => {
       if (eventSourceRef.current) {
@@ -700,11 +548,9 @@ function SearchPageClient() {
     };
   }, []);
 
-  // 輸入框內容變化時觸發，顯示搜索建議
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-
     if (value.trim()) {
       setShowSuggestions(true);
     } else {
@@ -712,51 +558,38 @@ function SearchPageClient() {
     }
   };
 
-  // 搜索框聚焦時觸發，顯示搜索建議
   const handleInputFocus = () => {
     if (searchQuery.trim()) {
       setShowSuggestions(true);
     }
   };
 
-  // 搜索表單提交時觸發，處理搜索邏輯
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = searchQuery.trim().replace(/\s+/g, ' ');
     if (!trimmed) return;
-
-    // 回顯搜索框
     setSearchQuery(trimmed);
     setIsLoading(true);
     setShowResults(true);
     setShowSuggestions(false);
-
     router.push(`/search?q=${encodeURIComponent(trimmed)}`);
-    // 其餘由 searchParams 變化的 effect 處理
   };
 
   const handleSuggestionSelect = (suggestion: string) => {
     setSearchQuery(suggestion);
     setShowSuggestions(false);
-
-    // 自動執行搜索
     setIsLoading(true);
     setShowResults(true);
-
     router.push(`/search?q=${encodeURIComponent(suggestion)}`);
-    // 其餘由 searchParams 變化的 effect 處理
   };
 
-  // 返回頂部功能
   const scrollToTop = () => {
     try {
-      // 根據調試結果，真正的滾動容器是 document.body
       document.body.scrollTo({
         top: 0,
         behavior: 'smooth',
       });
     } catch (error) {
-      // 如果平滑滾動完全失敗，使用立即滾動
       document.body.scrollTop = 0;
     }
   };
@@ -764,7 +597,6 @@ function SearchPageClient() {
   return (
     <PageLayout activePath='/search'>
       <div className='px-4 sm:px-10 py-4 sm:py-8 overflow-visible mb-10'>
-        {/* 搜索框 */}
         <div className='mb-8'>
           <form onSubmit={handleSearch} className='max-w-2xl mx-auto'>
             <div className='relative'>
@@ -779,8 +611,6 @@ function SearchPageClient() {
                 autoComplete='off'
                 className='w-full h-12 rounded-lg bg-gray-50/80 py-3 pl-10 pr-12 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff3e6c] focus:bg-white border border-gray-200/50 shadow-sm dark:bg-gray-800 dark:text-gray-300 dark:placeholder-gray-500 dark:focus:bg-gray-700 dark:border-gray-700'
               />
-
-              {/* 清除按鈕 */}
               {searchQuery && (
                 <button
                   type='button'
@@ -795,36 +625,27 @@ function SearchPageClient() {
                   <X className='h-5 w-5' />
                 </button>
               )}
-
-              {/* 搜索建議 */}
               <SearchSuggestions
                 query={searchQuery}
                 isVisible={showSuggestions}
                 onSelect={handleSuggestionSelect}
                 onClose={() => setShowSuggestions(false)}
                 onEnterKey={() => {
-                  // 當用戶按回車鍵時，使用搜索框的實際內容進行搜索
                   const trimmed = searchQuery.trim().replace(/\s+/g, ' ');
                   if (!trimmed) return;
-
-                  // 回顯搜索框
                   setSearchQuery(trimmed);
                   setIsLoading(true);
                   setShowResults(true);
                   setShowSuggestions(false);
-
                   router.push(`/search?q=${encodeURIComponent(trimmed)}`);
                 }}
               />
             </div>
           </form>
         </div>
-
-        {/* 搜索結果或搜索歷史 */}
         <div className='max-w-[95%] mx-auto mt-12 overflow-visible'>
           {showResults ? (
             <section className='mb-12'>
-              {/* 標題 */}
               <div className='mb-4'>
                 <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
                   搜索結果
@@ -840,7 +661,6 @@ function SearchPageClient() {
                   )}
                 </h2>
               </div>
-              {/* 篩選器 + 聚合開關 同行 */}
               <div className='mb-8 flex items-center justify-between gap-3'>
                 <div className='flex-1 min-w-0'>
                   {viewMode === 'agg' ? (
@@ -857,7 +677,6 @@ function SearchPageClient() {
                     />
                   )}
                 </div>
-                {/* 聚合開關 */}
                 <label className='flex items-center gap-2 cursor-pointer select-none shrink-0'>
                   <span className='text-xs sm:text-sm text-gray-700 dark:text-gray-300'>
                     聚合
@@ -876,7 +695,7 @@ function SearchPageClient() {
                   </div>
                 </label>
               </div>
-               {fuzzySearchResults.length === 0 ? (
+              {fuzzySearchResults.length === 0 ? (
                 isLoading ? (
                   <div className='flex justify-center items-center h-40'>
                     <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff3e6c]'></div>
@@ -890,7 +709,7 @@ function SearchPageClient() {
                 <div key={`search-results-${viewMode}`}>
                   {viewMode === 'agg' ? (
                     <VirtualGrid
-                      items={filteredAggResults}
+                      items={aggregatedResults}
                       className='grid-cols-3 gap-x-2 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'
                       rowGapClass='pb-14 sm:pb-20'
                       estimateRowHeight={320}
@@ -901,7 +720,6 @@ function SearchPageClient() {
                         const { episodes, source_names, douban_id } =
                           computeGroupStats(group);
                         const type = episodes === 1 ? 'movie' : 'tv';
-
                         if (!groupStatsRef.current.has(mapKey)) {
                           groupStatsRef.current.set(mapKey, {
                             episodes,
@@ -909,7 +727,6 @@ function SearchPageClient() {
                             douban_id,
                           });
                         }
-
                         return (
                           <div key={`agg-${mapKey}`} className='w-full'>
                             <VideoCard
@@ -969,14 +786,13 @@ function SearchPageClient() {
               )}
             </section>
           ) : searchHistory.length > 0 ? (
-            // 搜索歷史
             <section className='mb-12'>
               <h2 className='mb-4 text-xl font-bold text-gray-800 text-left dark:text-gray-200'>
                 搜索歷史
                 {searchHistory.length > 0 && (
                   <button
                     onClick={() => {
-                      clearSearchHistory(); // 事件監聽會自動更新界面
+                      clearSearchHistory();
                     }}
                     className='ml-3 text-sm text-gray-500 hover:text-red-500 transition-colors dark:text-gray-400 dark:hover:text-red-500'
                   >
@@ -998,13 +814,12 @@ function SearchPageClient() {
                     >
                       {item}
                     </button>
-                    {/* 刪除按鈕 */}
                     <button
                       aria-label='刪除搜索歷史'
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();
-                        deleteSearchHistory(item); // 事件監聽會自動更新界面
+                        deleteSearchHistory(item);
                       }}
                       className='absolute -top-1 -right-1 w-4 h-4 opacity-0 group-hover:opacity-100 bg-gray-400 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] transition-colors'
                     >
@@ -1017,11 +832,9 @@ function SearchPageClient() {
           ) : null}
         </div>
       </div>
-
-      {/* 返回頂部懸浮按鈕 */}
       <button
         onClick={scrollToTop}
-        className={`fixed bottom-20 md:bottom-6 right-6 z-[500] w-12 h-12 bg-[#ff3e6c]/90 hover:bg-[#ff3e6c] text-white rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out flex items-center justify-center group ${
+        className={`fixed bottom-20 md-bottom-6 right-6 z-[500] w-12 h-12 bg-[#ff3e6c]/90 hover:bg-[#ff3e6c] text-white rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out flex items-center justify-center group ${
           showBackToTop
             ? 'opacity-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 translate-y-4 pointer-events-none'

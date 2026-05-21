@@ -4,9 +4,9 @@ import { getCachedSearchPage, setCachedSearchPage } from '@/lib/search-cache';
 import { SearchResult } from '@/lib/types';
 import { cleanHtmlTags } from '@/lib/utils';
 
-import { convertS2T, convertT2S } from './s2t';
 import { generateSearchVariants, toDisplayLanguage } from './chinese';
 import { deduplicateRequest } from './request-dedupe';
+import { convertS2T, convertT2S } from './s2t';
 
 interface ApiSearchItem {
   vod_id: string;
@@ -21,17 +21,26 @@ interface ApiSearchItem {
   type_name?: string;
 }
 
-function cleanQueryForApi(rawQuery: string): string {
+export function cleanQueryForApi(rawQuery: string): string {
   if (!rawQuery) return '';
+
+  // 移除所有空格、特殊符號與標點
   let k = rawQuery.replace(/[\\s\\-_,.:：，。！？]/g, '');
+
+  // 如果字串包含「和」或「与」，直接切開，只拿前半段核心詞去搜尋
   if (k.includes('和')) k = k.split('和')[0];
   if (k.includes('与')) k = k.split('与')[0];
   if (k.includes('與')) k = k.split('與')[0];
+
+  // 移除常見的干擾後綴
   k = k.replace(/(的故事|動畫版|动画版|第一季|第二季|第三季|第四季|真人版|劇場版|剧场版)/gi, '');
+
+  // 如果處理完字串還是太長（> 4 個字），擷取核心 4 個字
   if (k.length > 4) {
     if (k.includes('风纪委员') || k.includes('風紀委員')) return '风纪委员';
-    return k.slice(2, 6);
+    return k.slice(2, 6); // 保險擷取第 2 到第 6 個字
   }
+
   return k;
 }
 
