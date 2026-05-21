@@ -5,6 +5,7 @@ import { KvrocksStorage } from './kvrocks.db';
 import { RedisStorage } from './redis.db';
 import { Favorite, IStorage, PlayRecord, SkipConfig } from './types';
 import { UpstashRedisStorage } from './upstash.db';
+import { convertS2T } from '@/lib/s2t';
 
 // storage type 常量: 'localstorage' | 'redis' | 'upstash'，默认 'localstorage'
 const STORAGE_TYPE =
@@ -159,8 +160,14 @@ export class DbManager {
     id: string,
     record: PlayRecord
   ): Promise<void> {
-    const key = generateStorageKey(source, id);
-    await this.storage.setPlayRecord(userName, key, record);
+    // 1. 強行將劇名轉為繁體，作為唯一標識符
+    const traditionalName = convertS2T(record.title || '');
+    // 2. 清理片源名稱，移除「資源」或「片源」贅詞
+    const cleanSource = (record.source_name || '').replace(/(資源|片源)/g, '');
+    // 3. 強制使用 `劇名_片源` 作為唯一 Key，確保同一部劇在同一片源下只會有一筆紀錄 (覆蓋更新)
+    const historyStorageKey = `${traditionalName}_${cleanSource}`;
+    
+    await this.storage.setPlayRecord(userName, historyStorageKey, record);
   }
 
   async getAllPlayRecords(userName: string): Promise<{
