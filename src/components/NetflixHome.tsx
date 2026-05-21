@@ -76,6 +76,7 @@ export default function NetflixHome({
   const [activeNav, setActiveNav] = useState<'home' | 'favorites'>('home');
   const [showAnnouncement, setShowAnnouncement] = useState(false);
 
+  // 狀態化管理繼續觀看，確保刪除時能即時反應
   const [continueWatching, setContinueWatching] = useState<any[]>(() =>
     playRecords.map((r) => ({
       ...r,
@@ -102,35 +103,38 @@ export default function NetflixHome({
     e.stopPropagation();
     e.preventDefault();
     try {
-      const authInfo = getAuthInfoFromBrowserCookie();
-      const userId = authInfo?.username || 'default_user';
-
-      const res = await fetch('/api/history/delete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          vod_name: item.title || item.vod_name,
-          userId,
-        }),
-      });
-
-      // 同時呼叫本地資料庫刪除
       const realSource = item.source || item.key?.split('+')[0] || '';
-      const realId = item.vod_id || item.id || item.key?.split('+')[1] || '';
+      const realId = item.id || item.vod_id || item.key?.split('+')[1] || '';
+
+      // 1. 前端立即蒸發
+      setContinueWatching((prev) =>
+        prev.filter((c) => {
+          const cName = convertS2T(c.title || c.vod_name || '').replace(/[\s\-_,.:：，。！？]/g, '').trim();
+          const iName = convertS2T(item.title || item.vod_name || '').replace(/[\s\-_,.:：，。！？]/g, '').trim();
+          return cName !== iName;
+        })
+      );
+
+      // 2. 刪除本地 IndexedDB
       if (realSource && realId) {
         await deletePlayRecord(realSource, realId);
       }
 
-      if (res.ok) {
-        setContinueWatching((prev) =>
-          prev.filter((c) => c.vod_name !== item.vod_name)
-        );
-        window.dispatchEvent(new CustomEvent('playRecordsUpdated'));
-      } else {
-        console.error('後端刪除播放記錄失敗');
-      }
+      // 3. 通知後端抹除快取
+      const authInfo = getAuthInfoFromBrowserCookie();
+      const userId = authInfo?.username || 'default_user';
+
+      await fetch('/api/history/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vod_name: item.title || item.vod_name,
+          source: realSource,
+          userId,
+        }),
+      }).catch(() => {});
+
+      window.dispatchEvent(new CustomEvent('playRecordsUpdated'));
     } catch (err) {
       console.error('刪除播放記錄錯誤:', err);
     }
@@ -186,7 +190,6 @@ export default function NetflixHome({
       </div>
 
       <div className='pl-0 md:pl-24'>
-        {/* ========== B. 頂部毛玻璃搜尋列 ========== */}
         <header
           className={`sticky top-0 z-40 h-16 md:h-20 flex items-center justify-between px-4 md:px-8 transition-all duration-300 ${
             isScrolled
@@ -212,7 +215,6 @@ export default function NetflixHome({
           </div>
         </header>
 
-        {/* ========== 主頁內容 ========== */}
         <main
           className='px-4 md:px-6'
           style={{
@@ -221,7 +223,6 @@ export default function NetflixHome({
         >
           {activeNav === 'home' ? (
             <>
-              {/* 繼續觀看 */}
               {continueWatching.length > 0 && (
                 <section className='mb-8'>
                   <div className='flex items-center gap-3 mb-4'>
@@ -234,10 +235,7 @@ export default function NetflixHome({
                     <div
                       onClick={(e) => {
                         e.stopPropagation();
-                        scrollRow(
-                          continueRef as React.RefObject<HTMLDivElement>,
-                          'left'
-                        );
+                        scrollRow(continueRef as any, 'left');
                       }}
                       className='absolute left-0 top-0 h-full w-14 bg-gradient-to-r from-black/80 to-transparent flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200 z-50 cursor-pointer'
                     >
@@ -248,10 +246,7 @@ export default function NetflixHome({
                     <div
                       onClick={(e) => {
                         e.stopPropagation();
-                        scrollRow(
-                          continueRef as React.RefObject<HTMLDivElement>,
-                          'right'
-                        );
+                        scrollRow(continueRef as any, 'right');
                       }}
                       className='absolute right-0 top-0 h-full w-14 bg-gradient-to-l from-black/80 to-transparent flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200 z-50 cursor-pointer'
                     >
@@ -288,15 +283,13 @@ export default function NetflixHome({
                                 <button
                                   onClick={() =>
                                     router.push(
-                                      `/play?id=${item.vod_id || item.id}&source=${encodeURIComponent(
+                                      `/play?id=${encodeURIComponent(item.vod_id || item.id)}&source=${encodeURIComponent(
                                         item.source
                                       )}&title=${encodeURIComponent(
                                         item.title || item.vod_name
-                                      )}${
+                                      )}${item.url ? `&url=${encodeURIComponent(item.url)}` : ''}${
                                         item.search_title
-                                          ? `&stitle=${encodeURIComponent(
-                                              item.search_title
-                                            )}`
+                                          ? `&stitle=${encodeURIComponent(item.search_title)}`
                                           : ''
                                       }`
                                     )
@@ -313,10 +306,7 @@ export default function NetflixHome({
                                   <div className='visual-box glass-panel rounded-2xl border border-white/10 flex flex-col h-full'>
                                     <div className='relative aspect-[2/3] w-full rounded-t-2xl overflow-hidden bg-gray-900'>
                                       <Image
-                                        src={
-                                          processImageUrl(item.cover) ||
-                                          '/placeholder.jpg'
-                                        }
+                                        src={processImageUrl(item.cover) || '/placeholder.jpg'}
                                         alt={item.title || item.vod_name}
                                         fill
                                         className='object-cover w-full h-full'
@@ -343,7 +333,7 @@ export default function NetflixHome({
                                           ? item.source_name
                                               .replace(/^🎬\s*/, '')
                                               .replace(/\s*資源$/, '')
-                                          : ''}
+                                          : (item.source || '').toUpperCase()}
                                       </span>
                                     </div>
                                   </div>
@@ -356,14 +346,13 @@ export default function NetflixHome({
                                 </button>
                               </div>
                             );
-                          });
+                          })
                       })()}
                     </div>
                   </div>
                 </section>
               )}
 
-              {/* 最新上架網格 */}
               <section className='mb-10'>
                 <SectionTitle
                   title='最新上架'
@@ -379,7 +368,6 @@ export default function NetflixHome({
                 </div>
               </section>
 
-              {/* 熱門電影 */}
               <NetflixSectionRow
                 title='熱門電影'
                 icon={<Film className='w-5 h-5 text-[#ff3e6c]' />}
@@ -388,7 +376,6 @@ export default function NetflixHome({
                 scrollRow={scrollRow}
               />
 
-              {/* 熱門劇集 */}
               <NetflixSectionRow
                 title='熱門劇集'
                 icon={<Tv className='w-5 h-5 text-[#ff3e6c]' />}
@@ -397,13 +384,11 @@ export default function NetflixHome({
                 scrollRow={scrollRow}
               />
 
-              {/* 新番放送（今日） */}
               <NetflixBangumiRow
                 bangumiData={bangumiData}
                 scrollRow={scrollRow}
               />
 
-              {/* 熱門綜藝 */}
               <NetflixSectionRow
                 title='熱門綜藝'
                 icon={<Star className='w-5 h-5 text-[#ff3e6c]' />}
@@ -413,13 +398,11 @@ export default function NetflixHome({
               />
             </>
           ) : (
-            /* ========== 收藏夾視圖 ========== */
             <FavoritesView />
           )}
         </main>
       </div>
 
-      {/* ========== 公告彈窗 ========== */}
       {announcement && showAnnouncement && (
         <div
           className='fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4'
@@ -456,7 +439,6 @@ export default function NetflixHome({
           </div>
         </div>
       )}
-      {/* 移動端底部導航 */}
       <div className='md:hidden'>
         <MobileBottomNav
           activePath={activeNav === 'favorites' ? '/?tab=favorites' : '/'}
@@ -465,8 +447,6 @@ export default function NetflixHome({
     </div>
   );
 }
-
-/* ========== 內部子元件 ========== */
 
 function SectionTitle({
   title,
@@ -523,7 +503,7 @@ function NetflixSectionRow({
         <div
           onClick={(e) => {
             e.stopPropagation();
-            scrollRow(scrollRef as React.RefObject<HTMLDivElement>, 'left');
+            scrollRow(scrollRef as any, 'left');
           }}
           className='absolute left-0 top-0 h-full w-14 bg-gradient-to-r from-black/80 to-transparent flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200 z-50 cursor-pointer'
         >
@@ -534,7 +514,7 @@ function NetflixSectionRow({
         <div
           onClick={(e) => {
             e.stopPropagation();
-            scrollRow(scrollRef as React.RefObject<HTMLDivElement>, 'right');
+            scrollRow(scrollRef as any, 'right');
           }}
           className='absolute right-0 top-0 h-full w-14 bg-gradient-to-l from-black/80 to-transparent flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200 z-50 cursor-pointer'
         >
@@ -696,7 +676,7 @@ function NetflixBangumiRow({
       <div className='relative group'>
         <button
           onClick={() =>
-            scrollRow(scrollRef as React.RefObject<HTMLDivElement>, 'left')
+            scrollRow(scrollRef as any, 'left')
           }
           className='absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80'
         >
@@ -704,7 +684,7 @@ function NetflixBangumiRow({
         </button>
         <button
           onClick={() =>
-            scrollRow(scrollRef as React.RefObject<HTMLDivElement>, 'right')
+            scrollRow(scrollRef as any, 'right')
           }
           className='absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80'
         >
@@ -772,18 +752,6 @@ function NetflixBangumiRow({
   );
 }
 
-const TAG_COLORS: Record<string, string> = {
-  red: '#ff3e6c',
-  accent: '#ff3e6c',
-  orange: '#f97316',
-  yellow: '#eab308',
-  green: '#22c55e',
-  cyan: '#06b6d4',
-  blue: '#3b82f6',
-  purple: '#8b5cf6',
-  pink: '#ec4899',
-};
-
 function TagManagerModal({
   open,
   onClose,
@@ -822,43 +790,21 @@ function TagManagerModal({
   if (!open) return null;
 
   return (
-    <div
-      className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'
-      onClick={onClose}
-    >
-      <div
-        className='bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6'
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm' onClick={onClose}>
+      <div className='bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6' onClick={(e) => e.stopPropagation()}>
         <div className='flex items-center justify-between mb-6'>
-          <h3 className='text-lg font-bold text-zinc-900 dark:text-white'>
-            管理標籤
-          </h3>
-          <button
-            onClick={onClose}
-            className='text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'
-          >
+          <h3 className='text-lg font-bold text-zinc-900 dark:text-white'>管理標籤</h3>
+          <button onClick={onClose} className='text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'>
             <X className='w-5 h-5' />
           </button>
         </div>
 
         <div className='space-y-3'>
           {tags.map((tag, i) => (
-            <div
-              key={tag.name}
-              className='flex items-center gap-3 px-3 py-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl'
-            >
-              <span
-                className='w-3 h-3 rounded-full flex-shrink-0'
-                style={{ backgroundColor: tag.color }}
-              />
-              <span className='flex-1 text-sm font-medium text-zinc-900 dark:text-white'>
-                {tag.name}
-              </span>
-              <button
-                onClick={() => handleDelete(i)}
-                className='text-zinc-400 hover:text-red-500 transition-colors'
-              >
+            <div key={tag.name} className='flex items-center gap-3 px-3 py-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl'>
+              <span className='w-3 h-3 rounded-full flex-shrink-0' style={{ backgroundColor: tag.color }} />
+              <span className='flex-1 text-sm font-medium text-zinc-900 dark:text-white'>{tag.name}</span>
+              <button onClick={() => handleDelete(i)} className='text-zinc-400 hover:text-red-500 transition-colors'>
                 <Trash2 className='w-4 h-4' />
               </button>
             </div>
@@ -879,11 +825,7 @@ function TagManagerModal({
             className='px-2 py-2 text-xs bg-zinc-100 dark:bg-zinc-800 rounded-xl outline-none text-zinc-900 dark:text-white'
           >
             {Object.entries(TAG_COLORS).map(([name, color]) => (
-              <option
-                key={name}
-                value={name}
-                style={{ backgroundColor: color }}
-              >
+              <option key={name} value={name} style={{ backgroundColor: color }}>
                 {name}
               </option>
             ))}
@@ -899,6 +841,18 @@ function TagManagerModal({
     </div>
   );
 }
+
+const TAG_COLORS: Record<string, string> = {
+  red: '#ff3e6c',
+  accent: '#ff3e6c',
+  orange: '#f97316',
+  yellow: '#eab308',
+  green: '#22c55e',
+  cyan: '#06b6d4',
+  blue: '#3b82f6',
+  purple: '#8b5cf6',
+  pink: '#ec4899',
+};
 
 function FavoritesView() {
   const [favoriteItems, setFavoriteItems] = useState<
@@ -1062,16 +1016,9 @@ function FavoritesView() {
                     ? 'text-white'
                     : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                 }`}
-                style={
-                  activeTag === tag.name
-                    ? { backgroundColor: tag.color }
-                    : undefined
-                }
+                style={activeTag === tag.name ? { backgroundColor: tag.color } : undefined}
               >
-                <span
-                  className='w-2 h-2 rounded-full'
-                  style={{ backgroundColor: tag.color }}
-                />
+                <span className='w-2 h-2 rounded-full' style={{ backgroundColor: tag.color }} />
                 {tag.name} ({count})
               </button>
             );
@@ -1144,38 +1091,31 @@ function FavoritesView() {
                   from='favorite'
                   type={item.episodes > 1 ? 'tv' : ''}
                 />
-                {(isEditing || editingItemKey === null) &&
-                  definedTags.length > 0 && (
-                    <div
-                      className={`absolute top-2 left-2 right-2 flex flex-wrap gap-1 ${
-                        isEditing ? '' : 'opacity-0 group-hover:opacity-100'
-                      } transition-opacity`}
-                    >
-                      {definedTags.map((tag) => {
-                        const active = itemTagNames.includes(tag.name);
-                        return (
-                          <button
-                            key={tag.name}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              toggleItemTag(key, tag.name);
-                            }}
-                            className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium transition-all ${
-                              active
-                                ? 'text-white shadow-sm'
-                                : 'bg-black/50 text-white/70 hover:bg-black/70'
-                            }`}
-                            style={
-                              active ? { backgroundColor: tag.color } : undefined
-                            }
-                          >
-                            {tag.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                {(isEditing || editingItemKey === null) && definedTags.length > 0 && (
+                  <div className={`absolute top-2 left-2 right-2 flex flex-wrap gap-1 ${isEditing ? '' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
+                    {definedTags.map((tag) => {
+                      const active = itemTagNames.includes(tag.name);
+                      return (
+                        <button
+                          key={tag.name}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleItemTag(key, tag.name);
+                          }}
+                          className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium transition-all ${
+                            active
+                              ? 'text-white shadow-sm'
+                              : 'bg-black/50 text-white/70 hover:bg-black/70'
+                          }`}
+                          style={active ? { backgroundColor: tag.color } : undefined}
+                        >
+                          {tag.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -1194,7 +1134,6 @@ function FavoritesView() {
   );
 }
 
-/* ========== 頁面包裝元件（資料載入）========== */
 export function NetflixHomePage() {
   const [hotMovies, setHotMovies] = useState<DoubanItem[]>([]);
   const [hotTvShows, setHotTvShows] = useState<DoubanItem[]>([]);
@@ -1243,31 +1182,13 @@ export function NetflixHomePage() {
         if (varietyData.code === 200) setHotVarietyShows(varietyData.list);
         setBangumiData(bangumi);
 
-        // 處理播放記錄：強制對齊原版 Unique Key 覆蓋邏輯，徹底根治複製人
         const recordsArray = Object.entries(records)
-          .map(([key, record]) => {
-            const [keySource, keyId] = key.split('+');
-            const realId = record.vod_id || keyId || '';
-            const realSource = record.source || keySource || '';
-            return {
-              ...record,
-              key,
-              vod_id: realId,
-              id: realId,
-              vod_name: record.title || '',
-              source: realSource,
-            };
-          })
+          .map(([key, record]) => ({ ...record, key }))
           .sort((a, b) => b.save_time - a.save_time);
 
         const seen = new Map<string, typeof recordsArray[0]>();
         for (const record of recordsArray) {
-          // 建立唯一識別碼：繁體劇名 + 純淨片源
-          const uniqueKey = `${convertS2T(record.title)}_${record.source_name.replace(
-            /(資源|片源)/g,
-            ''
-          )}`;
-
+          const uniqueKey = `${convertS2T(record.title)}_${record.source_name.replace(/(資源|片源)/g, '')}`;
           const existing = seen.get(uniqueKey);
           if (!existing || record.save_time > existing.save_time) {
             seen.set(uniqueKey, record);
@@ -1279,7 +1200,6 @@ export function NetflixHomePage() {
 
         setPlayRecords(deduplicated);
       } catch {
-        // keep empty on error
       } finally {
         setLoading(false);
       }

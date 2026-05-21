@@ -4,9 +4,6 @@ export interface ChangelogItem {
   content: string;
 }
 
-export const VERSION = 'v1.4.9';
-export const UPDATE_DATE = '2026-05-21';
-
 export const CHANGELOGS: ChangelogItem[] = [
   {
     version: 'v1.4.9',
@@ -128,4 +125,4 @@ export const CHANGELOGS: ChangelogItem[] = [
   },
 ];
 
-export const CURRENT_VERSION = VERSION;
+export const CURRENT_VERSION = CHANGELOGS[0]?.version || 'v1.0.4';
