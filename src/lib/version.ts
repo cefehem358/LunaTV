@@ -6,6 +6,12 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.5.0',
+    date: '2026-05-21',
+    content:
+      '新增動漫頻道與新番放送卡牌搜尋容錯機制。引入 Longest Common Substring (LCS) 模糊劇名比對算法，以及搜尋關鍵字自動縮短/退路重試邏輯，徹底解決因片名微幅差異（如「女女孩」與「女孩子」）導致無法匹配片源的問題。',
+  },
+  {
     version: 'v1.4.9',
     date: '2026-05-21',
     content:

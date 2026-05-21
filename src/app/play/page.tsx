@@ -43,6 +43,63 @@ interface WakeLockSentinel {
   removeEventListener(type: 'release', listener: () => void): void;
 }
 
+// 最長公共子字串長度計算
+function getLongestCommonSubstringLength(s1: string, s2: string): number {
+  let longest = 0;
+  const num = Array(s1.length)
+    .fill(0)
+    .map(() => Array(s2.length).fill(0));
+  for (let i = 0; i < s1.length; i++) {
+    for (let j = 0; j < s2.length; j++) {
+      if (s1[i] === s2[j]) {
+        num[i][j] = i === 0 || j === 0 ? 1 : num[i - 1][j - 1] + 1;
+        if (num[i][j] > longest) {
+          longest = num[i][j];
+        }
+      }
+    }
+  }
+  return longest;
+}
+
+// 備用關鍵字生成器
+function getFallbackQueries(query: string): string[] {
+  const cleanQuery = query.trim();
+  const fallbacks: string[] = [];
+
+  // 1. 如果有括號，提取括號前的內容
+  const noBrackets = cleanQuery.replace(/\s*[（(].*?[）)]\s*/g, '').trim();
+  if (noBrackets && noBrackets !== cleanQuery) {
+    fallbacks.push(noBrackets);
+  }
+
+  // 2. 移除常見的第X季、第X部分後綴
+  const noSeason = cleanQuery
+    .replace(
+      /(第[一二三四五六七八九十\d]+[季期部話话]|[a-zA-Z0-9\s]+Season\s*\d+|S\d+|\s+Part\s*\d+)/gi,
+      ''
+    )
+    .trim();
+  if (noSeason && noSeason !== cleanQuery) {
+    fallbacks.push(noSeason);
+  }
+
+  // 3. 如果長度大於6，截取前6、10個字
+  if (cleanQuery.length > 6) {
+    fallbacks.push(cleanQuery.slice(0, 6));
+    if (cleanQuery.length > 10) {
+      fallbacks.push(cleanQuery.slice(0, 10));
+    }
+  }
+
+  // 4. 如果長度更長，甚至截取前 4 個字
+  if (cleanQuery.length > 4) {
+    fallbacks.push(cleanQuery.slice(0, 4));
+  }
+
+  return Array.from(new Set(fallbacks)).filter((q) => q.length >= 2);
+}
+
 function PlayPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -713,9 +770,11 @@ function PlayPageClient() {
     };
     const fetchSourcesData = async (query: string): Promise<SearchResult[]> => {
       // 根據搜索詞獲取全部源信息
-      try {
+      const doFetchAndFilter = async (
+        searchQuery: string
+      ): Promise<SearchResult[]> => {
         const response = await fetch(
-          `/api/search?q=${encodeURIComponent(query.trim())}`
+          `/api/search?q=${encodeURIComponent(searchQuery.trim())}`
         );
         if (!response.ok) {
           throw new Error('搜索失敗');
@@ -723,7 +782,7 @@ function PlayPageClient() {
         const data = await response.json();
 
         // 處理搜索結果，根據規則過濾（加入繁簡轉換與模糊匹配）
-        const results = data.results.filter((result: SearchResult) => {
+        return (data.results || []).filter((result: SearchResult) => {
           const normalizedResultTitle = toDisplayLanguage(
             result.title.replaceAll(' ', '').toLowerCase()
           );
@@ -736,6 +795,21 @@ function PlayPageClient() {
             titlesMatch =
               normalizedResultTitle.includes(normalizedVideoTitle) ||
               normalizedVideoTitle.includes(normalizedResultTitle);
+          }
+
+          // 模糊匹配退路 (擁有長度 >= 4 的最長公共子字串，或重合度大於 50%)
+          if (!titlesMatch && normalizedVideoTitle.length >= 3) {
+            const lcsLen = getLongestCommonSubstringLength(
+              normalizedResultTitle,
+              normalizedVideoTitle
+            );
+            const minLen = Math.min(
+              normalizedResultTitle.length,
+              normalizedVideoTitle.length
+            );
+            if (lcsLen >= 4 || (minLen > 0 && lcsLen / minLen >= 0.5)) {
+              titlesMatch = true;
+            }
           }
 
           // 比較年份 (放寬匹配，如年份相差不超過1年)
@@ -794,8 +868,39 @@ function PlayPageClient() {
 
           return titlesMatch && yearsMatch && typeMatch;
         });
-        setAvailableSources(results);
-        return results;
+      };
+
+      try {
+        let results = await doFetchAndFilter(query);
+        if (results.length > 0) {
+          setAvailableSources(results);
+          return results;
+        }
+
+        // 如果原標題找不到，自動嘗試備用/縮短後的關鍵字搜尋
+        const fallbackQueries = getFallbackQueries(query);
+        console.warn(
+          '原標題搜尋不到片源，開始嘗試備用關鍵字:',
+          fallbackQueries
+        );
+
+        for (const fbQuery of fallbackQueries) {
+          try {
+            results = await doFetchAndFilter(fbQuery);
+            if (results.length > 0) {
+              console.log(
+                `使用備用關鍵字 [${fbQuery}] 成功尋找到 ${results.length} 個片源`
+              );
+              setAvailableSources(results);
+              return results;
+            }
+          } catch (e) {
+            console.error(`備用關鍵字 [${fbQuery}] 搜尋出錯:`, e);
+          }
+        }
+
+        setAvailableSources([]);
+        return [];
       } catch (err) {
         setSourceSearchError(err instanceof Error ? err.message : '搜索失敗');
         setAvailableSources([]);
