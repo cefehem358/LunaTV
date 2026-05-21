@@ -33,6 +33,7 @@ import {
   getAllPlayRecords,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
+import { titlesMatch } from '@/lib/string-utils';
 import { getDoubanCategories } from '@/lib/douban.client';
 import {
   type FavoriteTag,
@@ -258,8 +259,8 @@ export default function NetflixHome({
                                 <p className='text-xs text-gray-400 mt-1.5 font-noto truncate'>
                                   看到第 {record.index} / 全 {record.total_episodes} 集 ({Math.round(progress)}%)
                                 </p>
-                                <span className='text-[11px] font-medium text-[#ff3e6c] bg-[#ff3e6c]/10 px-3 py-0.5 rounded-full mt-3 border border-[#ff3e6c]/20 tracking-wider font-noto flex items-center justify-center mx-auto'>
-                                  🎬 {record.source_name}
+                                <span className='text-xs font-medium text-[#ff3e6c] bg-[#ff3e6c]/10 px-2.5 py-0.5 rounded-full mt-3 border border-[#ff3e6c]/20 tracking-wider font-noto flex items-center justify-center mx-auto'>
+                                  🎬 {record.source_name.replace(/^🎬\s*/, '').replace(/\s*資源$/, '')}
                                 </span>
                               </div>
                             </div>
@@ -1111,11 +1112,32 @@ export function NetflixHomePage() {
         if (varietyData.code === 200) setHotVarietyShows(varietyData.list);
         setBangumiData(bangumi);
 
-        // 處理播放記錄：按 save_time 降序
+        // 處理播放記錄：繁簡對齊 + 模糊去重 + 按 save_time 降序
         const recordsArray = Object.entries(records)
           .map(([key, record]) => ({ ...record, key }))
           .sort((a, b) => b.save_time - a.save_time);
-        setPlayRecords(recordsArray);
+
+        // 模糊去重：同一部劇只保留最後觀看或進度最前面的那筆
+        const seen = new Map<string, typeof recordsArray[0]>();
+        for (const record of recordsArray) {
+          const match = Array.from(seen.values()).find((r) =>
+            titlesMatch(r.title, record.title)
+          );
+          if (!match) {
+            seen.set(record.key, record);
+          } else {
+            const keep =
+              record.index > match.index ||
+              (record.index === match.index && record.save_time > match.save_time);
+            if (keep) seen.delete(match.key);
+            seen.set(record.key, keep ? record : match);
+          }
+        }
+        const deduplicated = Array.from(seen.values()).sort(
+          (a, b) => b.save_time - a.save_time
+        );
+
+        setPlayRecords(deduplicated);
       } catch {
         // keep empty on error
       } finally {
