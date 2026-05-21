@@ -97,6 +97,9 @@ function PlayPageClient() {
   // 快捷鍵幫助面板
   const [showShortcuts, setShowShortcuts] = useState(false);
 
+  // 子母畫面狀態
+  const [isPiP, setIsPiP] = useState(false);
+
   // 跳过检查的时间间隔控制
   const lastSkipCheckRef = useRef(0);
 
@@ -1615,6 +1618,14 @@ function PlayPageClient() {
       artPlayerRef.current.on('video:ratechange', () => {
         lastPlaybackRateRef.current = artPlayerRef.current.playbackRate;
       });
+      const onPiPChange = () => {
+        setIsPiP(!!document.pictureInPictureElement);
+      };
+      const pipVideoEl = artPlayerRef.current?.video;
+      if (pipVideoEl) {
+        pipVideoEl.addEventListener('enterpictureinpicture', onPiPChange);
+        pipVideoEl.addEventListener('leavepictureinpicture', onPiPChange);
+      }
 
       // 監聽視頻可播放事件，這時恢復播放進度更可靠
       artPlayerRef.current.on('video:canplay', () => {
@@ -1994,7 +2005,7 @@ function PlayPageClient() {
                 isEpisodeSelectorCollapsed ? 'col-span-1' : 'md:col-span-3'
               }`}
             >
-              <div className='relative w-full h-[300px] lg:h-full'>
+              <div className='relative w-full h-[300px] lg:h-full group'>
                 <div
                   ref={artRef}
                   className='bg-black w-full h-full rounded-xl overflow-hidden shadow-lg'
@@ -2036,6 +2047,32 @@ function PlayPageClient() {
                       </div>
                     </div>
                   </div>
+                )}
+
+                {/* 子母畫面按鈕 */}
+                {typeof document !== 'undefined' && 'pictureInPictureEnabled' in document && document.pictureInPictureEnabled && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        if (document.pictureInPictureElement) {
+                          await document.exitPictureInPicture();
+                          setIsPiP(false);
+                        } else if (artPlayerRef.current?.video) {
+                          await artPlayerRef.current.video.requestPictureInPicture();
+                          setIsPiP(true);
+                        }
+                      } catch {
+                        setIsPiP(false);
+                      }
+                    }}
+                    className='absolute top-3 right-3 z-10 w-9 h-9 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100'
+                    title={isPiP ? '退出子母畫面' : '子母畫面'}
+                  >
+                    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' className='text-white'>
+                      <rect x='2' y='3' width='20' height='14' rx='2' />
+                      <rect x='11' y='10' width='9' height='5' rx='1' />
+                    </svg>
+                  </button>
                 )}
               </div>
             </div>

@@ -4,14 +4,13 @@
 
 import {
   BookMarked,
+  Calendar,
   Cat,
   Clover,
   Film,
   Home,
   Menu,
-  Radio,
   Search,
-  Star,
   Tv,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -157,37 +156,6 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
     },
   ]);
 
-  useEffect(() => {
-    const runtimeConfig = (window as any).RUNTIME_CONFIG;
-    if (runtimeConfig?.ENABLE_WEB_LIVE) {
-      setMenuItems((prevItems) => {
-        if (prevItems.some((item) => item.href === '/live')) return prevItems;
-        return [
-          ...prevItems,
-          {
-            icon: Radio,
-            label: '直播',
-            href: '/live',
-          },
-        ];
-      });
-    }
-    if (runtimeConfig?.CUSTOM_CATEGORIES?.length > 0) {
-      setMenuItems((prevItems) => {
-        if (prevItems.some((item) => item.href === '/douban?type=custom'))
-          return prevItems;
-        return [
-          ...prevItems,
-          {
-            icon: Star,
-            label: '自定義',
-            href: '/douban?type=custom',
-          },
-        ];
-      });
-    }
-  }, []);
-
   return (
     <SidebarContext.Provider value={contextValue}>
       {/* 在移動端隱藏側邊欄 */}
@@ -285,6 +253,37 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                 {isCollapsed && (
                   <div className='absolute left-full ml-2 px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg'>
                     搜索
+                  </div>
+                )}
+              </Link>
+              <Link
+                href='/bangumi'
+                onClick={() => setActive('/bangumi')}
+                className={`group relative flex items-center rounded-lg px-2 py-2 pl-4 transition-colors duration-200 min-h-[40px] ${
+                  isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
+                } gap-3 justify-start ${
+                  active === '/bangumi'
+                    ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white font-semibold'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-white'
+                }`}
+              >
+                <div className='w-4 h-4 flex items-center justify-center'>
+                  <Calendar
+                    className={`h-4 w-4 ${
+                      active === '/bangumi'
+                        ? 'text-zinc-900 dark:text-white'
+                        : 'text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white'
+                    }`}
+                  />
+                </div>
+                {!isCollapsed && (
+                  <span className='whitespace-nowrap transition-opacity duration-200 opacity-100'>
+                    本季番表
+                  </span>
+                )}
+                {isCollapsed && (
+                  <div className='absolute left-full ml-2 px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg'>
+                    本季番表
                   </div>
                 )}
               </Link>

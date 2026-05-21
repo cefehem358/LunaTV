@@ -2,7 +2,7 @@
 
 'use client';
 
-import { Cat, Clover, Film, Home, Radio, Search, Star, Tv } from 'lucide-react';
+import { Calendar, Cat, Clover, Film, Home, Radio, Search, Star, Tv } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -41,6 +41,11 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
       icon: Cat,
       label: '動漫',
       href: '/douban?type=anime',
+    },
+    {
+      icon: Calendar,
+      label: '番表',
+      href: '/bangumi',
     },
     {
       icon: Clover,

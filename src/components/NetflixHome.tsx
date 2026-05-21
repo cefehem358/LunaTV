@@ -8,9 +8,13 @@ import {
   Clapperboard,
   Film,
   Home,
+  Plus,
   Search,
+  Settings2,
   Sparkles,
   Star,
+  Tag,
+  Trash2,
   Tv,
   Watch,
   X,
@@ -32,6 +36,13 @@ import {
   subscribeToDataUpdates,
 } from '@/lib/db.client';
 import { getDoubanCategories } from '@/lib/douban.client';
+import {
+  type FavoriteTag,
+  getAllItemTags,
+  getFavoriteTags,
+  saveFavoriteTags,
+  setItemTags,
+} from '@/lib/favorite-tags.client';
 import { DoubanItem } from '@/lib/types';
 import { processImageUrl } from '@/lib/utils';
 
@@ -752,6 +763,107 @@ function NetflixBangumiRow({
   );
 }
 
+const TAG_COLORS: Record<string, string> = {
+  red: '#e50914',
+  orange: '#f97316',
+  yellow: '#eab308',
+  green: '#22c55e',
+  cyan: '#06b6d4',
+  blue: '#3b82f6',
+  purple: '#8b5cf6',
+  pink: '#ec4899',
+};
+
+function TagManagerModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [tags, setTags] = useState<FavoriteTag[]>([]);
+  const [newName, setNewName] = useState('');
+  const [newColor, setNewColor] = useState('red');
+  useEffect(() => {
+    if (open) setTags(getFavoriteTags());
+  }, [open]);
+
+  const handleAdd = () => {
+    const name = newName.trim();
+    if (!name || tags.some((t) => t.name === name)) return;
+    const updated = [...tags, { name, color: TAG_COLORS[newColor] }];
+    saveFavoriteTags(updated);
+    setTags(updated);
+    setNewName('');
+  };
+
+  const handleDelete = (index: number) => {
+    const deleted = tags[index];
+    const updated = tags.filter((_, i) => i !== index);
+    saveFavoriteTags(updated);
+    setTags(updated);
+    const allItems = getAllItemTags();
+    for (const key of Object.keys(allItems)) {
+      allItems[key] = allItems[key].filter((t) => t !== deleted.name);
+    }
+    localStorage.setItem('moontv_favorite_tags_items', JSON.stringify(allItems));
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm' onClick={onClose}>
+      <div className='bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6' onClick={(e) => e.stopPropagation()}>
+        <div className='flex items-center justify-between mb-6'>
+          <h3 className='text-lg font-bold text-zinc-900 dark:text-white'>管理標籤</h3>
+          <button onClick={onClose} className='text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'>
+            <X className='w-5 h-5' />
+          </button>
+        </div>
+
+        <div className='space-y-3'>
+          {tags.map((tag, i) => (
+            <div key={tag.name} className='flex items-center gap-3 px-3 py-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl'>
+              <span className='w-3 h-3 rounded-full flex-shrink-0' style={{ backgroundColor: tag.color }} />
+              <span className='flex-1 text-sm font-medium text-zinc-900 dark:text-white'>{tag.name}</span>
+              <button onClick={() => handleDelete(i)} className='text-zinc-400 hover:text-red-500 transition-colors'>
+                <Trash2 className='w-4 h-4' />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div className='flex items-center gap-2 mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800'>
+          <input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+            placeholder='新增標籤名稱...'
+            className='flex-1 px-3 py-2 text-sm bg-zinc-100 dark:bg-zinc-800 rounded-xl outline-none focus:ring-2 focus:ring-[#e50914]/50 text-zinc-900 dark:text-white placeholder-zinc-400'
+          />
+          <select
+            value={newColor}
+            onChange={(e) => setNewColor(e.target.value)}
+            className='px-2 py-2 text-xs bg-zinc-100 dark:bg-zinc-800 rounded-xl outline-none text-zinc-900 dark:text-white'
+          >
+            {Object.entries(TAG_COLORS).map(([name, color]) => (
+              <option key={name} value={name} style={{ backgroundColor: color }}>
+                {name}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={handleAdd}
+            className='px-3 py-2 bg-[#e50914] text-white text-sm font-medium rounded-xl hover:bg-[#f6121d] transition-colors'
+          >
+            <Plus className='w-4 h-4' />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FavoritesView() {
   const [favoriteItems, setFavoriteItems] = useState<
     {
@@ -767,6 +879,11 @@ function FavoritesView() {
     }[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [tagManagerOpen, setTagManagerOpen] = useState(false);
+  const [itemTags, setItemTagsState] = useState<Record<string, string[]>>({});
+  const [editingItemKey, setEditingItemKey] = useState<string | null>(null);
+  const [definedTags, setDefinedTags] = useState<FavoriteTag[]>([]);
 
   const updateFavoriteItems = useCallback(
     async (allFavorites: Record<string, unknown>) => {
@@ -811,6 +928,8 @@ function FavoritesView() {
     const load = async () => {
       const allFavorites = await getAllFavorites();
       await updateFavoriteItems(allFavorites);
+      setItemTagsState(getAllItemTags());
+      setDefinedTags(getFavoriteTags());
       setLoading(false);
     };
     load();
@@ -821,29 +940,107 @@ function FavoritesView() {
     return unsub;
   }, [updateFavoriteItems]);
 
+  const refreshTags = () => {
+    setItemTagsState(getAllItemTags());
+    setDefinedTags(getFavoriteTags());
+  };
+
   const handleClearAll = async () => {
     await clearAllFavorites();
     setFavoriteItems([]);
+    localStorage.removeItem('moontv_favorite_tags_items');
+    setItemTagsState({});
+  };
+
+  const filteredItems = activeTag
+    ? favoriteItems.filter((item) => {
+        const key = `${item.source}+${item.id}`;
+        return (itemTags[key] || []).includes(activeTag);
+      })
+    : favoriteItems;
+
+  const getItemTagNames = (key: string) => itemTags[key] || [];
+
+  const toggleItemTag = (key: string, tagName: string) => {
+    const current = getItemTagNames(key);
+    const updated = current.includes(tagName)
+      ? current.filter((t) => t !== tagName)
+      : [...current, tagName];
+    setItemTags(key, updated);
+    setItemTagsState((prev) => ({ ...prev, [key]: updated }));
   };
 
   return (
     <div>
-      <div className='flex items-center justify-between mb-6'>
+      <div className='flex items-center justify-between mb-4'>
         <div className='flex items-center gap-3'>
           <BookMarked className='w-6 h-6 text-[#e50914]' />
           <h2 className='text-2xl font-bold text-zinc-900 dark:text-white'>
             我的收藏
           </h2>
         </div>
-        {favoriteItems.length > 0 && (
-          <button
-            onClick={handleClearAll}
-            className='text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors'
-          >
-            清空全部
-          </button>
-        )}
+        <div className='flex items-center gap-2'>
+          {definedTags.length > 0 && (
+            <button
+              onClick={() => setTagManagerOpen(true)}
+              className='text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center gap-1'
+            >
+              <Tag className='w-4 h-4' />
+              <span className='hidden sm:inline'>管理標籤</span>
+            </button>
+          )}
+          {favoriteItems.length > 0 && (
+            <button
+              onClick={handleClearAll}
+              className='text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors'
+            >
+              清空全部
+            </button>
+          )}
+        </div>
       </div>
+
+      {definedTags.length > 0 && (
+        <div className='flex gap-2 mb-6 overflow-x-auto scrollbar-hide pb-1'>
+          <button
+            onClick={() => setActiveTag(null)}
+            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              activeTag === null
+                ? 'bg-[#e50914] text-white'
+                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+            }`}
+          >
+            全部 ({favoriteItems.length})
+          </button>
+          {definedTags.map((tag) => {
+            const count = favoriteItems.filter((item) => {
+              const key = `${item.source}+${item.id}`;
+              return (itemTags[key] || []).includes(tag.name);
+            }).length;
+            return (
+              <button
+                key={tag.name}
+                onClick={() => setActiveTag(tag.name)}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
+                  activeTag === tag.name
+                    ? 'text-white'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                }`}
+                style={activeTag === tag.name ? { backgroundColor: tag.color } : undefined}
+              >
+                <span className='w-2 h-2 rounded-full' style={{ backgroundColor: tag.color }} />
+                {tag.name} ({count})
+              </button>
+            );
+          })}
+          <button
+            onClick={() => setTagManagerOpen(true)}
+            className='flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all flex items-center gap-1'
+          >
+            <Settings2 className='w-3 h-3' />
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4'>
@@ -854,26 +1051,95 @@ function FavoritesView() {
             />
           ))}
         </div>
-      ) : favoriteItems.length === 0 ? (
+      ) : filteredItems.length === 0 ? (
         <div className='flex flex-col items-center justify-center py-24 text-zinc-500'>
           <BookMarked className='w-16 h-16 mb-4 opacity-30' />
-          <p className='text-lg'>尚無收藏內容</p>
-          <p className='text-sm mt-1'>快去探索心儀的影視作品吧！</p>
+          <p className='text-lg'>
+            {activeTag ? '此標籤尚無內容' : '尚無收藏內容'}
+          </p>
+          <p className='text-sm mt-1'>
+            {activeTag ? '試試其他標籤' : '快去探索心儀的影視作品吧！'}
+          </p>
+        </div>
+      ) : definedTags.length === 0 ? (
+        <div>
+          <button
+            onClick={() => setTagManagerOpen(true)}
+            className='mb-6 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all flex items-center gap-2'
+          >
+            <Plus className='w-4 h-4' /> 建立分類標籤
+          </button>
+          <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4'>
+            {favoriteItems.map((item) => (
+              <div key={`${item.source}-${item.id}`} className='w-full'>
+                <VideoCard
+                  query={item.search_title}
+                  {...item}
+                  from='favorite'
+                  type={item.episodes > 1 ? 'tv' : ''}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4'>
-          {favoriteItems.map((item) => (
-            <div key={`${item.source}-${item.id}`} className='w-full'>
-              <VideoCard
-                query={item.search_title}
-                {...item}
-                from='favorite'
-                type={item.episodes > 1 ? 'tv' : ''}
-              />
-            </div>
-          ))}
+          {filteredItems.map((item) => {
+            const key = `${item.source}+${item.id}`;
+            const itemTagNames = getItemTagNames(key);
+            const isEditing = editingItemKey === key;
+            return (
+              <div
+                key={key}
+                className='w-full relative group'
+                onMouseEnter={() => setEditingItemKey(key)}
+                onMouseLeave={() => setEditingItemKey(null)}
+              >
+                <VideoCard
+                  query={item.search_title}
+                  {...item}
+                  from='favorite'
+                  type={item.episodes > 1 ? 'tv' : ''}
+                />
+                {(isEditing || editingItemKey === null) && definedTags.length > 0 && (
+                  <div className={`absolute top-2 left-2 right-2 flex flex-wrap gap-1 ${isEditing ? '' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
+                    {definedTags.map((tag) => {
+                      const active = itemTagNames.includes(tag.name);
+                      return (
+                        <button
+                          key={tag.name}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleItemTag(key, tag.name);
+                          }}
+                          className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium transition-all ${
+                            active
+                              ? 'text-white shadow-sm'
+                              : 'bg-black/50 text-white/70 hover:bg-black/70'
+                          }`}
+                          style={active ? { backgroundColor: tag.color } : undefined}
+                        >
+                          {tag.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
+
+      <TagManagerModal
+        open={tagManagerOpen}
+        onClose={() => {
+          setTagManagerOpen(false);
+          refreshTags();
+        }}
+      />
+      <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
     </div>
   );
 }

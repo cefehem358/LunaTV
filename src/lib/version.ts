@@ -6,6 +6,12 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.1.0',
+    date: '2026-05-21',
+    content:
+      '本季番表頁面、我的片單分類標籤系統、播放器子母畫面按鈕、書籤收藏標籤管理。',
+  },
+  {
     version: 'v1.0.9',
     date: '2026-05-21',
     content:
