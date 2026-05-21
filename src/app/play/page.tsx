@@ -98,7 +98,7 @@ function PlayPageClient() {
   const [showShortcuts, setShowShortcuts] = useState(false);
 
   // 子母畫面狀態
-  const [isPiP, setIsPiP] = useState(false);
+  const [, setIsPiP] = useState(false);
 
   // 跳过检查的时间间隔控制
   const lastSkipCheckRef = useRef(0);
@@ -117,19 +117,35 @@ function PlayPageClient() {
   }, [blockAdEnabled]);
 
   // 視頻基本信息
-  const [videoTitle, setVideoTitle] = useState(searchParams.get('title') || '');
-  const [videoYear, setVideoYear] = useState(searchParams.get('year') || '');
+  const [videoTitle, setVideoTitle] = useState(() => {
+    const val = searchParams.get('title');
+    return !val || val === 'undefined' || val === 'null' ? '' : val;
+  });
+  const [videoYear, setVideoYear] = useState(() => {
+    const val = searchParams.get('year');
+    return !val || val === 'undefined' || val === 'null' ? '' : val;
+  });
   const [videoCover, setVideoCover] = useState('');
   const [videoDoubanId, setVideoDoubanId] = useState(0);
   // 當前源和ID
-  const [currentSource, setCurrentSource] = useState(
-    searchParams.get('source') || ''
-  );
-  const [currentId, setCurrentId] = useState(searchParams.get('id') || '');
+  const [currentSource, setCurrentSource] = useState(() => {
+    const val = searchParams.get('source');
+    return !val || val === 'undefined' || val === 'null' ? '' : val;
+  });
+  const [currentId, setCurrentId] = useState(() => {
+    const val = searchParams.get('id');
+    return !val || val === 'undefined' || val === 'null' ? '' : val;
+  });
 
   // 搜索所需信息
-  const [searchTitle] = useState(searchParams.get('stitle') || '');
-  const [searchType] = useState(searchParams.get('stype') || '');
+  const [searchTitle] = useState(() => {
+    const val = searchParams.get('stitle');
+    return !val || val === 'undefined' || val === 'null' ? '' : val;
+  });
+  const [searchType] = useState(() => {
+    const val = searchParams.get('stype');
+    return !val || val === 'undefined' || val === 'null' ? '' : val;
+  });
 
   // 是否需要優選
   const [needPrefer, setNeedPrefer] = useState(
@@ -835,9 +851,16 @@ function PlayPageClient() {
         if (target) {
           detailData = target;
         } else {
-          setError('未找到匹配結果');
-          setLoading(false);
-          return;
+          console.warn(
+            `未找到指定的源 ${currentSource} 和 ID ${currentId}，自動退回到優選其他可用片源`
+          );
+          if (optimizationEnabled) {
+            setLoadingStage('preferring');
+            setLoadingMessage('⚡ 正在優選最佳播放源...');
+            detailData = await preferBestSource(sourcesInfo);
+          } else {
+            detailData = sourcesInfo[0];
+          }
         }
       }
 
@@ -2089,45 +2112,6 @@ function PlayPageClient() {
                     </div>
                   </div>
                 )}
-
-                {/* 子母畫面按鈕 */}
-                {typeof document !== 'undefined' &&
-                  'pictureInPictureEnabled' in document &&
-                  document.pictureInPictureEnabled && (
-                    <button
-                      onClick={async () => {
-                        try {
-                          if (document.pictureInPictureElement) {
-                            await document.exitPictureInPicture();
-                            setIsPiP(false);
-                          } else if (artPlayerRef.current?.video) {
-                            await artPlayerRef.current.video.requestPictureInPicture();
-                            setIsPiP(true);
-                          }
-                        } catch {
-                          setIsPiP(false);
-                        }
-                      }}
-                      className='absolute top-3 right-3 z-10 w-9 h-9 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100'
-                      title={isPiP ? '退出子母畫面' : '子母畫面'}
-                    >
-                      <svg
-                        xmlns='http://www.w3.org/2000/svg'
-                        width='16'
-                        height='16'
-                        viewBox='0 0 24 24'
-                        fill='none'
-                        stroke='currentColor'
-                        strokeWidth='2'
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        className='text-white'
-                      >
-                        <rect x='2' y='3' width='20' height='14' rx='2' />
-                        <rect x='11' y='10' width='9' height='5' rx='1' />
-                      </svg>
-                    </button>
-                  )}
               </div>
             </div>
 

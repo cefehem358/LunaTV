@@ -126,8 +126,9 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
 
     const actualTitle = title;
     const actualPoster = poster;
-    const actualSource = source;
-    const actualId = id;
+    const actualSource =
+      !source || source === 'undefined' || source === 'null' ? '' : source;
+    const actualId = !id || id === 'undefined' || id === 'null' ? '' : id;
     const actualDoubanId = dynamicDoubanId;
     const actualEpisodes = dynamicEpisodes;
     const actualYear = year;
@@ -265,6 +266,13 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
           actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
         }${actualSearchType ? `&stype=${actualSearchType}` : ''}`;
         router.push(url);
+      } else {
+        const url = `/play?title=${encodeURIComponent(actualTitle.trim())}${
+          actualYear ? `&year=${actualYear}` : ''
+        }${actualSearchType ? `&stype=${actualSearchType}` : ''}&prefer=true${
+          actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
+        }`;
+        router.push(url);
       }
     }, [
       origin,
@@ -308,6 +316,13 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         }${
           actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
         }${actualSearchType ? `&stype=${actualSearchType}` : ''}`;
+        window.open(url, '_blank');
+      } else {
+        const url = `/play?title=${encodeURIComponent(actualTitle.trim())}${
+          actualYear ? `&year=${actualYear}` : ''
+        }${actualSearchType ? `&stype=${actualSearchType}` : ''}&prefer=true${
+          actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
+        }`;
         window.open(url, '_blank');
       }
     }, [

@@ -303,14 +303,28 @@ export default function NetflixHome({
                                 : 0;
 
                             // 核心修復：精確切出當初 IndexedDB 快取的原始唯一辨識數位 ID 與片源
+                            const keyContainsPlus =
+                              item.key && item.key.includes('+');
+                            const rawId = keyContainsPlus
+                              ? item.key.split('+')[1]
+                              : item.id || item.vod_id;
+                            const rawSource = keyContainsPlus
+                              ? item.key.split('+')[0]
+                              : item.source;
+
                             const targetPlayId =
-                              item.key && item.key.includes('+')
-                                ? item.key.split('+')[1]
-                                : item.id || item.vod_id;
+                              !rawId ||
+                              rawId === 'undefined' ||
+                              rawId === 'null'
+                                ? ''
+                                : rawId;
                             const targetPlaySource =
-                              item.key && item.key.includes('+')
-                                ? item.key.split('+')[0]
-                                : item.source;
+                              !rawSource ||
+                              rawSource === 'undefined' ||
+                              rawSource === 'null'
+                                ? ''
+                                : rawSource;
+                            const isPrefer = !targetPlayId || !targetPlaySource;
 
                             return (
                               <div
@@ -329,7 +343,7 @@ export default function NetflixHome({
                                         targetPlaySource
                                       )}&title=${encodeURIComponent(
                                         item.title || item.vod_name
-                                      )}${
+                                      )}${isPrefer ? '&prefer=true' : ''}${
                                         item.url
                                           ? `&url=${encodeURIComponent(
                                               item.url
