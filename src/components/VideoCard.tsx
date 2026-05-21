@@ -1190,7 +1190,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                       className='inline-block text-gray-500 dark:text-gray-400 mr-1.5'
                     />
                   )}
-                  {source_name}
+                  🎬 {source_name}
                 </span>
               </span>
             )}

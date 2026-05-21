@@ -6,6 +6,12 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.3.6',
+    date: '2026-05-21',
+    content:
+      '優化繼續觀看卡片的元數據排版，精簡片源標籤文字，並重構觀看進度為「當前進度 / 最新集數」對比格式，提升追劇直覺性。',
+  },
+  {
     version: 'v1.3.5',
     date: '2026-05-21',
     content:
