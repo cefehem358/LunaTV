@@ -797,8 +797,8 @@ function PlayPageClient() {
               normalizedVideoTitle.includes(normalizedResultTitle);
           }
 
-          // 模糊匹配退路 (擁有長度 >= 4 的最長公共子字串，或重合度大於 50%)
-          if (!titlesMatch && normalizedVideoTitle.length >= 3) {
+          // 模糊匹配退路 (擁有長度 >= 4 的最長公共子字串，且重合度大於 50%)
+          if (!titlesMatch && normalizedVideoTitle.length >= 4) {
             const lcsLen = getLongestCommonSubstringLength(
               normalizedResultTitle,
               normalizedVideoTitle
@@ -807,7 +807,7 @@ function PlayPageClient() {
               normalizedResultTitle.length,
               normalizedVideoTitle.length
             );
-            if (lcsLen >= 4 || (minLen > 0 && lcsLen / minLen >= 0.5)) {
+            if (lcsLen >= 4 && minLen > 0 && lcsLen / minLen >= 0.5) {
               titlesMatch = true;
             }
           }

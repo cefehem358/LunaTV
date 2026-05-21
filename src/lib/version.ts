@@ -6,6 +6,12 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.5.1',
+    date: '2026-05-21',
+    content:
+      '收緊模糊比對（LCS）匹配條件，規定最長公共子字串長度必須大於等於 4 且重合比例大於等於 50%，修復「電影中的女孩」等短劇名片源誤匹配長劇名（如「和班上第二可愛的女孩成為了朋友」）的搜尋問題。',
+  },
+  {
     version: 'v1.5.0',
     date: '2026-05-21',
     content:
