@@ -22,29 +22,25 @@ interface ApiSearchItem {
 }
 
 export function cleanQueryForApi(rawQuery: string): string {
-  if (!rawQuery) return '';
+  if (!rawQuery) return rawQuery;
 
-  // 移除所有空格、特殊符號與標點
-  let k = rawQuery.replace(/[\\s\\-_,.:：，。！？]/g, '');
+  let k = rawQuery.trim();
 
-  // 如果字串包含「和」或「与」，直接切開，只拿前半段核心詞去搜尋
-  if (k.includes('和')) k = k.split('和')[0];
-  if (k.includes('与')) k = k.split('与')[0];
-  if (k.includes('與')) k = k.split('與')[0];
+  // 1. 移除括號及括號內的修飾詞（如「(第一季)」「（僅限）」）
+  k = k.replace(/\s*[（(][^）)]*[）)]\s*/g, '').trim();
 
-  // 移除常見的干擾後綴
-  k = k.replace(
-    /(的故事|動畫版|动画版|第一季|第二季|第三季|第四季|真人版|劇場版|剧场版)/gi,
-    ''
-  );
+  // 2. 移除結尾的常見干擾後綴（季、期、部、版等）
+  k = k
+    .replace(
+      /([\s\u3000]*(?:第[一二三四五六七八九十\d]+[季期部話话集]|Season\s*\d+|Part\s*\d+|S\d+|動畫版|动画版|真人版|劇場版|剧场版|的故事))+$/gi,
+      ''
+    )
+    .trim();
 
-  // 如果處理完字串還是太長（> 4 個字），擷取核心 4 個字
-  if (k.length > 4) {
-    if (k.includes('风纪委员') || k.includes('風紀委員')) return '风纪委员';
-    return k.slice(2, 6); // 保險擷取第 2 到第 6 個字
-  }
+  // 3. 清除頭尾的標點符號和多餘空格
+  k = k.replace(/^[\s\-_,.：，。！？]+|[\s\-_,.：，。！？]+$/g, '').trim();
 
-  return k;
+  return k || rawQuery.trim();
 }
 
 async function searchWithCache(

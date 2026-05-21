@@ -6,6 +6,12 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.5.2',
+    date: '2026-05-21',
+    content:
+      '全面修復搜尋引擎三大問題：(1) 修正 cleanQueryForApi 過度裁切搜尋關鍵字的 Bug（原本以「和」/「與」切割、截第 2-6 字），恢復長劇名卡牌正常搜尋片源；(2) 將 isFuzzyMatch 升級為 LCS 嚴格比對，徹底根治「點 A 搜尋出 B」的搜尋污染問題；(3) 恢復聚合模式下的篩選器（filteredAggResults），使來源/年份/標題過濾器在聚合視圖中正常運作。',
+  },
+  {
     version: 'v1.5.1',
     date: '2026-05-21',
     content:

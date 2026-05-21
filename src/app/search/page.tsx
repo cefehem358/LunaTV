@@ -315,6 +315,42 @@ function SearchPageClient() {
     });
   }, [fuzzySearchResults, filterAll, searchQuery]);
 
+  const filteredAggResults = useMemo(() => {
+    const { source, title, year, yearOrder } = filterAgg;
+    const filtered = aggregatedResults.filter(([_, group]) => {
+      const gTitle = group[0]?.title ?? '';
+      const gYear = group[0]?.year ?? 'unknown';
+      const hasSource =
+        source === 'all' ? true : group.some((item) => item.source === source);
+      if (!hasSource) return false;
+      if (title !== 'all' && gTitle !== title) return false;
+      if (year !== 'all' && gYear !== year) return false;
+      return true;
+    });
+
+    if (yearOrder === 'none') {
+      return filtered;
+    }
+
+    return filtered.sort((a, b) => {
+      const aYear = a[1][0]?.year ?? 'unknown';
+      const bYear = b[1][0]?.year ?? 'unknown';
+      const yearComp = compareYear(aYear, bYear, yearOrder);
+      if (yearComp !== 0) return yearComp;
+
+      const aExactMatch = a[1][0]?.title === searchQuery.trim();
+      const bExactMatch = b[1][0]?.title === searchQuery.trim();
+      if (aExactMatch && !bExactMatch) return -1;
+      if (!aExactMatch && bExactMatch) return 1;
+
+      const aTitle = a[1][0]?.title ?? '';
+      const bTitle = b[1][0]?.title ?? '';
+      return yearOrder === 'asc'
+        ? aTitle.localeCompare(bTitle)
+        : bTitle.localeCompare(aTitle);
+    });
+  }, [aggregatedResults, filterAgg, searchQuery]);
+
   useEffect(() => {
     !searchParams.get('q') && document.getElementById('searchInput')?.focus();
     getSearchHistory().then(setSearchHistory);
@@ -709,7 +745,7 @@ function SearchPageClient() {
                 <div key={`search-results-${viewMode}`}>
                   {viewMode === 'agg' ? (
                     <VirtualGrid
-                      items={aggregatedResults}
+                      items={filteredAggResults}
                       className='grid-cols-3 gap-x-2 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'
                       rowGapClass='pb-14 sm:pb-20'
                       estimateRowHeight={320}
