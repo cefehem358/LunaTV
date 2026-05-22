@@ -203,7 +203,7 @@ export class DbManager {
           const recordSource = (record.source || record.source_name || '')
             .replace(/(資源|片源)/g, '')
             .trim();
-          const recordId = record.vod_id || record.id || '';
+          const recordId = record.vod_id || (record as any).id || '';
           if (
             recordSource === cleanTargetSource &&
             String(recordId) === String(id)

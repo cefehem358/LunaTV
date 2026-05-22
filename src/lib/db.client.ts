@@ -676,7 +676,7 @@ export async function deletePlayRecord(
         const rSource = (r.source || r.source_name || '')
           .replace(/(資源|片源)/g, '')
           .trim();
-        const rId = r.vod_id || r.id || '';
+        const rId = r.vod_id || (r as any).id || '';
         if (rSource === cleanTargetSource && String(rId) === String(id)) {
           keysToDelete.push(k);
         }
@@ -716,7 +716,7 @@ export async function deletePlayRecord(
       const rSource = (r.source || r.source_name || '')
         .replace(/(資源|片源)/g, '')
         .trim();
-      const rId = r.vod_id || r.id || '';
+      const rId = r.vod_id || (r as any).id || '';
       if (rSource === cleanTargetSource && String(rId) === String(id)) {
         keysToDelete.push(k);
       }

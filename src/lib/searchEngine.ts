@@ -74,7 +74,7 @@ export function isFuzzyMatch(vodName: string, query: string): boolean {
     ...generateSearchVariants(cleanQuery),
   ]);
 
-  for (const variant of variants) {
+  for (const variant of Array.from(variants)) {
     const normQuery = normalize(variant);
     if (!normQuery) continue;
 
