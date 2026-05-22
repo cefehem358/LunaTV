@@ -249,6 +249,24 @@ export default function NetflixHome({
                     <h3 className='text-xl font-bold text-white flex items-center gap-2'>
                       ⏳ 繼續觀看
                     </h3>
+                    {continueWatching.length > 0 && (
+                      <button
+                        className='ml-auto flex items-center gap-1 text-sm text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors'
+                        onClick={async () => {
+                          if (
+                            window.confirm(
+                              '確定要清除所有繼續觀看紀錄嗎？此動作無法復原。'
+                            )
+                          ) {
+                            await clearAllPlayRecords();
+                            setContinueWatching([]);
+                          }
+                        }}
+                      >
+                        <Trash2 className='w-4 h-4' />
+                        清空
+                      </button>
+                    )}
                   </div>
                   <div className='relative'>
                     <div

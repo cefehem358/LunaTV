@@ -6,6 +6,15 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.5.4',
+    date: '2026-05-22',
+    content: `
+- 修正「動漫」首頁片源進入搜尋時的別名過濾匹配問題
+- 新增首頁「繼續觀看」區塊的一鍵清空按鈕
+- 版本號提升至 0.1.1
+    `.trim(),
+  },
+  {
     version: 'v1.5.3',
     date: '2026-05-23',
     content:

@@ -104,9 +104,7 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
             className='flex items-center gap-1 text-sm text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors'
             onClick={async () => {
               if (
-                window.confirm(
-                  '確定要一鍵清除所有繼續觀看紀錄嗎？此動作無法復原。'
-                )
+                window.confirm('確定要清除所有繼續觀看紀錄嗎？此動作無法復原。')
               ) {
                 await clearAllPlayRecords();
                 setPlayRecords([]);
@@ -130,7 +128,7 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
               <line x1='10' y1='11' x2='10' y2='17' />
               <line x1='14' y1='11' x2='14' y2='17' />
             </svg>
-            一鍵清除全部
+            清空
           </button>
         )}
       </div>

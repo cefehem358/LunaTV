@@ -148,5 +148,5 @@ export function getCoreTokens(queryStr: string): string[] {
   return [cleanStr.slice(0, 2), cleanStr.slice(-2)];
 }
 
-export const VERSION = 'v1.5.2';
-export const UPDATE_DATE = '2026-05-21';
+export const VERSION = 'v1.5.4';
+export const UPDATE_DATE = '2026-05-22';

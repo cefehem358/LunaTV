@@ -130,6 +130,10 @@ export function generateSearchVariants(originalQuery: string): string[] {
 
   // 自定義動漫/影集名稱別名映射
   const ALIAS_MAP: Record<string, string[]> = {
+    木头风纪委员和迷你裙JK: [
+      '废柴风纪委员与裙子长度不合规的JK',
+      '废柴风纪委员',
+    ],
     木头风纪委员和迷你裙JK的故事: [
       '废柴风纪委员与裙子长度不合规的JK的故事',
       '废柴风纪委员',
