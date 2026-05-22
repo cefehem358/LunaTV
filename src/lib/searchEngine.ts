@@ -1,5 +1,5 @@
 /**
- * LunaTV 智慧搜尋與繁簡容錯核心引擎 - v1.6.2
+ * LunaTV 智慧搜尋與繁簡容錯核心引擎 - v1.6.3
  *
  * isFuzzyMatch 使用 LCS（最長公共子字串）嚴格比對：
  *   - 兩個字串必須互包含（substring），或
@@ -186,5 +186,5 @@ export function getCoreTokens(queryStr: string): string[] {
   return [cleanStr.slice(0, 2), cleanStr.slice(-2)];
 }
 
-export const VERSION = 'v1.6.2';
+export const VERSION = 'v1.6.3';
 export const UPDATE_DATE = '2026-05-22';

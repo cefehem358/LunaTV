@@ -11,66 +11,47 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
-    version: '1.0.8',
-    date: '2026-05-20',
-    added: [],
-    changed: [],
-    fixed: [
-      '修复动漫番剧/剧场版切换时卡片消失问题 - 修正getDoubanRecommends的category和format参数',
-    ],
-  },
-  {
-    version: '1.0.9',
-    date: '2026-05-20',
-    added: [],
-    changed: [],
-    fixed: ['为继续观看卡片新增片源资讯标签 - 显示影片来源资讯'],
-  },
-  {
-    version: '1.0.6',
-    date: '2026-05-20',
-    added: [],
-    changed: [],
-    fixed: [
-      "修复番剧/剧场版显示真人影视问题 - format参数改为'動畫'过滤动画内容",
-    ],
-  },
-  {
-    version: '1.0.4',
-    date: '2026-05-20',
-    added: [],
-    changed: [],
-    fixed: ['修复番剧/剧场版内容获取问题 - 简化API调用参数避免过度过滤'],
-  },
-  {
-    version: '1.0.3',
-    date: '2026-05-20',
+    version: '1.6.3',
+    date: '2026-05-22',
     added: [
-      '选集UI全面改为Netflix风格 - 深色主题配红色强调',
-      '换源UI全面改为Netflix风格 - 卡片式布局优化',
+      // 无新增内容
     ],
     changed: [
-      '选集/换源面板采用 #141414 深色背景',
-      'Tab切换采用 #e50914 Netflix红强调色',
-      '集数按钮改为方形网格布局，选中项放大+红色+阴影效果',
+      // 无变更内容
     ],
-    fixed: [],
-  },
-  {
-    version: '1.0.2',
-    date: '2026-05-20',
-    added: [],
-    changed: [],
-    fixed: ['修复番剧/剧场版卡牌不显示问题 - 移除错误的format和label过滤'],
-  },
-  {
-    version: '1.0.1',
-    date: '2026-05-20',
-    added: [],
-    changed: [],
     fixed: [
-      "修复label='all'被错误转换为空字符串的问题",
-      '改进API响应过滤器，对动漫类型更加宽松',
+      '修復搜尋頁面中的 TypeScript 型別檢查錯誤，正確解構與傳遞 type_name 屬性',
+    ],
+  },
+  {
+    version: '1.6.2',
+    date: '2026-05-22',
+    added: [
+      '引入季數感知模糊匹配機制（extractSeasonNumber），防止不同季片源混雜',
+      '當查詢詞含季數但結果不含季數時，使用更嚴格的單向 LCS 匹配',
+      '修復 cleanQuery 避免自動去季數，有季數時僅用原始查詢變體比對，防跨季誤配',
+      '優化 API 搜尋層級：當查詢含季數時，不對上游 API 發送去掉季數的 Show Name',
+    ],
+    changed: [
+      // 无变更内容
+    ],
+    fixed: [
+      // 无修复内容
+    ],
+  },
+  {
+    version: '1.6.1',
+    date: '2026-05-22',
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+      // 无变更内容
+    ],
+    fixed: [
+      '收緊模糊比對 LCS 最長公共子字串門檻至大於等於 4，移除短標題門檻放寬',
+      '回退為單一搜尋變體，避免過度擴展匹配',
+      '增加圖片載入出錯時的文字替代方案（VideoCard、EpisodeSelector、播放頁封面），提升容錯體驗',
     ],
   },
   {
@@ -82,9 +63,9 @@ export const changelog: ChangelogEntry[] = [
       'API 搜尋結果緩存（2小時 TTL，防記憶體溢出）',
       '請求去重機制（防止並發重複請求）',
     ],
-    changed: ['首頁全面換用 Netflix UI 元件'],
+    changed: ['首頁全面換用 Netflix UI 元件', '系統版本號重置為 1.0.0'],
     fixed: [
-      // 無修復內容
+      // 无修复内容
     ],
   },
   {

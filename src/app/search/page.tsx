@@ -776,7 +776,7 @@ function SearchPageClient() {
                         const title = group[0]?.title || '';
                         const poster = group[0]?.poster || '';
                         const year = group[0]?.year || 'unknown';
-                        const { episodes, source_names, douban_id } =
+                        const { episodes, source_names, douban_id, type_name } =
                           computeGroupStats(group);
                         const type = episodes === 1 ? 'movie' : 'tv';
                         if (!groupStatsRef.current.has(mapKey)) {
@@ -804,7 +804,7 @@ function SearchPageClient() {
                                   : ''
                               }
                               type={type}
-                              type_name={group.type_name}
+                              type_name={type_name}
                             />
                           </div>
                         );

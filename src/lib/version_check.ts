@@ -87,13 +87,20 @@ async function fetchVersionFromUrl(url: string): Promise<string | null> {
  */
 export function compareVersions(remoteVersion: string): UpdateStatus {
   // 如果版本号相同，无需更新
-  if (remoteVersion === CURRENT_VERSION) {
+  const cleanCurrent = CURRENT_VERSION.startsWith('v')
+    ? CURRENT_VERSION.substring(1)
+    : CURRENT_VERSION;
+  const cleanRemote = remoteVersion.startsWith('v')
+    ? remoteVersion.substring(1)
+    : remoteVersion;
+
+  if (cleanRemote === cleanCurrent) {
     return UpdateStatus.NO_UPDATE;
   }
 
   try {
     // 解析版本号为数字数组 [X, Y, Z]
-    const currentParts = CURRENT_VERSION.split('.').map((part) => {
+    const currentParts = cleanCurrent.split('.').map((part) => {
       const num = parseInt(part, 10);
       if (isNaN(num) || num < 0) {
         throw new Error(`无效的版本号格式: ${CURRENT_VERSION}`);
@@ -101,7 +108,7 @@ export function compareVersions(remoteVersion: string): UpdateStatus {
       return num;
     });
 
-    const remoteParts = remoteVersion.split('.').map((part) => {
+    const remoteParts = cleanRemote.split('.').map((part) => {
       const num = parseInt(part, 10);
       if (isNaN(num) || num < 0) {
         throw new Error(`无效的版本号格式: ${remoteVersion}`);
