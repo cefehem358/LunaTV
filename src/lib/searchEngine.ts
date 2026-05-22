@@ -6,54 +6,7 @@
  *   - LCS 長度 >= 4，且覆蓋較短字串的 50% 以上
  * 以上均不滿足則視為不匹配，根治「點 A 搜出 B」問題。
  */
-const rawS2tPairs =
-  '阳陽 陆陸 龟龜 欺诈欺詐 诈欺詐欺 委员委員 戏戲 游戏遊戲 废廢 柴柴 木木 动動 漫畫 漫画 头頭';
-
-const s2tMap = new Map<string, string>();
-const t2sMap = new Map<string, string>();
-
-// 支援多字詞映射：保留原始 pairs，但增加全詞替換邏輯
-// 先建立單字元映射
-// 多字詞映射：格式為「簡體詞 繁體詞」，以空格分隔，簡繁各半
-// 例：'欺诈欺詐' => simplified='欺诈', traditional='欺詐'
-rawS2tPairs.split(' ').forEach((pair) => {
-  if (pair.length >= 2) {
-    // 計算前半（簡體）和後半（繁體）的分割點
-    const halfLen = pair.length / 2;
-    if (Number.isInteger(halfLen)) {
-      // 偶數長度：前半簡體，後半繁體
-      const simplified = pair.slice(0, halfLen);
-      const traditional = pair.slice(halfLen);
-      // 同時建立字元層和詞語層映射
-      for (let i = 0; i < simplified.length; i++) {
-        if (simplified[i] !== traditional[i]) {
-          s2tMap.set(simplified[i], traditional[i]);
-          t2sMap.set(traditional[i], simplified[i]);
-        }
-      }
-    } else {
-      // 奇數長度：舊格式兩個字符（簡→繁）
-      s2tMap.set(pair[0], pair[1]);
-      t2sMap.set(pair[1], pair[0]);
-    }
-  }
-});
-
-export function convertS2T(text: string): string {
-  if (!text) return '';
-  return text
-    .split('')
-    .map((char) => s2tMap.get(char) ?? char)
-    .join('');
-}
-
-export function convertT2S(text: string): string {
-  if (!text) return '';
-  return text
-    .split('')
-    .map((char) => t2sMap.get(char) ?? char)
-    .join('');
-}
+import { convertT2S } from './s2t';
 
 /**
  * 計算兩個字串的最長公共子字串長度（Longest Common Substring）

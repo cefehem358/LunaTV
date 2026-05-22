@@ -195,27 +195,30 @@ export async function searchFromApi(
       }
       searchVariants = Array.from(searchVariantsSet);
     }
-    const variantPromises = searchVariants.map(async (variant, index) => {
+    const variantResults = [];
+    for (let index = 0; index < searchVariants.length; index++) {
+      const variant = searchVariants[index];
       const apiUrl =
         apiBaseUrl + API_CONFIG.search.path + encodeURIComponent(variant);
       try {
         const result = await searchWithCache(apiSite, variant, 1, apiUrl, 8000);
-        return {
-          variant,
-          index,
-          results: result.results,
-          pageCount: result.pageCount,
-        };
+        if (result.results && result.results.length > 0) {
+          variantResults.push({
+            variant,
+            index,
+            results: result.results,
+            pageCount: result.pageCount,
+          });
+          break;
+        }
       } catch {
-        return { variant, index, results: [], pageCount: undefined };
+        // continue
       }
-    });
-    const variantResults = await Promise.all(variantPromises);
+    }
     const seenIds = new Set<string>();
     const results: SearchResult[] = [];
     let pageCountToFetch = 0;
     let successfulVariant = query;
-    variantResults.sort((a, b) => a.index - b.index);
     for (const { results: variantData, pageCount, variant } of variantResults) {
       if (variantData.length > 0) {
         if (!pageCountToFetch && pageCount) {

@@ -1,31 +1,13 @@
-const rawS2tPairs =
-  '亚亞 务務 乱亂 产產 亩畝 毕畢 氟氟 淀澱 洁潔 洒灑 涂塗 涨漲 汉漢 冲衝 决決 况況 兑兌 兰蘭 关關 兴興 养養 冻凍 几幾 刊刊 划劃 剧劇 劝勸 办辦 劲勁 劳勞 独獨 戏戲 卫衛 击擊 打打 扬揚 挂掛 抢槍 极極 概慨 柜櫃 栏欄 树樹 样樣 检檢 桥橋 档檔 桩樁 楼樓 历歷 残殘 杀殺 谷谷 钩鉤 锈鏽 错錯 录錄 隐隱 难難 雨雨 电電 需需 雾霧 露露 风風 飞飛 饭飯 饱飽 饥飢 马馬 驱驅 验驗 骨骨 体體 高高 鱼魚 鲜鮮 鸣鳴 鸡雞 争爭 乾乾 齿齒 蚀蝕 蛀蛀 蛇蛇 蜡蠟 蝇蠅 蝉蟬 虫蟲 蟹蟹 猪豬 猎獵 猫貓 献獻 率率 玉玉 瓜瓜 瓦瓦 瓶瓶 甜甜 田田 由由 男男 界界 留留 略略 番番 疑疑 疗療 疲疲 痒癢 痛痛 痢痢 痴癡 皂皂 的的 皇皇 皮皮 盅盅 益益 盏盞 盐鹽 监監 盘盤 盛盛 盗盜 眼眼 眷眷 矛矛 砖磚 硕碩 硬硬 硝硝 硫硫 碧碧 碗碗 碎碎 碟碟 碱鹼 磁磁 磅磅 碾碾 磨磨 示示 礼禮 秃禿 秋秋 私私 种種 科科 秦秦 秩秩 税稅 粮糧 鼻鼻 齐齐 龙龍 龚龔 龟龜 与與 举舉 誉譽 预預 头頭 汇匯 丛叢 东東 丝絲 丢丟 两兩 严嚴 丧喪 个個 临臨 丽麗 么麼 义義 乐樂 乔喬 乘乘 乙乙 九九 乞乞 也也 习習 书書 买買 乡鄉 乳乳 予予 事事 二二 于於 亏虧 云雲 互互 五五 井井 亚亞 些些 亡亡 亢亢 交交 亥亥 亨亨 亩畝 享享 京京 亭亭 亲親 俭儉 侠俠 俏俏 侦偵 侧側 侨僑 佩佩 佬佬 儿兒 入入 兔兔 党黨 關關 兴興 兹茲 養養 兼兼 净淨 凉涼 凌凌 凑湊 减減 凶兇 刑刑 刃刃 刻刻 剃剃 剥剝 剧劇 剩剩 功功 加加 劣劣 势勢 勇勇 勉勉 勃勃 勋勳 勾勾 匹匹 巨巨 医醫 卜卜 卞卞 卢盧 厂廠 厄厄 厅廳 历歷 厉厲 压壓 厌厭 厕廁 县縣 参參 叠疊 口口 句句 叨叨 叹嘆 吓嚇 吕呂 呆呆 呈呈 告告 咕咕 唁唁 哲哲 哭哭 嚣嚣 园園 围圍 圆圓 圣聖 在在 垂垂 坤坤 坦坦 坪坪 坠墜 垒壘 坟坟 坑坑 幸幸 幻幻 广廣 庄莊 庆慶 庐廬 库庫 应應 庙廟 庞龐 废廢 开開 异異 弃棄 弄弄 弊弊 弓弓 吊吊 引引 弗弗 弘弘 弹彈 强強 弦弦 形形 彩彩 影影 役役 往往 征徵 待待 径徑 很很 逃逃 递遞 选選 遗遺 郁鬱 郑鄭 邻鄰 郊郊 郎郎 里裡 金金 鉴鑑 镇鎮 锅鍋 错錯 锋鋒 锐銳 锤錘 键鍵 锯鋸 长長 门門 闪閃 闭閉 问问 闯闖 闲閒 間間 闵閔 闷悶 闹鬧 闻聞 阀閥 阁閣 阔闊 队隊 阳陽 阴陰 阵陣 阶階 陆陸 际際 陈陳 降降 难難 雾霧 需需 震震 霉霉 霍霍 龟龜 齿齒 龄齡 龙龍 欺欺诈 诈欺詐欺 委员委員 裙裙 游戏遊戲';
+import stcasc from 'switch-chinese';
 
-const s2tMap = new Map<string, string>();
-
-rawS2tPairs.split(' ').forEach((pair) => {
-  if (pair.length >= 2) {
-    s2tMap.set(pair[0], pair[1]);
-  }
-});
-
-// 模組載入時建立一次，避免 convertT2S 每次調用都重建（效能修復）
-const t2sMap = new Map<string, string>(
-  Array.from(s2tMap.entries()).map(([k, v]) => [v, k])
-);
+const converter = stcasc();
 
 export function convertS2T(text: string): string {
   if (!text) return '';
-  return text
-    .split('')
-    .map((char) => s2tMap.get(char) ?? char)
-    .join('');
+  return converter.traditionalized(text);
 }
 
 export function convertT2S(text: string): string {
   if (!text) return '';
-  return text
-    .split('')
-    .map((char) => t2sMap.get(char) ?? char)
-    .join('');
+  return converter.simplized(text);
 }

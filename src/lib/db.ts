@@ -167,14 +167,18 @@ export class DbManager {
     const cleanSource = (record.source_name || '').replace(/(資源|片源)/g, '');
     // 3. 強制使用 `劇名_片源` 作為唯一 Key，確保同一部劇在同一片源下只會有一筆紀錄 (覆蓋更新)
     const historyStorageKey = `${traditionalName}_${cleanSource}`;
-    
+
     const enrichedRecord = {
       ...record,
       vod_id: id,
       source: source,
     };
-    
-    await this.storage.setPlayRecord(userName, historyStorageKey, enrichedRecord);
+
+    await this.storage.setPlayRecord(
+      userName,
+      historyStorageKey,
+      enrichedRecord
+    );
   }
 
   async getAllPlayRecords(userName: string): Promise<{
@@ -189,6 +193,32 @@ export class DbManager {
     source: string,
     id: string
   ): Promise<void> {
+    try {
+      const allRecords = await this.storage.getAllPlayRecords(userName);
+      let foundKey: string | null = null;
+      if (allRecords) {
+        const cleanTargetSource = source.replace(/(資源|片源)/g, '').trim();
+        for (const [key, record] of Object.entries(allRecords)) {
+          if (!record) continue;
+          const recordSource = (record.source || record.source_name || '')
+            .replace(/(資源|片源)/g, '')
+            .trim();
+          const recordId = record.vod_id || record.id || '';
+          if (
+            recordSource === cleanTargetSource &&
+            String(recordId) === String(id)
+          ) {
+            foundKey = key;
+            break;
+          }
+        }
+      }
+      if (foundKey) {
+        await this.storage.deletePlayRecord(userName, foundKey);
+      }
+    } catch (err) {
+      console.error('Error finding play record to delete:', err);
+    }
     const key = generateStorageKey(source, id);
     await this.storage.deletePlayRecord(userName, key);
   }

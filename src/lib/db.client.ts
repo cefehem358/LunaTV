@@ -668,7 +668,23 @@ export async function deletePlayRecord(
 
       // 删除成功后更新缓存并触发事件，避免竞态导致读取旧数据
       const cachedRecords = cacheManager.getCachedPlayRecords() || {};
-      delete cachedRecords[key];
+
+      const cleanTargetSource = source.replace(/(資源|片源)/g, '').trim();
+      const keysToDelete = [key];
+      for (const [k, r] of Object.entries(cachedRecords)) {
+        if (!r) continue;
+        const rSource = (r.source || r.source_name || '')
+          .replace(/(資源|片源)/g, '')
+          .trim();
+        const rId = r.vod_id || r.id || '';
+        if (rSource === cleanTargetSource && String(rId) === String(id)) {
+          keysToDelete.push(k);
+        }
+      }
+      keysToDelete.forEach((k) => {
+        delete cachedRecords[k];
+      });
+
       cacheManager.cachePlayRecords(cachedRecords);
 
       window.dispatchEvent(
@@ -692,7 +708,23 @@ export async function deletePlayRecord(
 
   try {
     const allRecords = await getAllPlayRecords();
-    delete allRecords[key];
+
+    const cleanTargetSource = source.replace(/(資源|片源)/g, '').trim();
+    const keysToDelete = [key];
+    for (const [k, r] of Object.entries(allRecords)) {
+      if (!r) continue;
+      const rSource = (r.source || r.source_name || '')
+        .replace(/(資源|片源)/g, '')
+        .trim();
+      const rId = r.vod_id || r.id || '';
+      if (rSource === cleanTargetSource && String(rId) === String(id)) {
+        keysToDelete.push(k);
+      }
+    }
+    keysToDelete.forEach((k) => {
+      delete allRecords[k];
+    });
+
     localStorage.setItem(PLAY_RECORDS_KEY, JSON.stringify(allRecords));
     window.dispatchEvent(
       new CustomEvent('playRecordsUpdated', {

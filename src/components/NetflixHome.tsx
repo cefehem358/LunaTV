@@ -31,6 +31,7 @@ import {
 import type { PlayRecord } from '@/lib/db.client';
 import {
   clearAllFavorites,
+  clearAllPlayRecords,
   deletePlayRecord,
   getAllFavorites,
   getAllPlayRecords,
@@ -1340,6 +1341,39 @@ export function NetflixHomePage() {
       }
     };
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    const handleUpdate = (records: Record<string, PlayRecord>) => {
+      const recordsArray = Object.entries(records || {})
+        .map(([key, record]) => ({ ...record, key }))
+        .sort((a, b) => b.save_time - a.save_time);
+
+      const seen = new Map<string, (typeof recordsArray)[0]>();
+      for (const record of recordsArray) {
+        if (!record || !record.title) continue;
+        const uniqueKey = `${convertS2T(record.title)}_${(
+          record.source_name || ''
+        ).replace(/(資源|片源)/g, '')}`;
+        const existing = seen.get(uniqueKey);
+        if (!existing || record.save_time > existing.save_time) {
+          seen.set(uniqueKey, record);
+        }
+      }
+      const deduplicated = Array.from(seen.values()).sort(
+        (a, b) => b.save_time - a.save_time
+      );
+
+      setPlayRecords(deduplicated);
+    };
+
+    const unsubscribe = subscribeToDataUpdates<Record<string, PlayRecord>>(
+      'playRecordsUpdated',
+      handleUpdate
+    );
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   if (loading) {

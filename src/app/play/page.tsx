@@ -8,7 +8,6 @@ import { Heart } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useRef, useState } from 'react';
 
-import { toDisplayLanguage } from '@/lib/chinese';
 import {
   deleteFavorite,
   deletePlayRecord,
@@ -22,6 +21,7 @@ import {
   saveSkipConfig,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
+import { isFuzzyMatch } from '@/lib/searchEngine';
 import { SearchResult } from '@/lib/types';
 import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
 
@@ -41,25 +41,6 @@ interface WakeLockSentinel {
   release(): Promise<void>;
   addEventListener(type: 'release', listener: () => void): void;
   removeEventListener(type: 'release', listener: () => void): void;
-}
-
-// 最長公共子字串長度計算
-function getLongestCommonSubstringLength(s1: string, s2: string): number {
-  let longest = 0;
-  const num = Array(s1.length)
-    .fill(0)
-    .map(() => Array(s2.length).fill(0));
-  for (let i = 0; i < s1.length; i++) {
-    for (let j = 0; j < s2.length; j++) {
-      if (s1[i] === s2[j]) {
-        num[i][j] = i === 0 || j === 0 ? 1 : num[i - 1][j - 1] + 1;
-        if (num[i][j] > longest) {
-          longest = num[i][j];
-        }
-      }
-    }
-  }
-  return longest;
 }
 
 // 備用關鍵字生成器
@@ -786,34 +767,7 @@ function PlayPageClient() {
 
         // 處理搜索結果，根據規則過濾（加入繁簡轉換與模糊匹配）
         return (data.results || []).filter((result: SearchResult) => {
-          const normalizedResultTitle = toDisplayLanguage(
-            result.title.replaceAll(' ', '').toLowerCase()
-          );
-          const normalizedVideoTitle = toDisplayLanguage(
-            videoTitleRef.current.replaceAll(' ', '').toLowerCase()
-          );
-
-          let titlesMatch = normalizedResultTitle === normalizedVideoTitle;
-          if (!titlesMatch && normalizedVideoTitle.length > 2) {
-            titlesMatch =
-              normalizedResultTitle.includes(normalizedVideoTitle) ||
-              normalizedVideoTitle.includes(normalizedResultTitle);
-          }
-
-          // 模糊匹配退路 (擁有長度 >= 4 的最長公共子字串，且重合度大於 50%)
-          if (!titlesMatch && normalizedVideoTitle.length >= 4) {
-            const lcsLen = getLongestCommonSubstringLength(
-              normalizedResultTitle,
-              normalizedVideoTitle
-            );
-            const minLen = Math.min(
-              normalizedResultTitle.length,
-              normalizedVideoTitle.length
-            );
-            if (lcsLen >= 4 && minLen > 0 && lcsLen / minLen >= 0.5) {
-              titlesMatch = true;
-            }
-          }
+          const titlesMatch = isFuzzyMatch(result.title, videoTitleRef.current);
 
           // 比較年份 (放寬匹配，如年份相差不超過1年)
           let yearsMatch = true;
