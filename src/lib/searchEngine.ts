@@ -99,22 +99,35 @@ function normalize(text: string): string {
  * 2. LCS >= 4 且 LCS / min(len(vodName), len(query)) >= 0.5
  *    （且兩個字串長度都必須 >= 4 才啟用 LCS 比對，防止短字串誤觸）
  */
+import { generateSearchVariants } from '@/lib/chinese';
+
 export function isFuzzyMatch(vodName: string, query: string): boolean {
   if (!vodName || !query) return false;
 
   const normName = normalize(vodName);
-  const normQuery = normalize(query);
 
-  // 精確包含（繁簡統一後）
-  if (normName.includes(normQuery) || normQuery.includes(normName)) return true;
+  // 生成所有可能的變體，只要其中一個匹配就視為匹配
+  const variants = generateSearchVariants(query);
 
-  // 長度不足時不啟用 LCS 比對（防止誤匹配）
-  if (normName.length < 4 || normQuery.length < 4) return false;
+  for (const variant of variants) {
+    const normQuery = normalize(variant);
+    if (!normQuery) continue;
 
-  const lcsLen = getLCS(normName, normQuery);
-  const minLen = Math.min(normName.length, normQuery.length);
+    // 精確包含（繁簡統一後）
+    if (normName.includes(normQuery) || normQuery.includes(normName))
+      return true;
 
-  return lcsLen >= 4 && minLen > 0 && lcsLen / minLen >= 0.5;
+    // 長度不足時不啟用 LCS 比對（防止誤匹配）
+    if (normName.length >= 4 && normQuery.length >= 4) {
+      const lcsLen = getLCS(normName, normQuery);
+      const minLen = Math.min(normName.length, normQuery.length);
+      if (lcsLen >= 4 && minLen > 0 && lcsLen / minLen >= 0.5) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 /** @deprecated - 保留給舊程式碼相容性 */
