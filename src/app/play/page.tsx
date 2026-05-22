@@ -223,6 +223,7 @@ function PlayPageClient() {
   const currentEpisodeIndexRef = useRef(currentEpisodeIndex);
   const pipKeyHandlerRef = useRef<((e: KeyboardEvent) => void) | null>(null);
   const saveLockRef = useRef(false);
+  const autoNextBusyRef = useRef(false);
 
   // 同步最新值到 refs
   useEffect(() => {
@@ -588,6 +589,19 @@ function PlayPageClient() {
         artPlayerRef.current = null;
       }
     }
+  };
+
+  // v1.5.3: 非 WebKit 切換時銷毀 HLS 後重建，解決「沒畫面只剩聲音」
+  const switchAndRebuildPlayer = (url: string) => {
+    if (artPlayerRef.current) {
+      const oldVideo = artPlayerRef.current.video;
+      if (oldVideo && oldVideo.hls) {
+        try { oldVideo.hls.destroy(); } catch {}
+      }
+      artPlayerRef.current.destroy();
+      artPlayerRef.current = null;
+    }
+    setVideoUrl(url);
   };
 
   // 去廣告相關函數
@@ -1506,20 +1520,16 @@ search_title: searchTitle || videoTitleRef.current,
       typeof window !== 'undefined' &&
       typeof (window as any).webkitConvertPointFromNodeToPage === 'function';
 
-    // 非WebKit瀏覽器且播放器已存在，使用switch方法切換
+    // 非WebKit瀏覽器且播放器已存在，使用 switch 方法切換
     if (!isWebkit && artPlayerRef.current) {
-      artPlayerRef.current.switch = videoUrl;
-      artPlayerRef.current.title = `${videoTitle} - 第${
-        currentEpisodeIndex + 1
-      }集`;
-      artPlayerRef.current.poster = processImageUrl(videoCover);
-      if (artPlayerRef.current?.video) {
-        ensureVideoSource(
-          artPlayerRef.current.video as HTMLVideoElement,
-          videoUrl
-        );
+      // v1.5.3: 直接 switch 不會重建 HLS，改用重建方式確保畫面正常
+      const oldVideo = artPlayerRef.current.video;
+      if (oldVideo && oldVideo.hls) {
+        try { oldVideo.hls.destroy(); } catch {}
       }
-      return;
+      try { artPlayerRef.current.destroy(); } catch {}
+      artPlayerRef.current = null;
+      // 跌入下方的重建邏輯
     }
 
     // WebKit瀏覽器或首次創建：銷燬之前的播放器實例並創建新的
@@ -1891,9 +1901,6 @@ search_title: searchTitle || videoTitleRef.current,
         }
       });
 
-      const autoNextBusyRef = useRef(false);
-
-      // 監聽視頻播放結束事件，自動播放下一集
       artPlayerRef.current.on('video:ended', () => {
         const d = detailRef.current;
         const idx = currentEpisodeIndexRef.current;
@@ -1906,6 +1913,7 @@ search_title: searchTitle || videoTitleRef.current,
         ) {
           autoNextBusyRef.current = true;
           setTimeout(() => {
+            autoNextBusyRef.current = false;
             setCurrentEpisodeIndex(idx + 1);
           }, 2000);
         }
@@ -1942,6 +1950,10 @@ search_title: searchTitle || videoTitleRef.current,
   // 當組件解除安裝時清理定時器、Wake Lock 和播放器資源
   useEffect(() => {
     return () => {
+      // v1.5.3: 卸載前保存播放進度
+
+      saveCurrentPlayProgress();
+
       if (pipKeyHandlerRef.current) {
         document.removeEventListener('keydown', pipKeyHandlerRef.current);
       }
