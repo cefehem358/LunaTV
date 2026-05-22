@@ -10,11 +10,16 @@ export const storage = {
       actualKey = `u:${match[1]}:pr`;
     }
 
-    const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
+    // 伺服器端優先使用 STORAGE_TYPE（不帶 NEXT_PUBLIC_），避免在客戶端 bundle 暴露後端類型
+    const storageType =
+      process.env.STORAGE_TYPE ||
+      process.env.NEXT_PUBLIC_STORAGE_TYPE ||
+      'localstorage';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const storageImpl = (db as any).storage;
     if (!storageImpl || storageType === 'localstorage') {
-      // v1.5.3: localStorage 模式下讀取實際資料
+      // localStorage 只存在於瀏覽器端；伺服器端 API route 呼叫此方法時直接回傳空物件
+      if (typeof window === 'undefined') return {};
       const raw = localStorage.getItem(actualKey);
       if (!raw) return {};
       try {
@@ -56,11 +61,15 @@ export const storage = {
       actualKey = `u:${match[1]}:pr`;
     }
 
-    const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
+    const storageType =
+      process.env.STORAGE_TYPE ||
+      process.env.NEXT_PUBLIC_STORAGE_TYPE ||
+      'localstorage';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const storageImpl = (db as any).storage;
     if (!storageImpl || storageType === 'localstorage') {
-      // v1.5.3: localStorage 模式下讀取實際資料並刪除指定 field
+      // localStorage 只存在於瀏覽器端；伺服器端返回即可，不需操作
+      if (typeof window === 'undefined') return;
       const raw = localStorage.getItem(actualKey);
       if (!raw) return;
       try {

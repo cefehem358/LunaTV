@@ -75,14 +75,17 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
 
   // 計算播放進度百分比
   const getProgress = (record: PlayRecord) => {
-    if (record.total_time === 0) return 0;
+    if (!record.total_time || record.total_time <= 0) return 0;
     return (record.play_time / record.total_time) * 100;
   };
 
   // 從 key 中解析 source 和 id
   const parseKey = (key: string) => {
     if (key && key.includes('+')) {
-      const [source, id] = key.split('+');
+      // 只切第一個 '+'，避免 id 中含 '+' 時被截斷
+      const plusIndex = key.indexOf('+');
+      const source = key.slice(0, plusIndex);
+      const id = key.slice(plusIndex + 1);
       return { source, id };
     }
     return { source: '', id: '' };

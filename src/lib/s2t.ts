@@ -9,13 +9,23 @@ rawS2tPairs.split(' ').forEach((pair) => {
   }
 });
 
+// 模組載入時建立一次，避免 convertT2S 每次調用都重建（效能修復）
+const t2sMap = new Map<string, string>(
+  Array.from(s2tMap.entries()).map(([k, v]) => [v, k])
+);
+
 export function convertS2T(text: string): string {
   if (!text) return '';
-  return text.split('').map((char) => s2tMap.get(char) ?? char).join('');
+  return text
+    .split('')
+    .map((char) => s2tMap.get(char) ?? char)
+    .join('');
 }
 
 export function convertT2S(text: string): string {
   if (!text) return '';
-  const t2sMap = new Map(Array.from(s2tMap.entries()).map(([k, v]) => [v, k]));
-  return text.split('').map((char) => t2sMap.get(char) ?? char).join('');
+  return text
+    .split('')
+    .map((char) => t2sMap.get(char) ?? char)
+    .join('');
 }

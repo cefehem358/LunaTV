@@ -14,11 +14,28 @@ const t2sMap = new Map<string, string>();
 
 // 支援多字詞映射：保留原始 pairs，但增加全詞替換邏輯
 // 先建立單字元映射
+// 多字詞映射：格式為「簡體詞 繁體詞」，以空格分隔，簡繁各半
+// 例：'欺诈欺詐' => simplified='欺诈', traditional='欺詐'
 rawS2tPairs.split(' ').forEach((pair) => {
   if (pair.length >= 2) {
-    const [simplified, traditional] = pair.split('');
-    s2tMap.set(simplified, traditional);
-    t2sMap.set(traditional, simplified);
+    // 計算前半（簡體）和後半（繁體）的分割點
+    const halfLen = pair.length / 2;
+    if (Number.isInteger(halfLen)) {
+      // 偶數長度：前半簡體，後半繁體
+      const simplified = pair.slice(0, halfLen);
+      const traditional = pair.slice(halfLen);
+      // 同時建立字元層和詞語層映射
+      for (let i = 0; i < simplified.length; i++) {
+        if (simplified[i] !== traditional[i]) {
+          s2tMap.set(simplified[i], traditional[i]);
+          t2sMap.set(traditional[i], simplified[i]);
+        }
+      }
+    } else {
+      // 奇數長度：舊格式兩個字符（簡→繁）
+      s2tMap.set(pair[0], pair[1]);
+      t2sMap.set(pair[1], pair[0]);
+    }
   }
 });
 
@@ -59,10 +76,19 @@ function getLCS(s1: string, s2: string): number {
 }
 
 /**
- * 標準化文字：去空格、轉小寫、繁轉簡（用於比較）
+ * 標準化文字：去空格、轉小寫、繁轉簡、日文助詞轉中文（用於比較）
  */
 function normalize(text: string): string {
-  return convertT2S(text.replaceAll(' ', '').toLowerCase());
+  return convertT2S(
+    text
+      .replaceAll(' ', '')
+      .toLowerCase()
+      // 日文助詞標準化：讓含日文 の 的標題能匹配中文 的
+      .replace(/の/g, '的')
+      .replace(/は/g, '')
+      .replace(/を/g, '')
+      .replace(/と/g, '和')
+  );
 }
 
 /**

@@ -126,11 +126,14 @@ export default function NetflixHome({
           ? item.key.split('+')
           : [item.source, item.id || item.vod_id];
 
-      const targetKey = item.key || (realSource && realId ? `${realSource}+${realId}` : '');
+      const targetKey =
+        item.key || (realSource && realId ? `${realSource}+${realId}` : '');
 
       setContinueWatching((prev) =>
         targetKey
-          ? prev.filter((c) => (c.key || `${c.source}+${c.id || c.vod_id}`) !== targetKey)
+          ? prev.filter(
+              (c) => (c.key || `${c.source}+${c.id || c.vod_id}`) !== targetKey
+            )
           : prev
       );
 
@@ -148,7 +151,9 @@ export default function NetflixHome({
           source: realSource,
           userId,
         }),
-      }).catch(() => {});
+      }).catch((err) => {
+        console.warn('API 歷史刪除失敗:', err);
+      });
 
       window.dispatchEvent(new CustomEvent('playRecordsUpdated'));
     } catch (err) {
@@ -774,11 +779,11 @@ function NetflixBangumiRow({
               <Image
                 src={
                   processImageUrl(
-                    anime.images.large ||
-                      anime.images.common ||
-                      anime.images.medium ||
-                      anime.images.small ||
-                      anime.images.grid
+                    anime.images?.large ||
+                      anime.images?.common ||
+                      anime.images?.medium ||
+                      anime.images?.small ||
+                      anime.images?.grid
                   ) || '/placeholder.jpg'
                 }
                 alt={anime.name_cn || anime.name}
@@ -978,10 +983,11 @@ function FavoritesView() {
           const id = key.slice(plusIndex + 1);
           let playRecord = allPlayRecords[key];
           if (!playRecord) {
-            playRecord = Object.values(allPlayRecords).find(
-              (r: any) =>
-                r && (r.vod_id === id || r.id === id) && r.source === source
-            );
+            playRecord =
+              (Object.values(allPlayRecords).find(
+                (r: any) =>
+                  r && (r.vod_id === id || r.id === id) && r.source === source
+              ) as typeof playRecord) ?? undefined;
           }
           const f = fav as {
             title: string;
@@ -1298,9 +1304,9 @@ export function NetflixHomePage() {
 
         const seen = new Map<string, (typeof recordsArray)[0]>();
         for (const record of recordsArray) {
-          const uniqueKey = `${convertS2T(
-            record.title
-          )}_${record.source_name.replace(/(資源|片源)/g, '')}`;
+          const uniqueKey = `${convertS2T(record.title)}_${(
+            record.source_name || ''
+          ).replace(/(資源|片源)/g, '')}`;
           const existing = seen.get(uniqueKey);
           if (!existing || record.save_time > existing.save_time) {
             seen.set(uniqueKey, record);

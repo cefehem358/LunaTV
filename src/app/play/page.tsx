@@ -295,6 +295,8 @@ function PlayPageClient() {
   // 播放進度保存相關
   const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastSaveTimeRef = useRef<number>(0);
+  // 用於追蹤初始化 loading setTimeout，元件卸載時清理
+  const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const artPlayerRef = useRef<any>(null);
   const artRef = useRef<HTMLDivElement | null>(null);
@@ -591,19 +593,6 @@ function PlayPageClient() {
     }
   };
 
-  // v1.5.3: 非 WebKit 切換時銷毀 HLS 後重建，解決「沒畫面只剩聲音」
-  const switchAndRebuildPlayer = (url: string) => {
-    if (artPlayerRef.current) {
-      const oldVideo = artPlayerRef.current.video;
-      if (oldVideo && oldVideo.hls) {
-        try { oldVideo.hls.destroy(); } catch {}
-      }
-      artPlayerRef.current.destroy();
-      artPlayerRef.current = null;
-    }
-    setVideoUrl(url);
-  };
-
   // 去廣告相關函數
   function filterAdsFromM3U8(m3u8Content: string): string {
     if (!m3u8Content) return '';
@@ -779,9 +768,8 @@ function PlayPageClient() {
       } catch (err) {
         console.error('獲取視頻詳情失敗:', err);
         return [];
-      } finally {
-        setSourceSearchLoading(false);
       }
+      // 注意：setSourceSearchLoading(false) 已移到 fetchSourcesData 的 finally 中，避免提前清除 loading 狀態
     };
     const fetchSourcesData = async (query: string): Promise<SearchResult[]> => {
       // 根據搜索詞獲取全部源信息
@@ -1022,12 +1010,20 @@ function PlayPageClient() {
       setLoadingMessage('✨ 準備就緒，即將開始播放...');
 
       // 短暫延遲讓用戶看到完成狀態
-      setTimeout(() => {
+      const loadingTimer = setTimeout(() => {
         setLoading(false);
       }, 1000);
+      loadingTimerRef.current = loadingTimer;
     };
 
     initAll();
+    // cleanup：元件卸載時清除 loading timer，避免 setState on unmounted component
+    return () => {
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+        loadingTimerRef.current = null;
+      }
+    };
   }, []);
 
   // 播放記錄處理 — 等待 currentSource + currentId 就緒後執行
@@ -1042,27 +1038,34 @@ function PlayPageClient() {
         const key = generateStorageKey(currentSource, currentId);
         let record = allRecords[key];
         if (!record) {
-          record = Object.values(allRecords).find(
-            (r: any) =>
-              r &&
-              (r.vod_id === currentId ||
-                r.id === currentId ||
-                (r.source === currentSource &&
-                  r.vod_id === currentId)) &&
-              r.source === currentSource
-          );
+          record =
+            (Object.values(allRecords).find(
+              (r: any) =>
+                r &&
+                (r.vod_id === currentId ||
+                  r.id === currentId ||
+                  (r.source === currentSource && r.vod_id === currentId)) &&
+                r.source === currentSource
+            ) as typeof record) ?? undefined;
         }
 
         if (record && !cancelled) {
-          const targetIndex = record.index - 1;
-          const targetTime = record.play_time;
+          // record.index 儲存格式為 1-based（1代表第1集）
+          // 舐證處理：舊版本可能傲存 0-based，需給做一次認定
+          const rawIndex = typeof record.index === 'number' ? record.index : 1;
+          // 如果 index=0，視為第1集（舐證新舊版本）
+          const oneBasedIndex = rawIndex <= 0 ? 1 : rawIndex;
+          const targetIndex = Math.max(0, oneBasedIndex - 1);
+          const targetTime = record.play_time || 0;
 
-          // 🔧 v1.5.3: 同步更新 ref 以避免 timeupdate 在 state 生效前用舊值存檔
+          // 同步更新 ref 以避免 timeupdate 在 state 生效前用舊値存檔
           currentEpisodeIndexRef.current = targetIndex;
           setCurrentEpisodeIndex(targetIndex);
 
           // 保存待恢復的播放進度，待播放器就緒後跳轉
-          resumeTimeRef.current = targetTime;
+          if (targetTime > 3) {
+            resumeTimeRef.current = targetTime;
+          }
         }
       } catch (err) {
         console.error('讀取播放記錄失敗:', err);
@@ -1329,7 +1332,7 @@ function PlayPageClient() {
   // 播放記錄相關
   // ---------------------------------------------------------------------------
   // 保存播放進度
-const saveCurrentPlayProgress = async () => {
+  const saveCurrentPlayProgress = async () => {
     // v1.5.3: saveLockRef 防止 initFromHistory 還原 index 前誤存錯誤集數
     if (saveLockRef.current) return;
 
@@ -1477,7 +1480,7 @@ const saveCurrentPlayProgress = async () => {
           cover: detailRef.current?.poster || '',
           total_episodes: detailRef.current?.episodes.length || 1,
           save_time: Date.now(),
-search_title: searchTitle || videoTitleRef.current,
+          search_title: searchTitle || videoTitleRef.current,
         });
         setFavorited(true);
       }
@@ -1525,9 +1528,17 @@ search_title: searchTitle || videoTitleRef.current,
       // v1.5.3: 直接 switch 不會重建 HLS，改用重建方式確保畫面正常
       const oldVideo = artPlayerRef.current.video;
       if (oldVideo && oldVideo.hls) {
-        try { oldVideo.hls.destroy(); } catch {}
+        try {
+          oldVideo.hls.destroy();
+        } catch (err) {
+          console.warn('銷毀舊 hls 出錯:', err);
+        }
       }
-      try { artPlayerRef.current.destroy(); } catch {}
+      try {
+        artPlayerRef.current.destroy();
+      } catch (err) {
+        console.warn('銷毀舊播放器出錯:', err);
+      }
       artPlayerRef.current = null;
       // 跌入下方的重建邏輯
     }
@@ -1925,9 +1936,10 @@ search_title: searchTitle || videoTitleRef.current,
         if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'upstash') {
           interval = 20000;
         }
+        // 只有實際觸發存檔才更新時間戳（如果 saveLock 封鎖了則不更新）
         if (now - lastSaveTimeRef.current > interval) {
           saveCurrentPlayProgress();
-          lastSaveTimeRef.current = now;
+          // lastSaveTimeRef 在 saveCurrentPlayProgress 內部更新
         }
       });
 

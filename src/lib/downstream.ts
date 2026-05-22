@@ -29,7 +29,14 @@ export function cleanQueryForApi(rawQuery: string): string {
   // 1. 移除括號及括號內的修飾詞（如「(第一季)」「（僅限）」）
   k = k.replace(/\s*[（(][^）)]*[）)]\s*/g, '').trim();
 
-  // 2. 移除結尾的常見干擾後綴（季、期、部、版等）
+  // 2. 日文助詞轉換：將常見日文助詞轉為中文（讓「進擊の巨人」可搜到「進擊的巨人」）
+  k = k
+    .replace(/の/g, '的')
+    .replace(/は/g, '')
+    .replace(/を/g, '')
+    .replace(/と/g, '和');
+
+  // 3. 移除結尾的常見干擾後綴（季、期、部、版等）
   k = k
     .replace(
       /([\s\u3000]*(?:第[一二三四五六七八九十\d]+[季期部話话集]|Season\s*\d+|Part\s*\d+|S\d+|動畫版|动画版|真人版|劇場版|剧场版|的故事))+$/gi,
@@ -37,7 +44,7 @@ export function cleanQueryForApi(rawQuery: string): string {
     )
     .trim();
 
-  // 3. 清除頭尾的標點符號和多餘空格
+  // 4. 清除頭尾的標點符號和多餘空格
   k = k.replace(/^[\s\-_,.：，。！？]+|[\s\-_,.：，。！？]+$/g, '').trim();
 
   return k || rawQuery.trim();
@@ -157,6 +164,21 @@ export async function searchFromApi(
       if (queryTraditional !== query) searchVariantsSet.add(queryTraditional);
       if (querySimplified !== query && querySimplified !== simplifiedQuery) {
         searchVariantsSet.add(querySimplified);
+      }
+      // 日文展間：將日文助詞 の 轉為「的」，讓「進擊の巨人」能搜到「進擊的巨人」
+      if (
+        query.includes('の') ||
+        query.includes('を') ||
+        query.includes('と')
+      ) {
+        const japaneseCleaned = query
+          .replace(/の/g, '的')
+          .replace(/は/g, '')
+          .replace(/を/g, '')
+          .replace(/と/g, '和');
+        if (japaneseCleaned !== query) {
+          searchVariantsSet.add(japaneseCleaned);
+        }
       }
       searchVariants = Array.from(searchVariantsSet);
     }
@@ -355,7 +377,9 @@ async function handleSpecialSourceDetail(
   const descText = descMatch ? cleanHtmlTags(descMatch[1]) : '';
   const coverMatch = html.match(/(https?:\/\/[^"'\s]+?\.jpg)/g);
   const coverUrl = coverMatch ? coverMatch[0].trim() : '';
-  const yearMatch = html.match(/>(\d{4})<\//)?.[1] ?? html.match(/>(\d{4})</g)?.[0]?.match(/\d{4}/)?.[0];
+  const yearMatch =
+    html.match(/>(\d{4})<\//)?.[1] ??
+    html.match(/>(\d{4})</g)?.[0]?.match(/\d{4}/)?.[0];
   const yearText = yearMatch || 'unknown';
   return {
     id,
