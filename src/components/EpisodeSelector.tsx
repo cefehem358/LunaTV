@@ -60,6 +60,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   const [attemptedSources, setAttemptedSources] = useState<Set<string>>(
     new Set()
   );
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   const attemptedSourcesRef = useRef<Set<string>>(new Set());
   const videoInfoMapRef = useRef<Map<string, VideoInfo>>(new Map());
@@ -518,17 +519,28 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                       >
                         {/* 封面 */}
                         <div className='w-14 h-20 sm:w-16 sm:h-24 bg-zinc-800 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-white/5'>
-                          {source.episodes && source.episodes.length > 0 && (
+                          {source.episodes &&
+                          source.episodes.length > 0 &&
+                          !failedImages.has(sourceKey) ? (
                             <img
                               src={processImageUrl(source.poster)}
                               alt={source.title}
                               className='w-full h-full object-cover'
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
+                              onError={() => {
+                                setFailedImages((prev) => {
+                                  const next = new Set(prev);
+                                  next.add(sourceKey);
+                                  return next;
+                                });
                               }}
                             />
-                          )}
+                          ) : source.episodes && source.episodes.length > 0 ? (
+                            <div className='w-full h-full flex items-center justify-center bg-zinc-800'>
+                              <span className='text-zinc-500 text-[10px] text-center px-1 leading-tight'>
+                                {source.title}
+                              </span>
+                            </div>
+                          ) : null}
                         </div>
 
                         {/* 信息区域 */}
@@ -587,7 +599,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                         {/* 當前標記 */}
                         {isCurrentSource && (
                           <div className='absolute top-2 right-2'>
-                             <span className='px-2.5 py-0.5 bg-[#ff3e6c] text-white text-[10px] font-bold rounded-full shadow-lg shadow-[#ff3e6c]/30'>
+                            <span className='px-2.5 py-0.5 bg-[#ff3e6c] text-white text-[10px] font-bold rounded-full shadow-lg shadow-[#ff3e6c]/30'>
                               當前
                             </span>
                           </div>

@@ -92,6 +92,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
     const router = useRouter();
     const [favorited, setFavorited] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [imgError, setImgError] = useState(false);
     const [showMobileActions, setShowMobileActions] = useState(false);
     const [searchFavorited, setSearchFavorited] = useState<boolean | null>(
       null
@@ -649,44 +650,56 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
             }}
           >
             {/* 骨架屏 */}
-            {!isLoading && <ImagePlaceholder aspectRatio='aspect-[2/3]' />}
+            {!isLoading && !imgError && (
+              <ImagePlaceholder aspectRatio='aspect-[2/3]' />
+            )}
             {/* 圖片 */}
-            <Image
-              src={processImageUrl(actualPoster)}
-              alt={actualTitle}
-              fill
-              className={origin === 'live' ? 'object-contain' : 'object-cover'}
-              referrerPolicy='no-referrer'
-              loading='lazy'
-              onLoadingComplete={() => setIsLoading(true)}
-              onError={(e) => {
-                // 圖片加載失敗時的重試機製
-                const img = e.target as HTMLImageElement;
-                if (!img.dataset.retried) {
-                  img.dataset.retried = 'true';
-                  setTimeout(() => {
-                    img.src = processImageUrl(actualPoster);
-                  }, 2000);
+            {!imgError ? (
+              <Image
+                src={processImageUrl(actualPoster)}
+                alt={actualTitle}
+                fill
+                className={
+                  origin === 'live' ? 'object-contain' : 'object-cover'
                 }
-              }}
-              style={
-                {
-                  // 禁用圖片的默認長按效果
-                  WebkitUserSelect: 'none',
-                  userSelect: 'none',
-                  WebkitTouchCallout: 'none',
-                  pointerEvents: 'none', // 圖片不響應任何指針事件
-                } as React.CSSProperties
-              }
-              onContextMenu={(e) => {
-                e.preventDefault();
-                return false;
-              }}
-              onDragStart={(e) => {
-                e.preventDefault();
-                return false;
-              }}
-            />
+                referrerPolicy='no-referrer'
+                loading='lazy'
+                onLoadingComplete={() => setIsLoading(true)}
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  if (!img.dataset.retried) {
+                    img.dataset.retried = 'true';
+                    setTimeout(() => {
+                      img.src = processImageUrl(actualPoster);
+                    }, 2000);
+                  } else {
+                    setImgError(true);
+                  }
+                }}
+                style={
+                  {
+                    WebkitUserSelect: 'none',
+                    userSelect: 'none',
+                    WebkitTouchCallout: 'none',
+                    pointerEvents: 'none',
+                  } as React.CSSProperties
+                }
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  return false;
+                }}
+                onDragStart={(e) => {
+                  e.preventDefault();
+                  return false;
+                }}
+              />
+            ) : (
+              <div className='absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-800'>
+                <span className='text-gray-500 dark:text-gray-400 text-xs text-center px-2 line-clamp-3'>
+                  {actualTitle}
+                </span>
+              </div>
+            )}
 
             {/* 懸浮遮罩 */}
             <div

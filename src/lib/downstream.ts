@@ -210,8 +210,7 @@ export async function searchFromApi(
             results: result.results,
             pageCount: result.pageCount,
           });
-          // 收集最多 2 個變體後停止（精確+備用）
-          if (variantResults.length >= 2) break;
+          break;
         }
       } catch {
         // continue

@@ -240,6 +240,7 @@ function PlayPageClient() {
     return !val || val === 'undefined' || val === 'null' ? '' : val;
   });
   const [videoCover, setVideoCover] = useState('');
+  const [coverImgError, setCoverImgError] = useState(false);
   const [videoDoubanId, setVideoDoubanId] = useState(0);
   // 當前源和ID
   const [currentSource, setCurrentSource] = useState(() => {
@@ -2699,13 +2700,14 @@ function PlayPageClient() {
           <div className='hidden md:block md:col-span-1 md:order-first'>
             <div className='pl-0 py-4 pr-6'>
               <div className='relative bg-gray-300 dark:bg-gray-700 aspect-[2/3] flex items-center justify-center rounded-xl overflow-hidden'>
-                {videoCover ? (
+                {videoCover && !coverImgError ? (
                   <>
                     <img
                       src={processImageUrl(videoCover)}
                       alt={videoTitle}
                       className='w-full h-full object-cover'
                       referrerPolicy='no-referrer'
+                      onError={() => setCoverImgError(true)}
                     />
 
                     {/* 豆瓣鏈接按鈕 */}
@@ -2736,7 +2738,7 @@ function PlayPageClient() {
                   </>
                 ) : (
                   <span className='text-gray-600 dark:text-gray-400'>
-                    封面圖片
+                    {coverImgError ? videoTitle : '封面圖片'}
                   </span>
                 )}
               </div>
