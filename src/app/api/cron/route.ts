@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getConfig, refineConfig } from '@/lib/config';
+import { getConfig, refineConfig, setCachedConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 import { fetchVideoDetail } from '@/lib/fetchVideoDetail';
 import { refreshLiveChannels } from '@/lib/live';
@@ -11,7 +11,16 @@ import { SearchResult } from '@/lib/types';
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
-  console.log(request.url);
+  // 验证内部 cron 调用的密钥，防止未授权访问
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret) {
+    const authHeader = request.headers.get('authorization');
+    const expectedAuth = `Bearer ${cronSecret}`;
+    if (!authHeader || authHeader !== expectedAuth) {
+      console.warn('Cron job: 未授权的访问尝试');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  }
   try {
     console.log('Cron job triggered:', new Date().toISOString());
 
@@ -106,6 +115,7 @@ async function refreshConfig() {
       config.ConfigSubscribtion.LastCheck = new Date().toISOString();
       config = refineConfig(config);
       await db.saveAdminConfig(config);
+      await setCachedConfig(config);
     } catch (e) {
       console.error('刷新配置失敗:', e);
     }

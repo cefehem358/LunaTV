@@ -15,6 +15,10 @@ interface DoubanApiResponse {
 
 export const runtime = 'nodejs';
 
+// 豆瓣 API 主路由缓存，减少重复请求
+const DOUBAN_CACHE = new Map<string, { expiresAt: number; data: unknown }>();
+const DOUBAN_CACHE_TTL = 60 * 1000; // 1 分钟缓存，豆瓣热门列表变化不频繁
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
@@ -57,6 +61,22 @@ export async function GET(request: Request) {
     return handleTop250(pageStart);
   }
 
+  // 检查内存缓存
+  const cacheKey = `douban:${type}:${tag}:${pageSize}:${pageStart}`;
+  const now = Date.now();
+  const cached = DOUBAN_CACHE.get(cacheKey);
+  if (cached && cached.expiresAt > now) {
+    const cacheTime = await getCacheTime();
+    return NextResponse.json(cached.data, {
+      headers: {
+        'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+        'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+        'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+        'Netlify-Vary': 'query',
+      },
+    });
+  }
+
   const simTag = toSimplified(tag);
   const target = `https://movie.douban.com/j/search_subjects?type=${type}&tag=${encodeURIComponent(
     simTag
@@ -80,6 +100,12 @@ export async function GET(request: Request) {
       message: '獲取成功',
       list: list,
     };
+
+    // 存入内存缓存
+    DOUBAN_CACHE.set(cacheKey, {
+      expiresAt: Date.now() + DOUBAN_CACHE_TTL,
+      data: response,
+    });
 
     const cacheTime = await getCacheTime();
     return NextResponse.json(response, {

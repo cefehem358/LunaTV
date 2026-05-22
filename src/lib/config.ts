@@ -55,6 +55,8 @@ export const API_CONFIG = {
 
 // 在模块加载时根据环境决定配置来源
 let cachedConfig: AdminConfig;
+let cachedConfigTimestamp = 0;
+const CONFIG_CACHE_TTL = 300 * 1000; // 5 分钟缓存 TTL
 
 // 从配置文件补充管理员配置
 export function refineConfig(adminConfig: AdminConfig): AdminConfig {
@@ -295,8 +297,8 @@ async function getInitConfig(
 }
 
 export async function getConfig(): Promise<AdminConfig> {
-  // 直接使用内存缓存
-  if (cachedConfig) {
+  // 使用内存缓存，带 TTL 过期检查
+  if (cachedConfig && Date.now() - cachedConfigTimestamp < CONFIG_CACHE_TTL) {
     return cachedConfig;
   }
 
@@ -314,6 +316,7 @@ export async function getConfig(): Promise<AdminConfig> {
   }
   adminConfig = configSelfCheck(adminConfig);
   cachedConfig = adminConfig;
+  cachedConfigTimestamp = Date.now();
   db.saveAdminConfig(cachedConfig);
   return cachedConfig;
 }
@@ -449,6 +452,7 @@ export async function resetConfig() {
     originConfig.ConfigSubscribtion
   );
   cachedConfig = adminConfig;
+  cachedConfigTimestamp = Date.now();
   await db.saveAdminConfig(adminConfig);
 
   return;
@@ -517,4 +521,9 @@ export async function getAvailableApiSites(user?: string): Promise<ApiSite[]> {
 
 export async function setCachedConfig(config: AdminConfig) {
   cachedConfig = config;
+  cachedConfigTimestamp = Date.now();
+}
+
+export async function invalidateConfigCache() {
+  cachedConfigTimestamp = 0;
 }

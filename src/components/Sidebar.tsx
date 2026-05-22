@@ -5,6 +5,7 @@
 import {
   BookMarked,
   Cat,
+  Clock,
   Clover,
   Film,
   Home,
@@ -15,12 +16,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 import { CURRENT_VERSION } from '@/lib/version';
 
@@ -84,10 +80,18 @@ const Sidebar = ({ activePath = '/' }: SidebarProps) => {
   useEffect(() => {
     const rc = (window as any).RUNTIME_CONFIG;
     if (rc?.ENABLE_WEB_LIVE) {
-      setMenuItems((p) => p.some((i) => i.href === '/live') ? p : [...p, { icon: Radio, label: '直播', href: '/live' }]);
+      setMenuItems((p) =>
+        p.some((i) => i.href === '/live')
+          ? p
+          : [...p, { icon: Radio, label: '直播', href: '/live' }]
+      );
     }
     if (rc?.CUSTOM_CATEGORIES?.length > 0) {
-      setMenuItems((p) => p.some((i) => i.href === '/douban?type=custom') ? p : [...p, { icon: Star, label: '自定義', href: '/douban?type=custom' }]);
+      setMenuItems((p) =>
+        p.some((i) => i.href === '/douban?type=custom')
+          ? p
+          : [...p, { icon: Star, label: '自定義', href: '/douban?type=custom' }]
+      );
     }
   }, []);
 
@@ -134,13 +138,23 @@ const Sidebar = ({ activePath = '/' }: SidebarProps) => {
           </div>
 
           <nav className='flex-1 w-full px-3 space-y-2 flex flex-col items-center group-hover/sidewrap:items-stretch'>
-            <NavLink href='/' icon={Home} label='首頁' isActive={active === '/'} onClick={() => setActive('/')} />
+            <NavLink
+              href='/'
+              icon={Home}
+              label='首頁'
+              isActive={active === '/'}
+              onClick={() => setActive('/')}
+            />
             <NavLink
               href='/search'
               icon={Search}
               label='搜索'
               isActive={active === '/search'}
-              onClick={(e) => { e.preventDefault(); handleSearchClick(); setActive('/search'); }}
+              onClick={(e) => {
+                e.preventDefault();
+                handleSearchClick();
+                setActive('/search');
+              }}
             />
             <NavLink
               href='/?tab=favorites'
@@ -148,6 +162,13 @@ const Sidebar = ({ activePath = '/' }: SidebarProps) => {
               label='收藏夾'
               isActive={active === '/?tab=favorites'}
               onClick={() => setActive('/?tab=favorites')}
+            />
+            <NavLink
+              href='/history'
+              icon={Clock}
+              label='觀看記錄'
+              isActive={active === '/history'}
+              onClick={() => setActive('/history')}
             />
 
             <div className='border-t border-white/10 my-4' />

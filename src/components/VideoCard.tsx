@@ -51,6 +51,7 @@ export interface VideoCardProps {
   onDelete?: () => void;
   rate?: string;
   type?: string;
+  type_name?: string;
   isBangumi?: boolean;
   isAggregate?: boolean;
   origin?: 'vod' | 'live';
@@ -81,6 +82,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
       onDelete,
       rate,
       type = '',
+      type_name,
       isBangumi = false,
       isAggregate = false,
       origin = 'vod',
@@ -433,7 +435,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
           showCheckCircle: false,
           showDoubanLink: true,
           showRating: !!rate,
-          showYear: false,
+          showYear: true,
         },
       };
       return configs[from] || configs.search;
@@ -820,6 +822,26 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                   {actualYear}
                 </div>
               )}
+
+            {/* 類型徽章 */}
+            {type_name && (
+              <div
+                className='absolute top-2 right-2 bg-[#ff3e6c]/80 text-white text-xs font-medium px-2 py-1 rounded backdrop-blur-sm shadow-sm transition-all duration-300 ease-out group-hover:opacity-90'
+                style={
+                  {
+                    WebkitUserSelect: 'none',
+                    userSelect: 'none',
+                    WebkitTouchCallout: 'none',
+                  } as React.CSSProperties
+                }
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  return false;
+                }}
+              >
+                {type_name}
+              </div>
+            )}
 
             {/* 徽章 */}
             {config.showRating && rate && (

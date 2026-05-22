@@ -22,6 +22,13 @@ interface DoubanCategoryApiResponse {
 
 export const runtime = 'nodejs';
 
+// 豆瓣分類 API 緩存
+const CATEGORIES_CACHE = new Map<
+  string,
+  { expiresAt: number; data: unknown }
+>();
+const CATEGORIES_CACHE_TTL = 60 * 1000; // 1 分鐘緩存
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
@@ -63,6 +70,23 @@ export async function GET(request: Request) {
 
   const simCategory = toSimplified(category);
   const simType = toSimplified(type);
+
+  // 检查缓存
+  const cacheKey = `douban:categories:${kind}:${simCategory}:${simType}:${pageLimit}:${pageStart}`;
+  const now = Date.now();
+  const cached = CATEGORIES_CACHE.get(cacheKey);
+  if (cached && cached.expiresAt > now) {
+    const cacheTime = await getCacheTime();
+    return NextResponse.json(cached.data, {
+      headers: {
+        'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+        'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+        'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+        'Netlify-Vary': 'query',
+      },
+    });
+  }
+
   const target = `https://m.douban.com/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${encodeURIComponent(
     simCategory
   )}&type=${encodeURIComponent(simType)}`;
@@ -85,6 +109,12 @@ export async function GET(request: Request) {
       message: '獲取成功',
       list: list,
     };
+
+    // 存入缓存
+    CATEGORIES_CACHE.set(cacheKey, {
+      expiresAt: Date.now() + CATEGORIES_CACHE_TTL,
+      data: response,
+    });
 
     const cacheTime = await getCacheTime();
     return NextResponse.json(response, {

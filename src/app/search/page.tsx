@@ -107,7 +107,25 @@ function SearchPageClient() {
       return res;
     })();
 
-    return { episodes, source_names, douban_id };
+    const type_name = (() => {
+      const countMap = new Map<string, number>();
+      group.forEach((g) => {
+        if (g.type_name) {
+          countMap.set(g.type_name, (countMap.get(g.type_name) || 0) + 1);
+        }
+      });
+      let max = 0;
+      let res: string | undefined;
+      countMap.forEach((v, k) => {
+        if (v > max) {
+          max = v;
+          res = k;
+        }
+      });
+      return res;
+    })();
+
+    return { episodes, source_names, douban_id, type_name };
   };
 
   const [filterAll, setFilterAll] = useState<{
@@ -786,6 +804,7 @@ function SearchPageClient() {
                                   : ''
                               }
                               type={type}
+                              type_name={group.type_name}
                             />
                           </div>
                         );
@@ -818,6 +837,7 @@ function SearchPageClient() {
                             year={item.year}
                             from='search'
                             type={item.episodes.length > 1 ? 'tv' : 'movie'}
+                            type_name={item.type_name}
                           />
                         </div>
                       )}

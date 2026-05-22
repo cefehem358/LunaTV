@@ -197,6 +197,11 @@ function PlayPageClient() {
     autoNextRef.current = autoNext;
   }, [autoNext]);
 
+  // 自動連播倒數計時
+  const [autoNextCountdown, setAutoNextCountdown] = useState(0);
+  const [showCountdownOverlay, setShowCountdownOverlay] = useState(false);
+  const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // 快捷鍵幫助面板
   const [showShortcuts, setShowShortcuts] = useState(false);
 
@@ -2124,10 +2129,25 @@ function PlayPageClient() {
           autoNextRef.current
         ) {
           autoNextBusyRef.current = true;
-          setTimeout(() => {
-            autoNextBusyRef.current = false;
-            setCurrentEpisodeIndex(idx + 1);
-          }, 2000);
+          // 啟動 5 秒倒數計時
+          setAutoNextCountdown(5);
+          setShowCountdownOverlay(true);
+          countdownTimerRef.current = setInterval(() => {
+            setAutoNextCountdown((prev) => {
+              if (prev <= 1) {
+                // 倒數結束，切換到下一集
+                if (countdownTimerRef.current) {
+                  clearInterval(countdownTimerRef.current);
+                  countdownTimerRef.current = null;
+                }
+                setShowCountdownOverlay(false);
+                autoNextBusyRef.current = false;
+                setCurrentEpisodeIndex(idx + 1);
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
         }
       });
 
@@ -2166,6 +2186,11 @@ function PlayPageClient() {
       // v1.5.3: 卸載前保存播放進度
 
       saveCurrentPlayProgress();
+
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+        countdownTimerRef.current = null;
+      }
 
       if (pipKeyHandlerRef.current) {
         document.removeEventListener('keydown', pipKeyHandlerRef.current);
@@ -2453,6 +2478,60 @@ function PlayPageClient() {
                             ? '🔄 切換播放源...'
                             : '🔄 視頻加載中...'}
                         </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 自動連播倒數計時蒙層 */}
+                {showCountdownOverlay && autoNextCountdown > 0 && (
+                  <div className='absolute inset-0 bg-black/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-[501] transition-all duration-300'>
+                    <div className='text-center max-w-sm mx-auto px-6'>
+                      <p className='text-lg text-white/80 mb-3'>
+                        下一集即將播放
+                      </p>
+                      <div className='text-6xl font-bold text-[#ff3e6c] mb-6 animate-pulse'>
+                        {autoNextCountdown}
+                      </div>
+                      <div className='flex gap-3 justify-center'>
+                        <button
+                          onClick={() => {
+                            if (countdownTimerRef.current) {
+                              clearInterval(countdownTimerRef.current);
+                              countdownTimerRef.current = null;
+                            }
+                            setShowCountdownOverlay(false);
+                            setAutoNextCountdown(0);
+                            autoNextBusyRef.current = false;
+                            // 立即播放下一集
+                            const d = detailRef.current;
+                            const idx = currentEpisodeIndexRef.current;
+                            if (
+                              d &&
+                              d.episodes &&
+                              idx < d.episodes.length - 1
+                            ) {
+                              setCurrentEpisodeIndex(idx + 1);
+                            }
+                          }}
+                          className='px-5 py-2.5 bg-[#ff3e6c] hover:bg-[#cc3256] text-white font-medium rounded-xl transition-colors text-sm'
+                        >
+                          立即播放
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (countdownTimerRef.current) {
+                              clearInterval(countdownTimerRef.current);
+                              countdownTimerRef.current = null;
+                            }
+                            setShowCountdownOverlay(false);
+                            setAutoNextCountdown(0);
+                            autoNextBusyRef.current = false;
+                          }}
+                          className='px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-colors text-sm border border-white/20'
+                        >
+                          取消
+                        </button>
                       </div>
                     </div>
                   </div>

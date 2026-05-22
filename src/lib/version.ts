@@ -6,6 +6,20 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.5.9',
+    date: '2026-05-22',
+    content: `
+- 後端安全性強化：CRON_SECRET Bearer Token 驗證、圖片代理 SSRF 防護（白名單 + 私有 IP 阻擋）、config 加入 5 分鐘 TTL 快取
+- 豆瓣 API 全面伺服器端快取（主路由、分類、推薦），降低第三方 API 呼叫頻率
+- 自動連播倒數計時：影片結束時顯示 5 秒倒數覆蓋層，支援立即播放與取消
+- 首頁繼續觀看區塊視覺強化：淡粉色漸層背景與邊框
+- VideoCard 增強：豆瓣卡片顯示年份、搜尋卡片顯示 type_name 類型標籤
+- 新增觀看記錄管理頁面 (/history)：搜尋、篩選、單筆/批量刪除、清空全部
+- 側邊欄加入「觀看記錄」導航連結
+- 版本號提升至 1.5.9
+    `.trim(),
+  },
+  {
     version: 'v1.5.8',
     date: '2026-05-22',
     content: `

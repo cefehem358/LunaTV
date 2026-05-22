@@ -24,6 +24,13 @@ interface DoubanRecommendApiResponse {
 
 export const runtime = 'nodejs';
 
+// 豆瓣推薦 API 緩存
+const RECOMMENDS_CACHE = new Map<
+  string,
+  { expiresAt: number; data: unknown }
+>();
+const RECOMMENDS_CACHE_TTL = 60 * 1000; // 1 分鐘緩存
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
@@ -97,6 +104,23 @@ export async function GET(request: NextRequest) {
   }
 
   const target = `${baseUrl}?${params.toString()}`;
+
+  // 检查缓存
+  const cacheKey = `douban:recommends:${target}`;
+  const now = Date.now();
+  const cached = RECOMMENDS_CACHE.get(cacheKey);
+  if (cached && cached.expiresAt > now) {
+    const cacheTime = await getCacheTime();
+    return NextResponse.json(cached.data, {
+      headers: {
+        'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+        'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+        'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+        'Netlify-Vary': 'query',
+      },
+    });
+  }
+
   console.log(target);
   try {
     const doubanData = await fetchDoubanData<DoubanRecommendApiResponse>(
@@ -116,6 +140,12 @@ export async function GET(request: NextRequest) {
       message: '獲取成功',
       list: list,
     };
+
+    // 存入缓存
+    RECOMMENDS_CACHE.set(cacheKey, {
+      expiresAt: Date.now() + RECOMMENDS_CACHE_TTL,
+      data: response,
+    });
 
     const cacheTime = await getCacheTime();
     return NextResponse.json(response, {

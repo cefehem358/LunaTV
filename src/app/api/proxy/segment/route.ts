@@ -57,6 +57,7 @@ export async function GET(request: Request) {
     }
 
     // 使用流式傳輸，避免佔用內存
+    let isCancelled = false;
     const stream = new ReadableStream({
       start(controller) {
         if (!response?.body) {
@@ -65,7 +66,6 @@ export async function GET(request: Request) {
         }
 
         reader = response.body.getReader();
-        const isCancelled = false;
 
         function pump() {
           if (isCancelled || !reader) {
@@ -111,6 +111,7 @@ export async function GET(request: Request) {
       },
       cancel() {
         // 當流被取消時，確保釋放所有資源
+        isCancelled = true;
         if (reader) {
           try {
             reader.releaseLock();
