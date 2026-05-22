@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 
 // 讀取存儲類型環境變量，默認 localstorage
 const STORAGE_TYPE =
-  (process.env.NEXT_PUBLIC_STORAGE_TYPE as
+  ((process.env.STORAGE_TYPE || process.env.NEXT_PUBLIC_STORAGE_TYPE) as
     | 'localstorage'
     | 'redis'
     | 'upstash'

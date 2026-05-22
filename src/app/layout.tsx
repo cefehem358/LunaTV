@@ -21,7 +21,10 @@ export const dynamic = 'force-dynamic';
 
 // 動態生成 metadata，支持配置更新後的標題變化
 export async function generateMetadata(): Promise<Metadata> {
-  const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
+  const storageType =
+    process.env.STORAGE_TYPE ||
+    process.env.NEXT_PUBLIC_STORAGE_TYPE ||
+    'localstorage';
   const config = await getConfig();
   let siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'LunaTV';
   if (storageType !== 'localstorage') {
@@ -44,7 +47,10 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
+  const storageType =
+    process.env.STORAGE_TYPE ||
+    process.env.NEXT_PUBLIC_STORAGE_TYPE ||
+    'localstorage';
 
   let siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'LunaTV';
   let announcement =
@@ -89,7 +95,7 @@ export default async function RootLayout({
 
   // 將運行時配置注入到全局 window 對象，供客戶端在運行時讀取
   const runtimeConfig = {
-    STORAGE_TYPE: process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage',
+    STORAGE_TYPE: storageType,
     DOUBAN_PROXY_TYPE: doubanProxyType,
     DOUBAN_PROXY: doubanProxy,
     DOUBAN_IMAGE_PROXY_TYPE: doubanImageProxyType,

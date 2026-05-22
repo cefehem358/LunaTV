@@ -5,7 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthInfoFromCookie } from '@/lib/auth';
 import { generateSearchVariants } from '@/lib/chinese';
 import { getAvailableApiSites, getCacheTime, getConfig } from '@/lib/config';
-import { searchFromApi } from '@/lib/downstream';
+import { cleanQueryForApi, searchFromApi } from '@/lib/downstream';
+import { convertS2T, convertT2S } from '@/lib/s2t';
 import { yellowWords } from '@/lib/yellow';
 
 export const runtime = 'nodejs';
@@ -37,20 +38,69 @@ export async function GET(request: NextRequest) {
   const config = await getConfig();
   const apiSites = await getAvailableApiSites(authInfo.username);
 
-  const stcasc = (await import('switch-chinese')).default;
-  const converter = stcasc();
-  const simplifiedQuery = converter.simplized(query);
+  const cleanedOriginal = cleanQueryForApi(query);
+  const simplifiedCleaned = convertT2S(cleanedOriginal);
 
   const searchVariantsSet = new Set<string>();
-  generateSearchVariants(simplifiedQuery).forEach((v) =>
+
+  // 1. 原始清理後的名字與原始輸入名字
+  searchVariantsSet.add(cleanedOriginal);
+  searchVariantsSet.add(query);
+
+  // 2. 基於原始/清理/簡化名字提取變體
+  generateSearchVariants(query).forEach((v) => searchVariantsSet.add(v));
+  generateSearchVariants(cleanedOriginal).forEach((v) =>
     searchVariantsSet.add(v)
   );
-  generateSearchVariants(query).forEach((v) => searchVariantsSet.add(v));
+  generateSearchVariants(simplifiedCleaned).forEach((v) =>
+    searchVariantsSet.add(v)
+  );
+
+  // 3. 為目前所有變體擴充繁簡版本，保證 CMS 能精確對應
+  const allCurrentVariants = Array.from(searchVariantsSet);
+  allCurrentVariants.forEach((v) => {
+    searchVariantsSet.add(convertS2T(v));
+    searchVariantsSet.add(convertT2S(v));
+  });
+
+  // 4. 日文助詞替換展間（如「の」->「的」）
+  const checkJapaneseStr = cleanedOriginal + ' ' + query;
+  if (
+    checkJapaneseStr.includes('の') ||
+    checkJapaneseStr.includes('を') ||
+    checkJapaneseStr.includes('と') ||
+    checkJapaneseStr.includes('は')
+  ) {
+    const processJapanese = (str: string) => {
+      return str
+        .replace(/の/g, '的')
+        .replace(/は/g, '')
+        .replace(/を/g, '')
+        .replace(/と/g, '和');
+    };
+
+    const jCleaned = processJapanese(cleanedOriginal);
+    const jOriginal = processJapanese(query);
+
+    [jCleaned, jOriginal].forEach((jv) => {
+      if (jv && jv !== cleanedOriginal && jv !== query) {
+        searchVariantsSet.add(jv);
+        searchVariantsSet.add(convertS2T(jv));
+        searchVariantsSet.add(convertT2S(jv));
+        generateSearchVariants(jv).forEach((v) => {
+          searchVariantsSet.add(v);
+          searchVariantsSet.add(convertS2T(v));
+          searchVariantsSet.add(convertT2S(v));
+        });
+      }
+    });
+  }
+
   const searchVariants = Array.from(searchVariantsSet);
 
   const searchPromises = apiSites.map((site) =>
     Promise.race([
-      searchFromApi(site, simplifiedQuery, searchVariants),
+      searchFromApi(site, cleanedOriginal, searchVariants),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error(`${site.name} timeout`)), 20000)
       ),

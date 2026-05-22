@@ -6,6 +6,15 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.5.6',
+    date: '2026-05-22',
+    content: `
+- 優化 API 搜尋預處理流程，引進 Simplified/Traditional 與日文助詞變體對應，提升第三方 API 檢索效率與精確度
+- 標準化伺服器端環境變數支援，確保後端儲存設定支援安全的 STORAGE_TYPE 偵測（不需強加 NEXT_PUBLIC_ 前綴）
+- 版本號提升至 1.5.6
+    `.trim(),
+  },
+  {
     version: 'v1.5.5',
     date: '2026-05-22',
     content: `
