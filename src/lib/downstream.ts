@@ -7,6 +7,7 @@ import { cleanHtmlTags } from '@/lib/utils';
 import { generateSearchVariants, toDisplayLanguage } from './chinese';
 import { deduplicateRequest } from './request-dedupe';
 import { convertS2T, convertT2S } from './s2t';
+import { extractSeasonNumber } from './searchEngine';
 
 interface ApiSearchItem {
   vod_id: string;
@@ -157,18 +158,23 @@ export async function searchFromApi(
       const simplifiedQuery = converter.simplized(cleanedOriginal);
       const searchVariantsSet = new Set<string>();
 
-      // 添加原始 query 優先（保留完整資訊），清理後的名字作為備用
+      // 添加原始 query 優先（保留完整資訊），清理後的名字作為備用（僅在無季數時）
       searchVariantsSet.add(query);
-      searchVariantsSet.add(cleanedOriginal);
+      const querySeason = extractSeasonNumber(query);
+      if (querySeason === null) {
+        searchVariantsSet.add(cleanedOriginal);
+      }
       // 再從未清理的 query 提取變體（防止有些特殊別名需要完整 query）
       generateSearchVariants(query).forEach((v) => searchVariantsSet.add(v));
 
-      generateSearchVariants(simplifiedQuery).forEach((v) =>
-        searchVariantsSet.add(v)
-      );
-      generateSearchVariants(cleanedOriginal).forEach((v) =>
-        searchVariantsSet.add(v)
-      );
+      if (querySeason === null) {
+        generateSearchVariants(simplifiedQuery).forEach((v) =>
+          searchVariantsSet.add(v)
+        );
+        generateSearchVariants(cleanedOriginal).forEach((v) =>
+          searchVariantsSet.add(v)
+        );
+      }
 
       // 為了保證 API 能夠精確匹配繁簡體，為所有已知變體添加繁簡版本
       const allCurrentVariants = Array.from(searchVariantsSet);

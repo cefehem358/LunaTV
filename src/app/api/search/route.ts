@@ -7,6 +7,7 @@ import { generateSearchVariants } from '@/lib/chinese';
 import { getAvailableApiSites, getCacheTime, getConfig } from '@/lib/config';
 import { cleanQueryForApi, searchFromApi } from '@/lib/downstream';
 import { convertS2T, convertT2S } from '@/lib/s2t';
+import { extractSeasonNumber } from '@/lib/searchEngine';
 import { yellowWords } from '@/lib/yellow';
 
 export const runtime = 'nodejs';
@@ -43,18 +44,23 @@ export async function GET(request: NextRequest) {
 
   const searchVariantsSet = new Set<string>();
 
-  // 1. 原始輸入優先（保留季數等精確資訊），清理後的名字作為備用
+  // 1. 原始輸入優先（保留季數等精確資訊），清理後的名字作為備用（僅在無季數時）
   searchVariantsSet.add(query);
-  searchVariantsSet.add(cleanedOriginal);
+  const querySeason = extractSeasonNumber(query);
+  if (querySeason === null) {
+    searchVariantsSet.add(cleanedOriginal);
+  }
 
   // 2. 基於原始/清理/簡化名字提取變體
   generateSearchVariants(query).forEach((v) => searchVariantsSet.add(v));
-  generateSearchVariants(cleanedOriginal).forEach((v) =>
-    searchVariantsSet.add(v)
-  );
-  generateSearchVariants(simplifiedCleaned).forEach((v) =>
-    searchVariantsSet.add(v)
-  );
+  if (querySeason === null) {
+    generateSearchVariants(cleanedOriginal).forEach((v) =>
+      searchVariantsSet.add(v)
+    );
+    generateSearchVariants(simplifiedCleaned).forEach((v) =>
+      searchVariantsSet.add(v)
+    );
+  }
 
   // 3. 為目前所有變體擴充繁簡版本，保證 CMS 能精確對應
   const allCurrentVariants = Array.from(searchVariantsSet);
