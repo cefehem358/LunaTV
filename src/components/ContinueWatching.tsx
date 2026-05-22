@@ -3,9 +3,11 @@
 
 import { useEffect, useState } from 'react';
 
+import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import type { PlayRecord } from '@/lib/db.client';
 import {
   clearAllPlayRecords,
+  deletePlayRecord,
   getAllPlayRecords,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
@@ -147,11 +149,32 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
                     currentEpisode={record.index}
                     query={record.search_title}
                     from='playrecord'
-                    onDelete={() =>
+                    onDelete={async () => {
                       setPlayRecords((prev) =>
                         prev.filter((r) => r.key !== record.key)
-                      )
-                    }
+                      );
+                      const realSource = source;
+                      const realId = id;
+                      if (realSource && realId) {
+                        await deletePlayRecord(realSource, realId);
+                      }
+                      const authInfo = getAuthInfoFromBrowserCookie();
+                      const userId = authInfo?.username || 'default_user';
+                      await fetch('/api/history/delete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          vod_name: record.title || (record as any).vod_name,
+                          source: realSource,
+                          userId,
+                        }),
+                      }).catch((err) => {
+                        console.warn('API 歷史刪除失敗:', err);
+                      });
+                      window.dispatchEvent(
+                        new CustomEvent('playRecordsUpdated')
+                      );
+                    }}
                     type={record.total_episodes > 1 ? 'tv' : ''}
                   />
                 </div>

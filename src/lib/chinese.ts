@@ -82,15 +82,17 @@ function generatePunctuationVariant(query: string): string | null {
 
 export function generateSearchVariants(originalQuery: string): string[] {
   const trimmed = originalQuery.trim();
+  const variants = new Set<string>();
+  variants.add(trimmed);
 
   const numberVariant = generateNumberVariant(trimmed);
   if (numberVariant) {
-    return [trimmed, numberVariant];
+    variants.add(numberVariant);
   }
 
   const punctuationVariant = generatePunctuationVariant(trimmed);
   if (punctuationVariant) {
-    return [trimmed, punctuationVariant];
+    variants.add(punctuationVariant);
   }
 
   if (trimmed.includes(' ')) {
@@ -99,14 +101,34 @@ export function generateSearchVariants(originalQuery: string): string[] {
       const lastKeyword = keywords[keywords.length - 1];
       if (/第|季|集|部|篇|章/.test(lastKeyword)) {
         const combined = keywords[0] + lastKeyword;
-        return [trimmed, combined];
+        variants.add(combined);
       }
       const noSpaces = trimmed.replace(/\s+/g, '');
-      return [trimmed, noSpaces];
+      variants.add(noSpaces);
     }
   }
 
-  return [trimmed];
+  // 處理全形轉半形
+  const halfWidth = trimmed
+    .replace(/[\uff01-\uff5e]/g, (ch) =>
+      String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
+    )
+    .replace(/\u3000/g, ' ');
+  if (halfWidth !== trimmed) {
+    variants.add(halfWidth);
+    variants.add(halfWidth.toLowerCase());
+    variants.add(halfWidth.toUpperCase());
+  }
+
+  // 處理英文大小寫
+  const lower = trimmed.toLowerCase();
+  const upper = trimmed.toUpperCase();
+  if (lower !== upper) {
+    variants.add(lower);
+    variants.add(upper);
+  }
+
+  return Array.from(variants);
 }
 
 function buildConversionMap(): Record<string, string> {
