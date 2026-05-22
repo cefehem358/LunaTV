@@ -127,34 +127,39 @@ export function isFuzzyMatch(vodName: string, query: string): boolean {
 
   const normName = normalize(vodName);
 
-  // 清理常見干擾後綴，以便能夠匹配到別名
-  const cleanQuery =
-    query
-      .replace(
-        /(的故事|動畫版|动画版|第一季|第二季|第三季|第四季|真人版|劇場版|剧场版|Part\s*\d+|\d+期)/gi,
-        ''
-      )
-      .trim() || query;
+  // 清理常見干擾後綴（不含季數，季數已在上面處理）
+  const cleanSuffixes =
+    /(的故事|動畫版|动画版|真人版|劇場版|剧场版|Part\s*\d+|\d+期)/gi;
+  const cleanQuery = query.replace(cleanSuffixes, '').trim() || query;
 
-  // 生成所有可能的變體，只要其中一個匹配就視為匹配
-  const variants = new Set([
-    ...generateSearchVariants(query),
-    ...generateSearchVariants(cleanQuery),
-  ]);
+  // 生成變體：有季數時只用原始 query 的變體，避免去掉季數後匹配到其他季
+  const variants = new Set([...generateSearchVariants(query)]);
+  if (querySeason === null) {
+    generateSearchVariants(cleanQuery).forEach((v) => variants.add(v));
+  }
+
+  // 查詢有季數但結果無季數時，使用更嚴格的匹配方向
+  const strictDirection = querySeason !== null && nameSeason === null;
 
   for (const variant of Array.from(variants)) {
     const normQuery = normalize(variant);
     if (!normQuery) continue;
 
     // 精確包含（繁簡統一後）
-    if (normName.includes(normQuery) || normQuery.includes(normName))
-      return true;
+    if (strictDirection) {
+      // 查詢有季數但結果無：只允許結果包含查詢的方向
+      if (normName.includes(normQuery)) return true;
+    } else {
+      if (normName.includes(normQuery) || normQuery.includes(normName))
+        return true;
+    }
 
-    // LCS 模糊比對
+    // LCS 模糊比對：查詢有季數時以查詢長度為分母，要求更高覆蓋
     if (normName.length >= 4 && normQuery.length >= 4) {
       const lcsLen = getLCS(normName, normQuery);
       const minLen = Math.min(normName.length, normQuery.length);
-      if (lcsLen >= 4 && minLen > 0 && lcsLen / minLen >= 0.5) {
+      const denominator = strictDirection ? normQuery.length : minLen;
+      if (lcsLen >= 4 && denominator > 0 && lcsLen / denominator >= 0.5) {
         return true;
       }
     }
