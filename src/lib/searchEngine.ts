@@ -180,6 +180,25 @@ function getSpecialKeywords(text: string): string[] {
   );
 }
 
+function hasExactGeneratedVariantMatch(
+  vodName: string,
+  query: string
+): boolean {
+  const cName = cleanComparableTitle(vodName);
+  const normName = normalize(vodName);
+
+  return generateSearchVariants(query).some((variant) => {
+    if (!variant || variant === query) return false;
+    const cVariant = cleanComparableTitle(variant);
+    const normVariant = normalize(variant);
+
+    return (
+      (!!cVariant && cName === cVariant) ||
+      (!!normVariant && normName === normVariant)
+    );
+  });
+}
+
 export function getTitleMatchScore(vodName: string, query: string): number {
   if (!vodName || !query || !isFuzzyMatch(vodName, query)) return 0;
 
@@ -275,6 +294,10 @@ export function isFuzzyMatch(vodName: string, query: string): boolean {
 
   // 3. 如果兩者都無季數標記：
   if (querySeason === null && nameSeason === null) {
+    if (hasExactGeneratedVariantMatch(vodName, query)) {
+      return true;
+    }
+
     // 避免外傳/正片誤配（例如「蒼海之淚篇」與「紅蓮之絆篇」）
     if (cQuery.length > cName.length + 2) {
       return false;
@@ -350,5 +373,5 @@ export function getCoreTokens(queryStr: string): string[] {
   return [cleanStr.slice(0, 2), cleanStr.slice(-2)];
 }
 
-export const VERSION = 'v1.6.4';
-export const UPDATE_DATE = '2026-05-22';
+export const VERSION = 'v1.6.5';
+export const UPDATE_DATE = '2026-05-23';

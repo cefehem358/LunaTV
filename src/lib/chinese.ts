@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { convertT2S } from './s2t';
+
 // This module provides Traditional Chinese conversion utilities for search
 
 const CHINESE_TO_ARABIC: { [key: string]: string } = {
@@ -84,6 +86,8 @@ export function generateSearchVariants(originalQuery: string): string[] {
   const trimmed = originalQuery.trim();
   const variants = new Set<string>();
   variants.add(trimmed);
+  const simplifiedTrimmed = convertT2S(trimmed);
+  const aliasMatchCandidates = new Set([trimmed, simplifiedTrimmed]);
 
   const numberVariant = generateNumberVariant(trimmed);
   if (numberVariant) {
@@ -134,7 +138,15 @@ export function generateSearchVariants(originalQuery: string): string[] {
       '废柴风纪委员与裙子长度不合规的JK',
       '废柴风纪委员',
     ],
+    木頭風紀委員和迷你裙JK: [
+      '废柴风纪委员与裙子长度不合规的JK',
+      '废柴风纪委员',
+    ],
     木头风纪委员和迷你裙JK的故事: [
+      '废柴风纪委员与裙子长度不合规的JK的故事',
+      '废柴风纪委员',
+    ],
+    木頭風紀委員和迷你裙JK的故事: [
       '废柴风纪委员与裙子长度不合规的JK的故事',
       '废柴风纪委员',
     ],
@@ -147,13 +159,21 @@ export function generateSearchVariants(originalQuery: string): string[] {
 
   // 嘗試匹配別名
   for (const [key, aliases] of Object.entries(ALIAS_MAP)) {
-    if (trimmed.includes(key)) {
+    if (
+      Array.from(aliasMatchCandidates).some((candidate) =>
+        candidate.includes(key)
+      )
+    ) {
       aliases.forEach((alias) => variants.add(alias));
     }
   }
 
   // 提取核心關鍵字（對於太長的標題，API 容易找不到，可以嘗試提取核心名詞）
-  if (trimmed.includes('风纪委员') && trimmed.includes('JK')) {
+  if (
+    Array.from(aliasMatchCandidates).some(
+      (candidate) => candidate.includes('风纪委员') && candidate.includes('JK')
+    )
+  ) {
     variants.add('风纪委员');
   }
 

@@ -6,6 +6,14 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.6.5',
+    date: '2026-05-23',
+    content: `
+- 修復 Bangumi 每日放送動漫卡片點擊後，繁體中文標題未命中簡體別名，導致播放頁找不到片源的問題
+- 讓動漫標題別名參與播放頁模糊匹配，保留季數與外傳防誤配規則
+    `.trim(),
+  },
+  {
     version: 'v1.6.4',
     date: '2026-05-22',
     content: `
