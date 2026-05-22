@@ -21,7 +21,7 @@ import {
   saveSkipConfig,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
-import { isFuzzyMatch } from '@/lib/searchEngine';
+import { extractSeasonNumber, isFuzzyMatch } from '@/lib/searchEngine';
 import { SearchResult } from '@/lib/types';
 import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
 
@@ -54,15 +54,30 @@ function getFallbackQueries(query: string): string[] {
     fallbacks.push(noBrackets);
   }
 
-  // 2. 移除常見的第X季、第X部分後綴
-  const noSeason = cleanQuery
-    .replace(
-      /(第[一二三四五六七八九十\d]+[季期部話话]|[a-zA-Z0-9\s]+Season\s*\d+|S\d+|\s+Part\s*\d+)/gi,
-      ''
-    )
-    .trim();
-  if (noSeason && noSeason !== cleanQuery) {
-    fallbacks.push(noSeason);
+  // 2. 季數處理：有季數時產生替代格式，無季數時才去掉後綴
+  const querySeason = extractSeasonNumber(cleanQuery);
+  if (querySeason !== null) {
+    const baseNoSeason = cleanQuery
+      .replace(
+        /(第[一二三四五六七八九十\d]+[季期部話话]|[a-zA-Z0-9\s]+Season\s*\d+|S\d+|\s+Part\s*\d+)/gi,
+        ''
+      )
+      .trim();
+    if (baseNoSeason && baseNoSeason !== cleanQuery) {
+      // 產生替代季數格式，而非無季數版本（避免拉回所有季）
+      fallbacks.push(`${baseNoSeason} S${querySeason}`);
+      fallbacks.push(`${baseNoSeason} Season ${querySeason}`);
+    }
+  } else {
+    const noSeason = cleanQuery
+      .replace(
+        /(第[一二三四五六七八九十\d]+[季期部話话]|[a-zA-Z0-9\s]+Season\s*\d+|S\d+|\s+Part\s*\d+)/gi,
+        ''
+      )
+      .trim();
+    if (noSeason && noSeason !== cleanQuery) {
+      fallbacks.push(noSeason);
+    }
   }
 
   // 3. 如果長度大於6，截取前6、10個字
@@ -1035,7 +1050,13 @@ function PlayPageClient() {
               currentId
             );
             if (currentDetailList.length > 0) {
-              sourcesInfo = [...currentDetailList, ...sourcesInfo];
+              const detail = currentDetailList[0];
+              if (
+                isFuzzyMatch(detail.title, videoTitleRef.current) ||
+                (searchTitle ? isFuzzyMatch(detail.title, searchTitle) : false)
+              ) {
+                sourcesInfo = [...currentDetailList, ...sourcesInfo];
+              }
             }
           }
         }
@@ -1186,7 +1207,14 @@ function PlayPageClient() {
                     source.id === currentDetail.id
                 )
               ) {
-                bgSourcesInfo = [currentDetail, ...bgSourcesInfo];
+                if (
+                  isFuzzyMatch(currentDetail.title, videoTitleRef.current) ||
+                  (searchTitle
+                    ? isFuzzyMatch(currentDetail.title, searchTitle)
+                    : false)
+                ) {
+                  bgSourcesInfo = [currentDetail, ...bgSourcesInfo];
+                }
               } else {
                 const idx = bgSourcesInfo.findIndex(
                   (source) =>

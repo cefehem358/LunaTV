@@ -1,5 +1,5 @@
 /**
- * LunaTV 智慧搜尋與繁簡容錯核心引擎 - v1.6.1
+ * LunaTV 智慧搜尋與繁簡容錯核心引擎 - v1.6.2
  *
  * isFuzzyMatch 使用 LCS（最長公共子字串）嚴格比對：
  *   - 兩個字串必須互包含（substring），或
@@ -26,6 +26,63 @@ function getLCS(s1: string, s2: string): number {
     }
   }
   return longest;
+}
+
+/**
+ * 解析中文數字轉阿拉伯數字（僅處理 1-99）
+ */
+function parseChineseNumber(ch: string): number {
+  const map: Record<string, number> = {
+    一: 1,
+    二: 2,
+    三: 3,
+    四: 4,
+    五: 5,
+    六: 6,
+    七: 7,
+    八: 8,
+    九: 9,
+  };
+  if (ch === '十') return 10;
+  if (ch.length === 2) {
+    if (ch[0] === '十') return 10 + (map[ch[1]] || 0);
+    if (ch[1] === '十') return (map[ch[0]] || 1) * 10;
+  }
+  if (ch.length === 3 && ch[1] === '十') {
+    return (map[ch[0]] || 0) * 10 + (map[ch[2]] || 0);
+  }
+  return map[ch] || 0;
+}
+
+/**
+ * 從文字中提取季數，只在有明確季數標記時才回傳數字。
+ * 支援格式：第一季/第1季、Season 1、S1、Part 1
+ * 如果沒有季數標記則回傳 null，避免誤抓標題中的數字。
+ */
+export function extractSeasonNumber(text: string): number | null {
+  if (!text) return null;
+
+  // 1. 中文季數：第X季、第X期、第X部、第X話
+  const cnMatch = text.match(/第([一二三四五六七八九十\d]+)[季期部話]/);
+  if (cnMatch) {
+    const num = cnMatch[1];
+    if (/^\d+$/.test(num)) return parseInt(num, 10);
+    return parseChineseNumber(num) || null;
+  }
+
+  // 2. 英文 Season 數字
+  const seasonMatch = text.match(/Season\s*(\d+)/i);
+  if (seasonMatch) return parseInt(seasonMatch[1], 10);
+
+  // 3. S數字（需單詞邊界）
+  const sMatch = text.match(/\bS(\d{1,2})\b/i);
+  if (sMatch) return parseInt(sMatch[1], 10);
+
+  // 4. Part 數字
+  const partMatch = text.match(/Part\s*(\d+)/i);
+  if (partMatch) return parseInt(partMatch[1], 10);
+
+  return null;
 }
 
 /**
@@ -56,6 +113,17 @@ import { generateSearchVariants } from '@/lib/chinese';
 
 export function isFuzzyMatch(vodName: string, query: string): boolean {
   if (!vodName || !query) return false;
+
+  // 季數感知：如果 query 和 vodName 都有季數標記且不同，直接拒絕
+  const querySeason = extractSeasonNumber(query);
+  const nameSeason = extractSeasonNumber(vodName);
+  if (
+    querySeason !== null &&
+    nameSeason !== null &&
+    querySeason !== nameSeason
+  ) {
+    return false;
+  }
 
   const normName = normalize(vodName);
 
@@ -113,5 +181,5 @@ export function getCoreTokens(queryStr: string): string[] {
   return [cleanStr.slice(0, 2), cleanStr.slice(-2)];
 }
 
-export const VERSION = 'v1.6.1';
+export const VERSION = 'v1.6.2';
 export const UPDATE_DATE = '2026-05-22';
