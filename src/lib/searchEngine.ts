@@ -106,8 +106,20 @@ export function isFuzzyMatch(vodName: string, query: string): boolean {
 
   const normName = normalize(vodName);
 
+  // 清理常見干擾後綴，以便能夠匹配到別名
+  const cleanQuery =
+    query
+      .replace(
+        /(的故事|動畫版|动画版|第一季|第二季|第三季|第四季|真人版|劇場版|剧场版|Part\s*\d+|\d+期)/gi,
+        ''
+      )
+      .trim() || query;
+
   // 生成所有可能的變體，只要其中一個匹配就視為匹配
-  const variants = generateSearchVariants(query);
+  const variants = new Set([
+    ...generateSearchVariants(query),
+    ...generateSearchVariants(cleanQuery),
+  ]);
 
   for (const variant of variants) {
     const normQuery = normalize(variant);

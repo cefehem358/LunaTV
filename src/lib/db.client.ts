@@ -489,7 +489,13 @@ async function fetchWithAuth(
 }
 
 async function fetchFromApi<T>(path: string): Promise<T> {
-  const res = await fetchWithAuth(path);
+  const res = await fetchWithAuth(path, {
+    cache: 'no-store',
+    headers: {
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
+    },
+  });
   return (await res.json()) as T;
 }
 

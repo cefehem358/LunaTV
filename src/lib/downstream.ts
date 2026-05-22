@@ -155,8 +155,6 @@ export async function searchFromApi(
       const converter = stcasc();
       const cleanedOriginal = cleanQueryForApi(query);
       const simplifiedQuery = converter.simplized(cleanedOriginal);
-      const queryTraditional = convertS2T(cleanedOriginal);
-      const querySimplified = convertT2S(cleanedOriginal);
       const searchVariantsSet = new Set<string>();
 
       // 添加原始清理後的 query，保證原名也能被搜尋到
@@ -170,14 +168,14 @@ export async function searchFromApi(
       generateSearchVariants(cleanedOriginal).forEach((v) =>
         searchVariantsSet.add(v)
       );
-      if (queryTraditional !== cleanedOriginal)
-        searchVariantsSet.add(queryTraditional);
-      if (
-        querySimplified !== cleanedOriginal &&
-        querySimplified !== simplifiedQuery
-      ) {
-        searchVariantsSet.add(querySimplified);
-      }
+
+      // 為了保證 API 能夠精確匹配繁簡體，為所有已知變體添加繁簡版本
+      const allCurrentVariants = Array.from(searchVariantsSet);
+      allCurrentVariants.forEach((v) => {
+        searchVariantsSet.add(convertS2T(v));
+        searchVariantsSet.add(convertT2S(v));
+      });
+
       // 日文展間：將日文助詞 の 轉為「的」，讓「進擊の巨人」能搜到「進擊的巨人」
       if (
         cleanedOriginal.includes('の') ||
@@ -191,6 +189,8 @@ export async function searchFromApi(
           .replace(/と/g, '和');
         if (japaneseCleaned !== cleanedOriginal) {
           searchVariantsSet.add(japaneseCleaned);
+          searchVariantsSet.add(convertS2T(japaneseCleaned));
+          searchVariantsSet.add(convertT2S(japaneseCleaned));
         }
       }
       searchVariants = Array.from(searchVariantsSet);
