@@ -157,7 +157,8 @@ export async function searchFromApi(
       const simplifiedQuery = converter.simplized(cleanedOriginal);
       const searchVariantsSet = new Set<string>();
 
-      // 添加原始清理後的 query，保證原名也能被搜尋到
+      // 添加原始 query 優先（保留完整資訊），清理後的名字作為備用
+      searchVariantsSet.add(query);
       searchVariantsSet.add(cleanedOriginal);
       // 再從未清理的 query 提取變體（防止有些特殊別名需要完整 query）
       generateSearchVariants(query).forEach((v) => searchVariantsSet.add(v));
@@ -209,7 +210,8 @@ export async function searchFromApi(
             results: result.results,
             pageCount: result.pageCount,
           });
-          break;
+          // 收集最多 2 個變體後停止（精確+備用）
+          if (variantResults.length >= 2) break;
         }
       } catch {
         // continue

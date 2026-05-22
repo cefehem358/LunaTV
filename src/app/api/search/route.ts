@@ -43,9 +43,9 @@ export async function GET(request: NextRequest) {
 
   const searchVariantsSet = new Set<string>();
 
-  // 1. 原始清理後的名字與原始輸入名字
-  searchVariantsSet.add(cleanedOriginal);
+  // 1. 原始輸入優先（保留季數等精確資訊），清理後的名字作為備用
   searchVariantsSet.add(query);
+  searchVariantsSet.add(cleanedOriginal);
 
   // 2. 基於原始/清理/簡化名字提取變體
   generateSearchVariants(query).forEach((v) => searchVariantsSet.add(v));

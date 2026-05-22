@@ -93,6 +93,7 @@ function deduplicateResults(list: SearchResult[]): SearchResult[] {
 
 const DETAIL_CACHE_KEY = 'luna_detail_cache';
 const DETAIL_CACHE_LIMIT = 100;
+const DETAIL_CACHE_TTL = 60 * 60 * 1000; // 1 小時過期，防止 M3U8 連結失效
 
 function getCachedDetail(source: string, id: string): SearchResult | null {
   if (typeof window === 'undefined') return null;
@@ -105,6 +106,11 @@ function getCachedDetail(source: string, id: string): SearchResult | null {
     >;
     const entry = cache[`${source}_${id}`];
     if (entry && entry.detail) {
+      if (Date.now() - entry.timestamp > DETAIL_CACHE_TTL) {
+        delete cache[`${source}_${id}`];
+        localStorage.setItem(DETAIL_CACHE_KEY, JSON.stringify(cache));
+        return null;
+      }
       return entry.detail;
     }
   } catch (e) {
@@ -365,41 +371,33 @@ function PlayPageClient() {
   ): Promise<SearchResult> => {
     if (sources.length === 1) return sources[0];
 
-    // 將播放源均分為兩批，並發測速各批，避免一次性過多請求
-    const batchSize = Math.ceil(sources.length / 2);
+    // 全並行測速所有播放源，3 秒內出結果
     const allResults: Array<{
       source: SearchResult;
       testResult: { quality: string; loadSpeed: string; pingTime: number };
-    } | null> = [];
-
-    for (let start = 0; start < sources.length; start += batchSize) {
-      const batchSources = sources.slice(start, start + batchSize);
-      const batchResults = await Promise.all(
-        batchSources.map(async (source) => {
-          try {
-            // 檢查是否有第一集的播放地址
-            if (!source.episodes || source.episodes.length === 0) {
-              console.warn(`播放源 ${source.source_name} 沒有可用的播放地址`);
-              return null;
-            }
-
-            const episodeUrl =
-              source.episodes.length > 1
-                ? source.episodes[source.episodes.length - 1]
-                : source.episodes[0];
-            const testResult = await getVideoResolutionFromM3u8(episodeUrl);
-
-            return {
-              source,
-              testResult,
-            };
-          } catch (error) {
+    } | null> = await Promise.all(
+      sources.map(async (source) => {
+        try {
+          if (!source.episodes || source.episodes.length === 0) {
+            console.warn(`播放源 ${source.source_name} 沒有可用的播放地址`);
             return null;
           }
-        })
-      );
-      allResults.push(...batchResults);
-    }
+
+          const episodeUrl =
+            source.episodes.length > 1
+              ? source.episodes[source.episodes.length - 1]
+              : source.episodes[0];
+          const testResult = await getVideoResolutionFromM3u8(episodeUrl);
+
+          return {
+            source,
+            testResult,
+          };
+        } catch (error) {
+          return null;
+        }
+      })
+    );
 
     // 等待所有測速完成，包含成功和失敗的結果
     // 保存所有測速結果到 precomputedVideoInfo，供 EpisodeSelector 使用（包含錯誤結果）
@@ -914,29 +912,27 @@ function PlayPageClient() {
       try {
         let results = await doFetchAndFilter(query);
 
-        // 如果結果太少（少於8個），且我們有備用關鍵字，則進行擴展搜尋
+        // 如果結果太少，並行搜尋所有備用關鍵字
         if (results.length < 8) {
           const fallbackQueries = getFallbackQueries(query);
           console.warn(
-            `初始搜索結果數不足8個 (${results.length}個)，開始嘗試備用關鍵字:`,
+            `初始搜索結果數不足8個 (${results.length}個)，開始並行嘗試備用關鍵字:`,
             fallbackQueries
           );
 
-          for (const fbQuery of fallbackQueries) {
-            try {
-              const fbResults = await doFetchAndFilter(fbQuery);
-              if (fbResults.length > 0) {
-                console.log(
-                  `使用備用關鍵字 [${fbQuery}] 尋找到 ${fbResults.length} 個片源`
-                );
-                results = [...results, ...fbResults];
-                results = deduplicateResults(results);
-                if (results.length >= 8) {
-                  break;
-                }
-              }
-            } catch (e) {
-              console.error(`備用關鍵字 [${fbQuery}] 搜尋出錯:`, e);
+          const fbResultsArr = await Promise.all(
+            fallbackQueries.map((fbQuery) =>
+              doFetchAndFilter(fbQuery).catch((e) => {
+                console.error(`備用關鍵字 [${fbQuery}] 搜尋出錯:`, e);
+                return [];
+              })
+            )
+          );
+          for (const fbResults of fbResultsArr) {
+            if (fbResults.length > 0) {
+              results = [...results, ...fbResults];
+              results = deduplicateResults(results);
+              if (results.length >= 8) break;
             }
           }
         }
@@ -1116,12 +1112,12 @@ function PlayPageClient() {
         setLoadingStage('ready');
         setLoadingMessage('✨ 準備就緒，即將開始播放...');
 
-        // 短暫延遲讓用戶看到完成狀態
+        // 短暫延遲確保 UI 過渡流暢
         const loadingTimer = setTimeout(
           () => {
             setLoading(false);
           },
-          isDirectLoad ? 100 : 1000
+          isDirectLoad ? 50 : 300
         );
         loadingTimerRef.current = loadingTimer;
 
@@ -1269,6 +1265,17 @@ function PlayPageClient() {
           // 保存待恢復的播放進度，待播放器就緒後跳轉
           if (targetTime > 3) {
             resumeTimeRef.current = targetTime;
+          }
+        } else if (!cancelled) {
+          // fallback: 使用 URL 中的 episode 參數
+          const epParam = searchParams.get('episode');
+          if (epParam) {
+            const epNum = parseInt(epParam, 10);
+            if (!isNaN(epNum) && epNum > 0) {
+              const targetIndex = epNum - 1;
+              currentEpisodeIndexRef.current = targetIndex;
+              setCurrentEpisodeIndex(targetIndex);
+            }
           }
         }
       } catch (err) {

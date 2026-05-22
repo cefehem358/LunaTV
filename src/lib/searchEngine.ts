@@ -82,12 +82,15 @@ export function isFuzzyMatch(vodName: string, query: string): boolean {
     if (normName.includes(normQuery) || normQuery.includes(normName))
       return true;
 
-    // 長度不足時不啟用 LCS 比對（防止誤匹配）
-    if (normName.length >= 4 && normQuery.length >= 4) {
+    // LCS 模糊比對：短查詢降低門檻避免漏掉差一字的情況
+    if (normName.length >= 3 && normQuery.length >= 3) {
       const lcsLen = getLCS(normName, normQuery);
       const minLen = Math.min(normName.length, normQuery.length);
-      if (lcsLen >= 4 && minLen > 0 && lcsLen / minLen >= 0.5) {
-        return true;
+      // 較短的查詢使用較低門檻（LCS>=3, 60%覆蓋），長查詢保持嚴格（LCS>=4, 50%覆蓋）
+      if (minLen <= 6) {
+        if (lcsLen >= 3 && lcsLen / normQuery.length >= 0.6) return true;
+      } else {
+        if (lcsLen >= 4 && lcsLen / minLen >= 0.5) return true;
       }
     }
   }

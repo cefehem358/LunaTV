@@ -2,30 +2,7 @@ import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
-// 允许的图片域名白名单
-const ALLOWED_IMAGE_HOSTS = [
-  'doubanio.com',
-  'iqiyipic.com',
-  'iqiyi.com',
-  'qpic.cn',
-  'qq.com',
-  'ykimg.com',
-  'youku.com',
-  'imgdb.cn',
-  'pic.url.cn',
-  'sinaimg.cn',
-  'mgtv.com',
-  'biliapi.net',
-  'biliapi.com',
-  'hdslb.com',
-  'imgo.tv',
-  'sohu.com',
-  'itv.com',
-  'cntv.cn',
-  'cctvpic.com',
-];
-
-// 私有/内部 IP 地址段
+// SSRF 防護：私有/內部 IP 地址段
 const PRIVATE_IP_RANGES = [
   /^127\./,
   /^10\./,
@@ -48,39 +25,23 @@ function isValidImageUrl(urlStr: string): boolean {
       return false;
     }
 
-    // 检查是否在白名单中
-    const isAllowed = ALLOWED_IMAGE_HOSTS.some(
-      (host) => url.hostname === host || url.hostname.endsWith('.' + host)
-    );
-    if (isAllowed) return true;
-
-    // 检查是否指向私有/内部 IP
+    // SSRF 防護：阻擋私有/內部 IP
     const hostname = url.hostname;
     if (PRIVATE_IP_RANGES.some((r) => r.test(hostname))) {
       return false;
     }
 
-    // 不允许 localhost
+    // 阻擋 localhost
     if (hostname === 'localhost' || hostname === '0.0.0.0') {
       return false;
     }
 
-    // 基于 URL 特征判断是否为图片（有常见图片扩展名或看起来是 CDN 地址）
-    const path = url.pathname.toLowerCase();
-    const isImagePath = /\.(jpg|jpeg|png|gif|webp|bmp|svg|ico)(\?|$)/i.test(
-      path
-    );
-    const looksLikeImageHost =
-      /(img|image|pic|photo|poster|cover|cdn|static)/i.test(hostname);
-
-    // 允许图片路径或看起来像图片 CDN 的域名
-    return isImagePath || looksLikeImageHost;
+    return true;
   } catch {
     return false;
   }
 }
 
-// OrionTV 兼容接口
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const imageUrl = searchParams.get('url');
@@ -89,7 +50,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Missing image URL' }, { status: 400 });
   }
 
-  // SSRF 防护：验证 URL 合法性
+  // SSRF 防護：驗證 URL 合法性
   if (!isValidImageUrl(imageUrl)) {
     return NextResponse.json({ error: 'Invalid image URL' }, { status: 400 });
   }
@@ -100,6 +61,7 @@ export async function GET(request: Request) {
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
     };
 
+    // 針對常見圖片域名設定對應 Referer
     if (imageUrl.includes('doubanio.com')) {
       reqHeaders['Referer'] = 'https://movie.douban.com/';
     } else if (
@@ -118,7 +80,7 @@ export async function GET(request: Request) {
       try {
         const urlObj = new URL(imageUrl);
         reqHeaders['Referer'] = urlObj.origin;
-      } catch (e) {
+      } catch {
         // ignore
       }
     }
@@ -141,24 +103,22 @@ export async function GET(request: Request) {
       );
     }
 
-    // 創建響應頭
     const headers = new Headers();
     if (contentType) {
       headers.set('Content-Type', contentType);
     }
 
-    // 設置緩存頭（可選）
-    headers.set('Cache-Control', 'public, max-age=15720000, s-maxage=15720000'); // 緩存半年
+    // 緩存半年
+    headers.set('Cache-Control', 'public, max-age=15720000, s-maxage=15720000');
     headers.set('CDN-Cache-Control', 'public, s-maxage=15720000');
     headers.set('Vercel-CDN-Cache-Control', 'public, s-maxage=15720000');
     headers.set('Netlify-Vary', 'query');
 
-    // 直接返回圖片流
     return new Response(imageResponse.body, {
       status: 200,
       headers,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Error fetching image' },
       { status: 500 }
