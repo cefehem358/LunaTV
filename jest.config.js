@@ -16,6 +16,9 @@ const customJestConfig = {
 
   testEnvironment: 'jest-environment-jsdom',
 
+  modulePathIgnorePatterns: ['<rootDir>/scratch/'],
+  transformIgnorePatterns: ['/node_modules/(?!(switch-chinese)/)'],
+
   /**
    * Absolute imports and Module Path Aliases
    */
@@ -27,4 +30,8 @@ const customJestConfig = {
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-module.exports = createJestConfig(customJestConfig);
+module.exports = async () => {
+  const config = await createJestConfig(customJestConfig)();
+  config.transformIgnorePatterns = ['/node_modules/(?!(switch-chinese)/)'];
+  return config;
+};

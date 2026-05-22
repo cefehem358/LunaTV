@@ -6,6 +6,14 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.6.4',
+    date: '2026-05-22',
+    content: `
+- 徹底解決跨季與外傳片源誤配問題：修正播放頁面選擇影片來源時，videoTitle 被無季數標題覆寫，造成後續 fuzzy match 與 background search 片源混雜外傳片源的 Bug
+- 採用 initialVideoTitleRef 鎖定最初的含季數查詢劇名以利精準過濾
+    `.trim(),
+  },
+  {
     version: 'v1.6.3',
     date: '2026-05-22',
     content: `

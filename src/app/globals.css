@@ -87,7 +87,8 @@ html.dark body {
 }
 
 @media (max-width: 767px) {
-  html, body {
+  html,
+  body {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
@@ -171,12 +172,20 @@ html.dark .glass-panel {
 
 /* View Transitions */
 @keyframes slide-from-top {
-  from { clip-path: polygon(0 0, 100% 0, 100% 0, 0 0); }
-  to { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+  from {
+    clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+  }
+  to {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
 }
 @keyframes slide-from-bottom {
-  from { clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%); }
-  to { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+  from {
+    clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%);
+  }
+  to {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
 }
 ::view-transition-old(root),
 ::view-transition-new(root) {
@@ -207,7 +216,13 @@ div[data-media-provider] video {
 }
 
 @media (max-width: 768px) {
-  .art-control-pip { display: none !important; }
-  .art-control-fullscreenWeb { display: none !important; }
-  .art-control-volume { display: none !important; }
+  .art-control-pip {
+    display: none !important;
+  }
+  .art-control-fullscreenWeb {
+    display: none !important;
+  }
+  .art-control-volume {
+    display: none !important;
+  }
 }

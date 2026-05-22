@@ -11,7 +11,10 @@ export function deduplicateRequest<T>(
   }
 
   const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error(`deduplicateRequest timeout: ${key}`)), timeoutMs)
+    setTimeout(
+      () => reject(new Error(`deduplicateRequest timeout: ${key}`)),
+      timeoutMs
+    )
   );
 
   const promise = Promise.race([factory(), timeoutPromise]).finally(() => {

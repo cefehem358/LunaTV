@@ -136,7 +136,9 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
     const actualEpisodes = dynamicEpisodes;
     const actualYear = year;
     const actualQuery = query || title || '';
-    const actualSearchType = isAggregate
+    const actualSearchType = isBangumi
+      ? 'tv'
+      : isAggregate
       ? actualEpisodes && actualEpisodes === 1
         ? 'movie'
         : 'tv'

@@ -47,8 +47,16 @@ export function getAllItemTags(): Record<string, string[]> {
 }
 
 const TAG_COLORS = [
-  '#e50914', '#f97316', '#eab308', '#22c55e', '#06b6d4',
-  '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e', '#14b8a6',
+  '#e50914',
+  '#f97316',
+  '#eab308',
+  '#22c55e',
+  '#06b6d4',
+  '#3b82f6',
+  '#8b5cf6',
+  '#ec4899',
+  '#f43f5e',
+  '#14b8a6',
 ];
 
 export function getTagColor(name: string, tags: FavoriteTag[]): string {

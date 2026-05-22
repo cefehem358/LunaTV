@@ -1,17 +1,43 @@
 import { convertS2T } from './s2t';
 
 const COMMON_SUFFIXES = [
-  '動畫版', '電影版', '真人版',
-  '第一季', '第二季', '第三季', '第四季', '第五季',
-  '第六季', '第七季', '第八季', '第九季', '第十季',
-  'Season 1', 'Season 2', 'Season 3',
-  'Part 1', 'Part 2', 'Part 3',
-  '第1季', '第2季', '第3季',
-  '上部', '下部',
-  '終章', '前傳', '後傳',
-  '劇場版', 'OVA', 'OAD',
-  '國語', '英語', '日語', '粵語',
-  '完整版', '加長版', '導演剪輯版',
+  '動畫版',
+  '電影版',
+  '真人版',
+  '第一季',
+  '第二季',
+  '第三季',
+  '第四季',
+  '第五季',
+  '第六季',
+  '第七季',
+  '第八季',
+  '第九季',
+  '第十季',
+  'Season 1',
+  'Season 2',
+  'Season 3',
+  'Part 1',
+  'Part 2',
+  'Part 3',
+  '第1季',
+  '第2季',
+  '第3季',
+  '上部',
+  '下部',
+  '終章',
+  '前傳',
+  '後傳',
+  '劇場版',
+  'OVA',
+  'OAD',
+  '國語',
+  '英語',
+  '日語',
+  '粵語',
+  '完整版',
+  '加長版',
+  '導演剪輯版',
 ];
 
 function stripSuffix(title: string): string {
@@ -62,7 +88,9 @@ function jaroSimilarity(a: string, b: string): number {
     k++;
   }
   const jaro =
-    (matches / lenA + matches / lenB + (matches - transpositions / 2) / matches) /
+    (matches / lenA +
+      matches / lenB +
+      (matches - transpositions / 2) / matches) /
     3;
   const prefixLen = Math.min(4, Math.min(lenA, lenB));
   let prefix = 0;

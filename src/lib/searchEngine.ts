@@ -1,12 +1,37 @@
 /**
- * LunaTV 智慧搜尋與繁簡容錯核心引擎 - v1.6.3
+ * LunaTV 智慧搜尋與繁簡容錯核心引擎 - v1.6.4
  *
  * isFuzzyMatch 使用 LCS（最長公共子字串）嚴格比對：
  *   - 兩個字串必須互包含（substring），或
  *   - LCS 長度 >= 4，且覆蓋較短字串的 50% 以上
  * 以上均不滿足則視為不匹配，根治「點 A 搜出 B」問題。
  */
+import { generateSearchVariants } from '@/lib/chinese';
+
 import { convertT2S } from './s2t';
+
+const SPECIAL_TITLE_KEYWORDS = [
+  '特別篇',
+  '特别篇',
+  '外傳',
+  '外传',
+  '番外篇',
+  '番外',
+  '劇場版',
+  '剧场版',
+  '電影',
+  '电影',
+  '總集篇',
+  '总集篇',
+  '日記',
+  '日记',
+  '紅蓮之絆',
+  '红莲之绊',
+  '蒼海之淚',
+  '苍海之泪',
+  'ova',
+  'oad',
+];
 
 /**
  * 計算兩個字串的最長公共子字串長度（Longest Common Substring）
@@ -63,7 +88,7 @@ export function extractSeasonNumber(text: string): number | null {
   if (!text) return null;
 
   // 1. 中文季數：第X季、第X期、第X部、第X話
-  const cnMatch = text.match(/第([一二三四五六七八九十\d]+)[季期部話]/);
+  const cnMatch = text.match(/第([一二三四五六七八九十\d]+)[季期部話话集]/);
   if (cnMatch) {
     const num = cnMatch[1];
     if (/^\d+$/.test(num)) return parseInt(num, 10);
@@ -81,6 +106,31 @@ export function extractSeasonNumber(text: string): number | null {
   // 4. Part 數字
   const partMatch = text.match(/Part\s*(\d+)/i);
   if (partMatch) return parseInt(partMatch[1], 10);
+
+  // 5. 羅馬數字季數：II, III, IV, V, VI, VII, VIII, IX, X
+  const romanMatch = text.match(/\s+(II|III|IV|V|VI|VII|VIII|IX|X)\b/i);
+  if (romanMatch) {
+    const r = romanMatch[1].toUpperCase();
+    const map: Record<string, number> = {
+      II: 2,
+      III: 3,
+      IV: 4,
+      V: 5,
+      VI: 6,
+      VII: 7,
+      VIII: 8,
+      IX: 9,
+      X: 10,
+    };
+    return map[r] || null;
+  }
+
+  // 6. 尾部空格/橫線 + 數字 (例如: "關於我轉生變成史萊姆這檔事 4" 或 "關於我轉生變成史萊姆這檔事-4")
+  const trailingNumMatch = text.match(/[\s\-_](\d+)(?:$|[\s\-_【（(])/);
+  if (trailingNumMatch) {
+    const num = parseInt(trailingNumMatch[1], 10);
+    if (num > 1 && num < 20) return num;
+  }
 
   return null;
 }
@@ -101,6 +151,83 @@ function normalize(text: string): string {
   );
 }
 
+function stripSeasonMarkers(text: string): string {
+  return text
+    .replace(/第[一二三四五六七八九十\d]+[季期部話话集]/g, '')
+    .replace(/Season\s*\d+/gi, '')
+    .replace(/\bS\d{1,2}\b/gi, '')
+    .replace(/\s+Part\s*\d+/gi, '')
+    .replace(/\s+(II|III|IV|V|VI|VII|VIII|IX|X)\b/gi, '')
+    .replace(/[\s\-_](\d+)(?:$|[\s\-_【（(])/g, '')
+    .trim();
+}
+
+function cleanComparableTitle(text: string): string {
+  return normalize(stripSeasonMarkers(text))
+    .replace(/(的故事|動畫版|动画版|真人版|劇場版|剧场版|電影版|电影版)/gi, '')
+    .replace(
+      /(雙語|双语|國語|国语|日語|日语|中字|字幕|無修|无修|修復|修复|未刪減|未删减|1080p|720p|4k|hevc|x264|x265|aac|uncut|bdrip|webrip|櫻花動漫|樱花动漫|藍光|蓝光|bd)/gi,
+      ''
+    )
+    .replace(/[\s\-_,.:：，。！？【】[\]（）()《》]/g, '')
+    .trim();
+}
+
+function getSpecialKeywords(text: string): string[] {
+  const normalized = normalize(text);
+  return SPECIAL_TITLE_KEYWORDS.filter((keyword) =>
+    normalized.includes(normalize(keyword))
+  );
+}
+
+export function getTitleMatchScore(vodName: string, query: string): number {
+  if (!vodName || !query || !isFuzzyMatch(vodName, query)) return 0;
+
+  const normName = normalize(vodName);
+  const normQuery = normalize(query);
+  const cName = cleanComparableTitle(vodName);
+  const cQuery = cleanComparableTitle(query);
+  const querySeason = extractSeasonNumber(query);
+  const nameSeason = extractSeasonNumber(vodName);
+
+  let score = 100;
+
+  if (normName === normQuery) score += 500;
+  if (cName && cQuery && cName === cQuery) score += 350;
+  if (normName.includes(normQuery)) score += 160;
+  if (normQuery.includes(normName)) score += 120;
+  if (cName.includes(cQuery)) score += 120;
+  if (cQuery.includes(cName)) score += 80;
+
+  if (querySeason !== null && nameSeason === querySeason) score += 260;
+  if (querySeason === null && nameSeason === null) score += 30;
+
+  const candidateSpecials = getSpecialKeywords(vodName);
+  const querySpecials = getSpecialKeywords(query);
+  const hasUnexpectedSpecial = candidateSpecials.some(
+    (keyword) => !querySpecials.includes(keyword)
+  );
+  if (hasUnexpectedSpecial) score -= querySeason !== null ? 240 : 120;
+
+  const lcsLen = getLCS(cName, cQuery);
+  const maxLen = Math.max(cName.length, cQuery.length);
+  if (maxLen > 0) score += Math.round((lcsLen / maxLen) * 100);
+
+  score -= Math.abs(cName.length - cQuery.length) * 6;
+
+  return Math.max(1, score);
+}
+
+export function getBestTitleMatchScore(
+  vodName: string,
+  queries: Array<string | undefined | null>
+): number {
+  return queries.reduce((best, query) => {
+    if (!query) return best;
+    return Math.max(best, getTitleMatchScore(vodName, query));
+  }, 0);
+}
+
 /**
  * 判斷 vodName 是否與 query 匹配。
  *
@@ -109,8 +236,6 @@ function normalize(text: string): string {
  * 2. LCS >= 4 且 LCS / min(len(vodName), len(query)) >= 0.5
  *    （且兩個字串長度都必須 >= 4 才啟用 LCS 比對，防止短字串誤觸）
  */
-import { generateSearchVariants } from '@/lib/chinese';
-
 export function isFuzzyMatch(vodName: string, query: string): boolean {
   if (!vodName || !query) return false;
 
@@ -123,6 +248,45 @@ export function isFuzzyMatch(vodName: string, query: string): boolean {
     querySeason !== nameSeason
   ) {
     return false;
+  }
+
+  // 建立乾淨的比較用標題（去除所有季數標記與常見中繼資料、繁簡轉換、去除空白）
+  const cQuery = cleanComparableTitle(query);
+  const cName = cleanComparableTitle(vodName);
+
+  // 1. 如果查詢有明確季數，但結果沒有季數
+  if (querySeason !== null && nameSeason === null) {
+    // 如果是第二季（含）以上，但結果完全無季數標記，直接拒絕
+    if (querySeason > 1) {
+      return false;
+    }
+    // 如果是第一季，且結果沒有季數標記：為防誤配「外傳/特別篇」，結果乾淨標題長度不能比查詢長度多出 2 個字元以上
+    if (cName.length > cQuery.length + 2) {
+      return false;
+    }
+  }
+
+  // 2. 如果結果有明確季數，但查詢沒有季數（例如查詢是特定外傳，但結果是正片某一季）
+  if (querySeason === null && nameSeason !== null) {
+    if (cQuery.length > cName.length + 2) {
+      return false;
+    }
+  }
+
+  // 3. 如果兩者都無季數標記：
+  if (querySeason === null && nameSeason === null) {
+    // 避免外傳/正片誤配（例如「蒼海之淚篇」與「紅蓮之絆篇」）
+    if (cQuery.length > cName.length + 2) {
+      return false;
+    }
+    // 如果不互為子字串，且不匹配字元數過多（unmatched > 3），直接拒絕
+    if (!cName.includes(cQuery) && !cQuery.includes(cName)) {
+      const lcsLen = getLCS(cName, cQuery);
+      const maxLen = Math.max(cName.length, cQuery.length);
+      if (maxLen - lcsLen > 3) {
+        return false;
+      }
+    }
   }
 
   const normName = normalize(vodName);
@@ -186,5 +350,5 @@ export function getCoreTokens(queryStr: string): string[] {
   return [cleanStr.slice(0, 2), cleanStr.slice(-2)];
 }
 
-export const VERSION = 'v1.6.3';
+export const VERSION = 'v1.6.4';
 export const UPDATE_DATE = '2026-05-22';

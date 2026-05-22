@@ -34,7 +34,9 @@ function SettingToggle({
   return (
     <div className='flex items-start justify-between gap-4 py-4'>
       <div className='flex-1 min-w-0'>
-        <p className='text-sm font-bold text-zinc-900 dark:text-white'>{label}</p>
+        <p className='text-sm font-bold text-zinc-900 dark:text-white'>
+          {label}
+        </p>
         <p className='text-xs text-zinc-500 mt-1 leading-relaxed'>
           {description}
         </p>
@@ -193,7 +195,9 @@ export default function SettingsPage() {
                     <div className='w-2 h-2 rounded-full bg-[#ff3e6c]' />
                   )}
                 </div>
-                <span className='text-sm text-zinc-700 dark:text-zinc-200'>{opt.label}</span>
+                <span className='text-sm text-zinc-700 dark:text-zinc-200'>
+                  {opt.label}
+                </span>
               </label>
             ))}
           </div>
@@ -257,7 +261,9 @@ export default function SettingsPage() {
                     <div className='w-2 h-2 rounded-full bg-[#ff3e6c]' />
                   )}
                 </div>
-                <span className='text-sm text-zinc-700 dark:text-zinc-200'>{opt.label}</span>
+                <span className='text-sm text-zinc-700 dark:text-zinc-200'>
+                  {opt.label}
+                </span>
               </label>
             ))}
           </div>

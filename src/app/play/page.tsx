@@ -21,7 +21,11 @@ import {
   saveSkipConfig,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
-import { extractSeasonNumber, isFuzzyMatch } from '@/lib/searchEngine';
+import {
+  extractSeasonNumber,
+  getBestTitleMatchScore,
+  isFuzzyMatch,
+} from '@/lib/searchEngine';
 import { SearchResult } from '@/lib/types';
 import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
 
@@ -104,6 +108,24 @@ function deduplicateResults(list: SearchResult[]): SearchResult[] {
     seen.add(key);
     return true;
   });
+}
+
+function getMatchQueries(
+  title: string,
+  searchTitle?: string
+): Array<string | undefined> {
+  return Array.from(new Set([title, searchTitle].filter(Boolean))) as string[];
+}
+
+function sortByTitleMatch(
+  list: SearchResult[],
+  queries: Array<string | undefined | null>
+): SearchResult[] {
+  return [...list].sort(
+    (a, b) =>
+      getBestTitleMatchScore(b.title, queries) -
+      getBestTitleMatchScore(a.title, queries)
+  );
 }
 
 const DETAIL_CACHE_KEY = 'luna_detail_cache';
@@ -291,6 +313,18 @@ function PlayPageClient() {
   const currentSourceRef = useRef(currentSource);
   const currentIdRef = useRef(currentId);
   const videoTitleRef = useRef(videoTitle);
+  const initialVideoTitleRef = useRef<string>(
+    (() => {
+      const val = searchParams.get('title');
+      return !val || val === 'undefined' || val === 'null' ? '' : val;
+    })()
+  );
+  const initialVideoYearRef = useRef<string>(
+    (() => {
+      const val = searchParams.get('year');
+      return !val || val === 'undefined' || val === 'null' ? '' : val;
+    })()
+  );
   const videoYearRef = useRef(videoYear);
   const detailRef = useRef<SearchResult | null>(detail);
   const currentEpisodeIndexRef = useRef(currentEpisodeIndex);
@@ -474,10 +508,16 @@ function PlayPageClient() {
     const minPing = validPings.length > 0 ? Math.min(...validPings) : 50;
     const maxPing = validPings.length > 0 ? Math.max(...validPings) : 1000;
 
-    // 計算每個結果的評分
+    const matchQueries = getMatchQueries(
+      initialVideoTitleRef.current,
+      searchTitle
+    );
+
+    // 計算每個結果的評分，標題精準度優先於測速，避免錯誤片源因速度快被選中。
     const resultsWithScore = successfulResults.map((result) => ({
       ...result,
-      score: calculateSourceScore(
+      titleScore: getBestTitleMatchScore(result.source.title, matchQueries),
+      sourceScore: calculateSourceScore(
         result.testResult,
         maxSpeed,
         minPing,
@@ -485,21 +525,28 @@ function PlayPageClient() {
       ),
     }));
 
-    // 按綜合評分排序，選擇最佳播放源
-    resultsWithScore.sort((a, b) => b.score - a.score);
+    const maxTitleScore = Math.max(
+      ...resultsWithScore.map((result) => result.titleScore)
+    );
+    const titleSafeResults = resultsWithScore.filter(
+      (result) => result.titleScore >= maxTitleScore - 80
+    );
+
+    // 按標題精準度分組後，再按綜合測速評分排序，選擇最佳播放源
+    titleSafeResults.sort((a, b) => b.sourceScore - a.sourceScore);
 
     console.log('播放源評分排序結果:');
-    resultsWithScore.forEach((result, index) => {
+    titleSafeResults.forEach((result, index) => {
       console.log(
-        `${index + 1}. ${
-          result.source.source_name
-        } - 評分: ${result.score.toFixed(2)} (${result.testResult.quality}, ${
-          result.testResult.loadSpeed
-        }, ${result.testResult.pingTime}ms)`
+        `${index + 1}. ${result.source.source_name} - 標題: ${
+          result.titleScore
+        }, 測速: ${result.sourceScore.toFixed(2)} (${
+          result.testResult.quality
+        }, ${result.testResult.loadSpeed}, ${result.testResult.pingTime}ms)`
       );
     });
 
-    return resultsWithScore[0].source;
+    return titleSafeResults[0]?.source || resultsWithScore[0].source;
   };
 
   // 計算播放源綜合評分
@@ -861,68 +908,111 @@ function PlayPageClient() {
         }
         const data = await response.json();
 
+        const matchQueries = getMatchQueries(
+          initialVideoTitleRef.current,
+          searchTitle
+        );
+
         // 處理搜索結果，根據規則過濾（加入繁簡轉換與模糊匹配）
-        return (data.results || []).filter((result: SearchResult) => {
-          const titlesMatch =
-            isFuzzyMatch(result.title, videoTitleRef.current) ||
-            (searchTitle ? isFuzzyMatch(result.title, searchTitle) : false);
+        const filteredResults = (data.results || []).filter(
+          (result: SearchResult) => {
+            const titlesMatch =
+              getBestTitleMatchScore(result.title, matchQueries) > 0;
 
-          // 比較年份 (放寬匹配，如年份相差不超過1年)
-          let yearsMatch = true;
-          if (videoYearRef.current && result.year) {
-            const vYear = videoYearRef.current.replace(/\D/g, '');
-            const rYear = result.year.replace(/\D/g, '');
-            if (vYear && rYear && rYear !== '0') {
-              const vNum = parseInt(vYear, 10);
-              const rNum = parseInt(rYear, 10);
-              if (!isNaN(vNum) && !isNaN(rNum)) {
-                yearsMatch = Math.abs(vNum - rNum) <= 1;
+            // 比較年份 (使用鎖定的 initialVideoYearRef 以防被覆蓋，且放寬匹配，如年份相差不超過1年)
+            let yearsMatch = true;
+            const targetYear =
+              initialVideoYearRef.current || videoYearRef.current;
+            if (targetYear && result.year) {
+              const vYear = targetYear.replace(/\D/g, '');
+              const rYear = result.year.replace(/\D/g, '');
+              if (vYear && rYear && rYear !== '0') {
+                const vNum = parseInt(vYear, 10);
+                const rNum = parseInt(rYear, 10);
+                if (!isNaN(vNum) && !isNaN(rNum)) {
+                  yearsMatch = Math.abs(vNum - rNum) <= 1;
+                }
               }
             }
-          }
 
-          // 類型匹配
-          let typeMatch = true;
-          if (searchType) {
-            const typeName = (result.type_name || '').toLowerCase();
-            const className = (result.class || '').toLowerCase();
-            if (searchType === 'tv') {
-              typeMatch =
-                typeName.includes('剧') ||
-                typeName.includes('季') ||
-                typeName.includes('综艺') ||
-                typeName.includes('动漫') ||
-                className.includes('剧') ||
-                className.includes('季') ||
-                className.includes('综艺') ||
-                className.includes('动漫') ||
-                result.episodes.length > 1;
-            } else if (searchType === 'movie') {
-              const isMovieKeyword =
-                typeName.includes('电影') ||
-                typeName.includes('片') ||
-                typeName.includes('影') ||
-                className.includes('电影') ||
-                className.includes('片') ||
-                className.includes('影');
-              const isTvKeyword =
-                typeName.includes('剧') ||
-                typeName.includes('季') ||
-                className.includes('剧') ||
-                className.includes('季');
+            // 季數過濾
+            let seasonMatch = true;
+            const targetSeason =
+              extractSeasonNumber(searchTitle) ||
+              extractSeasonNumber(initialVideoTitleRef.current);
+            const candidateSeason = extractSeasonNumber(result.title);
 
-              if (isMovieKeyword && !isTvKeyword) {
-                typeMatch = true;
-              } else if (isTvKeyword) {
-                typeMatch = false;
-              } else {
-                typeMatch = result.episodes.length === 1;
+            if (targetSeason !== null) {
+              if (
+                candidateSeason !== null &&
+                candidateSeason !== targetSeason
+              ) {
+                seasonMatch = false;
+              } else if (candidateSeason === null && targetSeason > 1) {
+                // 目標是第二季及以上，但候選源沒有季數標記，拒絕
+                seasonMatch = false;
               }
             }
-          }
 
-          return titlesMatch && yearsMatch && typeMatch;
-        });
+            // 類型匹配
+            let typeMatch = true;
+            if (searchType) {
+              const typeName = (result.type_name || '').toLowerCase();
+              const className = (result.class || '').toLowerCase();
+              const sourceName = (result.source_name || '').toLowerCase();
+              const typeText = `${typeName} ${className} ${sourceName}`;
+              if (searchType === 'tv') {
+                const isMovieKeyword =
+                  typeText.includes('电影') ||
+                  typeText.includes('電影') ||
+                  typeText.includes('影院') ||
+                  typeText.includes('片库') ||
+                  typeText.includes('片庫');
+                const isTvKeyword =
+                  typeText.includes('剧') ||
+                  typeText.includes('劇') ||
+                  typeText.includes('季') ||
+                  typeText.includes('综艺') ||
+                  typeText.includes('綜藝') ||
+                  typeText.includes('动漫') ||
+                  typeText.includes('動漫') ||
+                  typeText.includes('动画') ||
+                  typeText.includes('動畫') ||
+                  typeText.includes('番');
+                typeMatch =
+                  result.episodes.length > 1 ||
+                  (isTvKeyword && !isMovieKeyword);
+              } else if (searchType === 'movie') {
+                const isMovieKeyword =
+                  typeText.includes('电影') ||
+                  typeText.includes('電影') ||
+                  typeText.includes('片') ||
+                  typeText.includes('影');
+                const isTvKeyword =
+                  typeText.includes('剧') ||
+                  typeText.includes('劇') ||
+                  typeText.includes('季') ||
+                  typeText.includes('动漫') ||
+                  typeText.includes('動漫') ||
+                  typeText.includes('动画') ||
+                  typeText.includes('動畫') ||
+                  typeText.includes('番');
+
+                if (isMovieKeyword && !isTvKeyword) {
+                  typeMatch = true;
+                } else if (isTvKeyword) {
+                  typeMatch = false;
+                } else {
+                  typeMatch = result.episodes.length === 1;
+                }
+              }
+            }
+
+            return titlesMatch && yearsMatch && typeMatch && seasonMatch;
+          }
+        );
+
+        return sortByTitleMatch(filteredResults, matchQueries);
       };
 
       try {
@@ -953,7 +1043,10 @@ function PlayPageClient() {
           }
         }
 
-        return results;
+        return sortByTitleMatch(
+          results,
+          getMatchQueries(initialVideoTitleRef.current, searchTitle)
+        );
       } catch (err) {
         console.error('搜索失敗:', err);
         return [];
@@ -1052,7 +1145,7 @@ function PlayPageClient() {
             if (currentDetailList.length > 0) {
               const detail = currentDetailList[0];
               if (
-                isFuzzyMatch(detail.title, videoTitleRef.current) ||
+                isFuzzyMatch(detail.title, initialVideoTitleRef.current) ||
                 (searchTitle ? isFuzzyMatch(detail.title, searchTitle) : false)
               ) {
                 sourcesInfo = [...currentDetailList, ...sourcesInfo];
@@ -1208,7 +1301,10 @@ function PlayPageClient() {
                 )
               ) {
                 if (
-                  isFuzzyMatch(currentDetail.title, videoTitleRef.current) ||
+                  isFuzzyMatch(
+                    currentDetail.title,
+                    initialVideoTitleRef.current
+                  ) ||
                   (searchTitle
                     ? isFuzzyMatch(currentDetail.title, searchTitle)
                     : false)
