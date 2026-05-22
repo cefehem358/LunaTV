@@ -652,25 +652,24 @@ export async function deletePlayRecord(
 ): Promise<void> {
   const key = generateStorageKey(source, id);
 
-  // 数据库存储模式：乐观更新策略（包括 redis 和 upstash）
+  // 数据库存储模式
   if (STORAGE_TYPE !== 'localstorage') {
-    // 立即更新缓存
-    const cachedRecords = cacheManager.getCachedPlayRecords() || {};
-    delete cachedRecords[key];
-    cacheManager.cachePlayRecords(cachedRecords);
-
-    // 触发立即更新事件
-    window.dispatchEvent(
-      new CustomEvent('playRecordsUpdated', {
-        detail: cachedRecords,
-      })
-    );
-
     // 异步同步到数据库
     try {
       await fetchWithAuth(`/api/playrecords?key=${encodeURIComponent(key)}`, {
         method: 'DELETE',
       });
+
+      // 删除成功后更新缓存并触发事件，避免竞态导致读取旧数据
+      const cachedRecords = cacheManager.getCachedPlayRecords() || {};
+      delete cachedRecords[key];
+      cacheManager.cachePlayRecords(cachedRecords);
+
+      window.dispatchEvent(
+        new CustomEvent('playRecordsUpdated', {
+          detail: cachedRecords,
+        })
+      );
     } catch (err) {
       await handleDatabaseOperationFailure('playRecords', err);
       triggerGlobalError('删除播放记录失败');
@@ -1172,24 +1171,22 @@ export async function isFavorited(
  * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
  */
 export async function clearAllPlayRecords(): Promise<void> {
-  // 数据库存储模式：乐观更新策略（包括 redis 和 upstash）
+  // 数据库存储模式
   if (STORAGE_TYPE !== 'localstorage') {
-    // 立即更新缓存
-    cacheManager.cachePlayRecords({});
-
-    // 触发立即更新事件
-    window.dispatchEvent(
-      new CustomEvent('playRecordsUpdated', {
-        detail: {},
-      })
-    );
-
     // 异步同步到数据库
     try {
       await fetchWithAuth(`/api/playrecords`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
       });
+
+      // 删除成功后更新缓存并触发事件，避免竞态导致读取旧数据
+      cacheManager.cachePlayRecords({});
+      window.dispatchEvent(
+        new CustomEvent('playRecordsUpdated', {
+          detail: {},
+        })
+      );
     } catch (err) {
       await handleDatabaseOperationFailure('playRecords', err);
       triggerGlobalError('清空播放记录失败');

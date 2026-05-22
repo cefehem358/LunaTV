@@ -153,41 +153,51 @@ export async function searchFromApi(
     if (!searchVariants) {
       const stcasc = (await import('switch-chinese')).default;
       const converter = stcasc();
-      const simplifiedQuery = converter.simplized(query);
-      const queryTraditional = convertS2T(query);
-      const querySimplified = convertT2S(query);
+      const cleanedOriginal = cleanQueryForApi(query);
+      const simplifiedQuery = converter.simplized(cleanedOriginal);
+      const queryTraditional = convertS2T(cleanedOriginal);
+      const querySimplified = convertT2S(cleanedOriginal);
       const searchVariantsSet = new Set<string>();
+
+      // 添加原始清理後的 query，保證原名也能被搜尋到
+      searchVariantsSet.add(cleanedOriginal);
+      // 再從未清理的 query 提取變體（防止有些特殊別名需要完整 query）
+      generateSearchVariants(query).forEach((v) => searchVariantsSet.add(v));
+
       generateSearchVariants(simplifiedQuery).forEach((v) =>
         searchVariantsSet.add(v)
       );
-      generateSearchVariants(query).forEach((v) => searchVariantsSet.add(v));
-      if (queryTraditional !== query) searchVariantsSet.add(queryTraditional);
-      if (querySimplified !== query && querySimplified !== simplifiedQuery) {
+      generateSearchVariants(cleanedOriginal).forEach((v) =>
+        searchVariantsSet.add(v)
+      );
+      if (queryTraditional !== cleanedOriginal)
+        searchVariantsSet.add(queryTraditional);
+      if (
+        querySimplified !== cleanedOriginal &&
+        querySimplified !== simplifiedQuery
+      ) {
         searchVariantsSet.add(querySimplified);
       }
       // 日文展間：將日文助詞 の 轉為「的」，讓「進擊の巨人」能搜到「進擊的巨人」
       if (
-        query.includes('の') ||
-        query.includes('を') ||
-        query.includes('と')
+        cleanedOriginal.includes('の') ||
+        cleanedOriginal.includes('を') ||
+        cleanedOriginal.includes('と')
       ) {
-        const japaneseCleaned = query
+        const japaneseCleaned = cleanedOriginal
           .replace(/の/g, '的')
           .replace(/は/g, '')
           .replace(/を/g, '')
           .replace(/と/g, '和');
-        if (japaneseCleaned !== query) {
+        if (japaneseCleaned !== cleanedOriginal) {
           searchVariantsSet.add(japaneseCleaned);
         }
       }
       searchVariants = Array.from(searchVariantsSet);
     }
     const variantPromises = searchVariants.map(async (variant, index) => {
-      const cleanedVariant = cleanQueryForApi(variant);
       const apiUrl =
-        apiBaseUrl +
-        API_CONFIG.search.path +
-        encodeURIComponent(cleanedVariant);
+        apiBaseUrl + API_CONFIG.search.path + encodeURIComponent(variant);
       try {
         const result = await searchWithCache(apiSite, variant, 1, apiUrl, 8000);
         return {
@@ -203,11 +213,15 @@ export async function searchFromApi(
     const variantResults = await Promise.all(variantPromises);
     const seenIds = new Set<string>();
     const results: SearchResult[] = [];
-    let pageCountFromFirst = 0;
+    let pageCountToFetch = 0;
+    let successfulVariant = query;
     variantResults.sort((a, b) => a.index - b.index);
-    for (const { index, results: variantData, pageCount } of variantResults) {
+    for (const { results: variantData, pageCount, variant } of variantResults) {
       if (variantData.length > 0) {
-        if (index === 0 && pageCount) pageCountFromFirst = pageCount;
+        if (!pageCountToFetch && pageCount) {
+          pageCountToFetch = pageCount;
+          successfulVariant = variant;
+        }
         variantData.forEach((result) => {
           const uniqueKey = `${result.source}_${result.id}`;
           if (!seenIds.has(uniqueKey)) {
@@ -221,7 +235,7 @@ export async function searchFromApi(
     if (results.length === 0) return [];
     const config = await getConfig();
     const MAX_SEARCH_PAGES: number = config.SiteConfig.SearchDownstreamMaxPage;
-    const pageCount = pageCountFromFirst || 1;
+    const pageCount = pageCountToFetch || 1;
     const pagesToFetch = Math.min(pageCount - 1, MAX_SEARCH_PAGES - 1);
     if (pagesToFetch > 0) {
       const additionalPagePromises = [];
@@ -229,12 +243,12 @@ export async function searchFromApi(
         const pageUrl =
           apiBaseUrl +
           API_CONFIG.search.pagePath
-            .replace('{query}', encodeURIComponent(cleanQueryForApi(query)))
+            .replace('{query}', encodeURIComponent(successfulVariant))
             .replace('{page}', page.toString());
         const pagePromise = (async () => {
           const pageResult = await searchWithCache(
             apiSite,
-            query,
+            successfulVariant,
             page,
             pageUrl,
             8000
