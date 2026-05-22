@@ -785,10 +785,14 @@ function NetflixBangumiRow({
                 const animeYear = anime.air_date
                   ? anime.air_date.split('-')[0]
                   : '';
+                const queryParam =
+                  anime.name && anime.name !== anime.name_cn
+                    ? `&stitle=${encodeURIComponent(anime.name)}`
+                    : '';
                 router.push(
                   `/play?title=${encodeURIComponent(animeTitle)}${
                     animeYear ? `&year=${animeYear}` : ''
-                  }&stype=tv&prefer=true`
+                  }&stype=tv&prefer=true${queryParam}`
                 );
               }}
               className='group relative flex-shrink-0 w-44 aspect-[2/3] rounded-xl overflow-hidden cursor-pointer text-left'

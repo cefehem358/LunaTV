@@ -6,6 +6,16 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.5.5',
+    date: '2026-05-22',
+    content: `
+- 提升動漫番劇搜尋片源完整度，雙語並行檢索原始名稱與譯名，自適應多重備用關鍵字回退擴展，解決少數片源漏配問題
+- 重新設計播放源優選算法，採用絕對性能閾值評分，避免被極端高網速片源拉偏
+- 新增 Watchable 1080P/2K/4K 畫質特權加成 (+50分)，優先推薦高網速低延遲的高清影片
+- 版本號提升至 1.5.5
+    `.trim(),
+  },
+  {
     version: 'v1.5.4',
     date: '2026-05-22',
     content: `

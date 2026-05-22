@@ -301,6 +301,7 @@ function DoubanPageClient() {
             list: weekdayData.items.map((item) => ({
               id: item.id?.toString() || '',
               title: item.name_cn || item.name,
+              original_title: item.name,
               poster:
                 item.images.large ||
                 item.images.common ||
@@ -788,6 +789,7 @@ function DoubanPageClient() {
                   <VideoCard
                     from='douban'
                     title={item.title}
+                    query={item.original_title}
                     poster={item.poster}
                     douban_id={Number(item.id)}
                     rate={item.rate}

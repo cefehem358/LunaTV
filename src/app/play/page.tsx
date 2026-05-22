@@ -81,6 +81,16 @@ function getFallbackQueries(query: string): string[] {
   return Array.from(new Set(fallbacks)).filter((q) => q.length >= 2);
 }
 
+function deduplicateResults(list: SearchResult[]): SearchResult[] {
+  const seen = new Set<string>();
+  return list.filter((item) => {
+    const key = `${item.source}_${item.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function PlayPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -425,9 +435,9 @@ function PlayPageClient() {
       loadSpeed: string;
       pingTime: number;
     },
-    maxSpeed: number,
-    minPing: number,
-    maxPing: number
+    _maxSpeed: number,
+    _minPing: number,
+    _maxPing: number
   ): number => {
     let score = 0;
 
@@ -452,38 +462,51 @@ function PlayPageClient() {
     })();
     score += qualityScore * 0.4;
 
-    // 下載速度評分 (40% 權重) - 基於最大速度線性映射
-    const speedScore = (() => {
-      const speedStr = testResult.loadSpeed;
-      if (speedStr === '未知' || speedStr === '測量中...') return 30;
-
-      // 解析速度值
+    // 解析速度值 (以 KB/s 為單位)
+    let speedKBps = 0;
+    const speedStr = testResult.loadSpeed;
+    if (speedStr && speedStr !== '未知' && speedStr !== '測量中...') {
       const match = speedStr.match(/^([\d.]+)\s*(KB\/s|MB\/s)$/);
-      if (!match) return 30;
+      if (match) {
+        const value = parseFloat(match[1]);
+        const unit = match[2];
+        speedKBps = unit === 'MB/s' ? value * 1024 : value;
+      }
+    }
 
-      const value = parseFloat(match[1]);
-      const unit = match[2];
-      const speedKBps = unit === 'MB/s' ? value * 1024 : value;
-
-      // 基於最大速度線性映射，最高100分
-      const speedRatio = speedKBps / maxSpeed;
-      return Math.min(100, Math.max(0, speedRatio * 100));
+    // 下載速度評分 (40% 權重) - 採用絕對性能閾值分級評分
+    const speedScore = (() => {
+      if (speedStr === '未知' || speedStr === '測量中...') return 30;
+      if (speedKBps >= 5 * 1024) return 100; // >= 5MB/s
+      if (speedKBps >= 3 * 1024) return 95; // >= 3MB/s
+      if (speedKBps >= 2 * 1024) return 90; // >= 2MB/s
+      if (speedKBps >= 1 * 1024) return 80; // >= 1MB/s
+      if (speedKBps >= 500) return 65; // >= 500KB/s
+      if (speedKBps >= 200) return 40; // >= 200KB/s
+      if (speedKBps > 0) return 20;
+      return 10; // 0 KB/s
     })();
     score += speedScore * 0.4;
 
-    // 網路延遲評分 (20% 權重) - 基於延遲範圍線性映射
+    // 網路延遲評分 (20% 權重) - 採用絕對延遲分級評分
     const pingScore = (() => {
       const ping = testResult.pingTime;
-      if (ping <= 0) return 0; // 無效延遲給默認分
-
-      // 如果所有延遲都相同，給滿分
-      if (maxPing === minPing) return 100;
-
-      // 線性映射：最低延遲=100分，最高延遲=0分
-      const pingRatio = (maxPing - ping) / (maxPing - minPing);
-      return Math.min(100, Math.max(0, pingRatio * 100));
+      if (ping <= 0) return 10; // 無效延遲/超時給低分
+      if (ping < 50) return 100;
+      if (ping < 100) return 95;
+      if (ping < 200) return 85;
+      if (ping < 400) return 70;
+      if (ping < 800) return 50;
+      if (ping < 1500) return 30;
+      return 10;
     })();
     score += pingScore * 0.2;
+
+    // 畫質特權加成：如果畫質為 1080p/2K/4K 且速度達標 (>= 500 KB/s)，給予額外加分，保障高清優先
+    const isHighQuality = ['1080p', '2K', '4K'].includes(testResult.quality);
+    if (isHighQuality && speedKBps >= 500) {
+      score += 50;
+    }
 
     return Math.round(score * 100) / 100; // 保留兩位小數
   };
@@ -750,7 +773,6 @@ function PlayPageClient() {
         console.error('獲取視頻詳情失敗:', err);
         return [];
       }
-      // 注意：setSourceSearchLoading(false) 已移到 fetchSourcesData 的 finally 中，避免提前清除 loading 狀態
     };
     const fetchSourcesData = async (query: string): Promise<SearchResult[]> => {
       // 根據搜索詞獲取全部源信息
@@ -767,7 +789,9 @@ function PlayPageClient() {
 
         // 處理搜索結果，根據規則過濾（加入繁簡轉換與模糊匹配）
         return (data.results || []).filter((result: SearchResult) => {
-          const titlesMatch = isFuzzyMatch(result.title, videoTitleRef.current);
+          const titlesMatch =
+            isFuzzyMatch(result.title, videoTitleRef.current) ||
+            (searchTitle ? isFuzzyMatch(result.title, searchTitle) : false);
 
           // 比較年份 (放寬匹配，如年份相差不超過1年)
           let yearsMatch = true;
@@ -829,41 +853,38 @@ function PlayPageClient() {
 
       try {
         let results = await doFetchAndFilter(query);
-        if (results.length > 0) {
-          setAvailableSources(results);
-          return results;
-        }
 
-        // 如果原標題找不到，自動嘗試備用/縮短後的關鍵字搜尋
-        const fallbackQueries = getFallbackQueries(query);
-        console.warn(
-          '原標題搜尋不到片源，開始嘗試備用關鍵字:',
-          fallbackQueries
-        );
+        // 如果結果太少（少於8個），且我們有備用關鍵字，則進行擴展搜尋
+        if (results.length < 8) {
+          const fallbackQueries = getFallbackQueries(query);
+          console.warn(
+            `初始搜索結果數不足8個 (${results.length}個)，開始嘗試備用關鍵字:`,
+            fallbackQueries
+          );
 
-        for (const fbQuery of fallbackQueries) {
-          try {
-            results = await doFetchAndFilter(fbQuery);
-            if (results.length > 0) {
-              console.log(
-                `使用備用關鍵字 [${fbQuery}] 成功尋找到 ${results.length} 個片源`
-              );
-              setAvailableSources(results);
-              return results;
+          for (const fbQuery of fallbackQueries) {
+            try {
+              const fbResults = await doFetchAndFilter(fbQuery);
+              if (fbResults.length > 0) {
+                console.log(
+                  `使用備用關鍵字 [${fbQuery}] 尋找到 ${fbResults.length} 個片源`
+                );
+                results = [...results, ...fbResults];
+                results = deduplicateResults(results);
+                if (results.length >= 8) {
+                  break;
+                }
+              }
+            } catch (e) {
+              console.error(`備用關鍵字 [${fbQuery}] 搜尋出錯:`, e);
             }
-          } catch (e) {
-            console.error(`備用關鍵字 [${fbQuery}] 搜尋出錯:`, e);
           }
         }
 
-        setAvailableSources([]);
-        return [];
+        return results;
       } catch (err) {
-        setSourceSearchError(err instanceof Error ? err.message : '搜索失敗');
-        setAvailableSources([]);
+        console.error('搜索失敗:', err);
         return [];
-      } finally {
-        setSourceSearchLoading(false);
       }
     };
 
@@ -880,94 +901,130 @@ function PlayPageClient() {
           ? '🎬 正在獲取視頻詳情...'
           : '🔍 正在搜索播放源...'
       );
+      setSourceSearchLoading(true);
+      setSourceSearchError(null);
 
-      let sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
-      if (
-        currentSource &&
-        currentId &&
-        !sourcesInfo.some(
-          (source) => source.source === currentSource && source.id === currentId
-        )
-      ) {
-        const currentDetailList = await fetchSourceDetail(
-          currentSource,
-          currentId
-        );
-        if (currentDetailList.length > 0) {
-          sourcesInfo = [...currentDetailList, ...sourcesInfo];
-          setAvailableSources(sourcesInfo);
-        }
-      }
-      if (sourcesInfo.length === 0) {
-        setError('未找到匹配結果');
-        setLoading(false);
-        return;
-      }
-
-      let detailData: SearchResult = sourcesInfo[0];
-      // 指定源和id且無需優選
-      if (currentSource && currentId && !needPreferRef.current) {
-        const target = sourcesInfo.find(
-          (source) => source.source === currentSource && source.id === currentId
-        );
-        if (target) {
-          detailData = target;
-        } else {
-          console.warn(
-            `未找到指定的源 ${currentSource} 和 ID ${currentId}，自動退回到優選其他可用片源`
+      try {
+        let sourcesInfo: SearchResult[] = [];
+        if (searchTitle && videoTitle && searchTitle !== videoTitle) {
+          console.log(
+            `開始並行檢索中文名稱 [${videoTitle}] 與原始名稱 [${searchTitle}]`
           );
-          if (optimizationEnabled) {
-            setLoadingStage('preferring');
-            setLoadingMessage('⚡ 正在優選最佳播放源...');
-            detailData = await preferBestSource(sourcesInfo);
-          } else {
-            detailData = sourcesInfo[0];
+          const [resultsChinese, resultsOriginal] = await Promise.all([
+            fetchSourcesData(videoTitle).catch((err) => {
+              console.error('中文名稱檢索失敗:', err);
+              return [];
+            }),
+            fetchSourcesData(searchTitle).catch((err) => {
+              console.error('原始名稱檢索失敗:', err);
+              return [];
+            }),
+          ]);
+          sourcesInfo = deduplicateResults([
+            ...resultsChinese,
+            ...resultsOriginal,
+          ]);
+        } else {
+          sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
+        }
+
+        if (
+          currentSource &&
+          currentId &&
+          !sourcesInfo.some(
+            (source) =>
+              source.source === currentSource && source.id === currentId
+          )
+        ) {
+          const currentDetailList = await fetchSourceDetail(
+            currentSource,
+            currentId
+          );
+          if (currentDetailList.length > 0) {
+            sourcesInfo = [...currentDetailList, ...sourcesInfo];
           }
         }
-      }
 
-      // 未指定源和 id 或需要優選，且開啟優選開關
-      if (
-        (!currentSource || !currentId || needPreferRef.current) &&
-        optimizationEnabled
-      ) {
-        setLoadingStage('preferring');
-        setLoadingMessage('⚡ 正在優選最佳播放源...');
+        setAvailableSources(sourcesInfo);
 
-        detailData = await preferBestSource(sourcesInfo);
-      }
+        if (sourcesInfo.length === 0) {
+          setError('未找到匹配結果');
+          setLoading(false);
+          return;
+        }
 
-      console.log(detailData.source, detailData.id);
+        let detailData: SearchResult = sourcesInfo[0];
+        // 指定源和id且無需優選
+        if (currentSource && currentId && !needPreferRef.current) {
+          const target = sourcesInfo.find(
+            (source) =>
+              source.source === currentSource && source.id === currentId
+          );
+          if (target) {
+            detailData = target;
+          } else {
+            console.warn(
+              `未找到指定的源 ${currentSource} 和 ID ${currentId}，自動退回到優選其他可用片源`
+            );
+            if (optimizationEnabled) {
+              setLoadingStage('preferring');
+              setLoadingMessage('⚡ 正在優選最佳播放源...');
+              detailData = await preferBestSource(sourcesInfo);
+            } else {
+              detailData = sourcesInfo[0];
+            }
+          }
+        }
 
-      setNeedPrefer(false);
-      setCurrentSource(detailData.source);
-      setCurrentId(detailData.id);
-      setVideoYear(detailData.year);
-      setVideoTitle(detailData.title || videoTitleRef.current);
-      setVideoCover(detailData.poster);
-      setVideoDoubanId(detailData.douban_id || 0);
-      setDetail(detailData);
-      if (currentEpisodeIndex >= detailData.episodes.length) {
-        setCurrentEpisodeIndex(0);
-      }
+        // 未指定源和 id 或需要優選，且開啟優選開關
+        if (
+          (!currentSource || !currentId || needPreferRef.current) &&
+          optimizationEnabled
+        ) {
+          setLoadingStage('preferring');
+          setLoadingMessage('⚡ 正在優選最佳播放源...');
 
-      // 規範URL參數
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.set('source', detailData.source);
-      newUrl.searchParams.set('id', detailData.id);
-      newUrl.searchParams.set('year', detailData.year);
-      newUrl.searchParams.set('title', detailData.title);
-      newUrl.searchParams.delete('prefer');
-      window.history.replaceState({}, '', newUrl.toString());
+          detailData = await preferBestSource(sourcesInfo);
+        }
 
-      setLoadingStage('ready');
-      setLoadingMessage('✨ 準備就緒，即將開始播放...');
+        console.log(detailData.source, detailData.id);
 
-      // 短暫延遲讓用戶看到完成狀態
-      const loadingTimer = setTimeout(() => {
+        setNeedPrefer(false);
+        setCurrentSource(detailData.source);
+        setCurrentId(detailData.id);
+        setVideoYear(detailData.year);
+        setVideoTitle(detailData.title || videoTitleRef.current);
+        setVideoCover(detailData.poster);
+        setVideoDoubanId(detailData.douban_id || 0);
+        setDetail(detailData);
+        if (currentEpisodeIndex >= detailData.episodes.length) {
+          setCurrentEpisodeIndex(0);
+        }
+
+        // 規範URL參數
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('source', detailData.source);
+        newUrl.searchParams.set('id', detailData.id);
+        newUrl.searchParams.set('year', detailData.year);
+        newUrl.searchParams.set('title', detailData.title);
+        newUrl.searchParams.delete('prefer');
+        window.history.replaceState({}, '', newUrl.toString());
+
+        setLoadingStage('ready');
+        setLoadingMessage('✨ 準備就緒，即將開始播放...');
+
+        // 短暫延遲讓用戶看到完成狀態
+        const loadingTimer = setTimeout(() => {
+          setLoading(false);
+        }, 1000);
+        loadingTimerRef.current = loadingTimer;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '加載失敗');
+        setSourceSearchError(err instanceof Error ? err.message : '搜索失敗');
         setLoading(false);
-      }, 1000);
-      loadingTimerRef.current = loadingTimer;
+      } finally {
+        setSourceSearchLoading(false);
+      }
     };
 
     initAll();
