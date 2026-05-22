@@ -171,9 +171,6 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
                       }).catch((err) => {
                         console.warn('API 歷史刪除失敗:', err);
                       });
-                      window.dispatchEvent(
-                        new CustomEvent('playRecordsUpdated')
-                      );
                     }}
                     type={record.total_episodes > 1 ? 'tv' : ''}
                   />

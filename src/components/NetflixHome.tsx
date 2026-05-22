@@ -154,8 +154,6 @@ export default function NetflixHome({
       }).catch((err) => {
         console.warn('API 歷史刪除失敗:', err);
       });
-
-      window.dispatchEvent(new CustomEvent('playRecordsUpdated'));
     } catch (err) {
       console.error('刪除播放記錄錯誤:', err);
     }

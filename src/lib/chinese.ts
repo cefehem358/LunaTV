@@ -128,9 +128,33 @@ export function generateSearchVariants(originalQuery: string): string[] {
     variants.add(upper);
   }
 
+  // 自定義動漫/影集名稱別名映射
+  const ALIAS_MAP: Record<string, string[]> = {
+    木头风纪委员和迷你裙JK的故事: [
+      '废柴风纪委员与裙子长度不合规的JK的故事',
+      '废柴风纪委员',
+    ],
+    废柴风纪委员与裙子长度不合规的JK的故事: [
+      '木头风纪委员和迷你裙JK的故事',
+      '木头风纪委员',
+    ],
+    // 可以在此新增其他常見的翻譯差異別名
+  };
+
+  // 嘗試匹配別名
+  for (const [key, aliases] of Object.entries(ALIAS_MAP)) {
+    if (trimmed.includes(key)) {
+      aliases.forEach((alias) => variants.add(alias));
+    }
+  }
+
+  // 提取核心關鍵字（對於太長的標題，API 容易找不到，可以嘗試提取核心名詞）
+  if (trimmed.includes('风纪委员') && trimmed.includes('JK')) {
+    variants.add('风纪委员');
+  }
+
   return Array.from(variants);
 }
-
 function buildConversionMap(): Record<string, string> {
   return {
     电: '電',
