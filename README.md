@@ -58,22 +58,26 @@
 
 ## 技術棧
 
-| 分類      | 主要依賴                                                                                              |
-| --------- | ----------------------------------------------------------------------------------------------------- |
-| 前端框架  | [Next.js 14](https://nextjs.org/) · App Router                                                        |
-| UI & 樣式 | [Tailwind&nbsp;CSS 3](https://tailwindcss.com/)                                                       |
-| 語言      | TypeScript                                                                                            |
-| 播放器    | [ArtPlayer](https://github.com/zhw2590582/ArtPlayer) · [HLS.js](https://github.com/video-dev/hls.js/) |
+| 分類       | 主要依賴                                                                                              |
+| ---------- | ----------------------------------------------------------------------------------------------------- |
+| 前端框架   | [Next.js 14](https://nextjs.org/) · App Router                                                        |
+| UI & 樣式  | [Tailwind&nbsp;CSS 3](https://tailwindcss.com/)                                                       |
+| 語言       | TypeScript                                                                                            |
+| 播放器     | [ArtPlayer](https://github.com/zhw2590582/ArtPlayer) · [HLS.js](https://github.com/video-dev/hls.js/) |
 | 程式碼品質 | ESLint · Prettier                                                                                     |
-| 部署      | Docker                                                                                                |
+| 部署       | Docker                                                                                                |
 
 ## 部署
 
-本專案**僅支援 Docker 或其他基於 Docker 的平台**部署。
+本專案支援 **Docker (VPS 自建)** 以及 **Vercel + Upstash (Serverless 免費雲端託管)** 兩種部署方式。
 
-請將以下設定檔中的 `berserker8888` 替換為您的 GitHub 帳號名稱。
+請將以下 Docker 設定檔中的 `berserker8888` 替換為您的 GitHub 帳號名稱。
 
-### Kvrocks 儲存（推薦）
+---
+
+### 1. Docker 部署 (推薦 VPS 自建)
+
+#### Kvrocks 儲存（推薦）
 
 > **優點：** 基於 RocksDB 的高效能鍵值資料庫，磁碟持久化儲存，重啟或升級時資料不遺失，適合長期穩定使用。
 
@@ -88,7 +92,7 @@ services:
     environment:
       - USERNAME=admin
       - PASSWORD=admin_password
-      - NEXT_PUBLIC_STORAGE_TYPE=kvrocks
+      - STORAGE_TYPE=kvrocks
       - KVROCKS_URL=redis://moontv-kvrocks:6666
     networks:
       - moontv-network
@@ -112,7 +116,7 @@ volumes:
   kvrocks-data:
 ```
 
-### Redis 儲存
+#### Redis 儲存
 
 > **注意：** Redis 預設為記憶體儲存，重啟容器會導致資料遺失。若需持久化請自行設定 `save` 指令或啟用 AOF。
 
@@ -127,7 +131,7 @@ services:
     environment:
       - USERNAME=admin
       - PASSWORD=admin_password
-      - NEXT_PUBLIC_STORAGE_TYPE=redis
+      - STORAGE_TYPE=redis
       - REDIS_URL=redis://moontv-redis:6379
     networks:
       - moontv-network
@@ -150,6 +154,86 @@ networks:
 volumes:
   redis-data:
 ```
+
+---
+
+### 2. Vercel + Upstash 部署 (Serverless 免費託管)
+
+如果您不想自行維護 VPS 伺服器，可以使用 Vercel (代管前端與 API 運算) 搭配 Upstash (提供免費且免維護的 Redis 儲存) 進行**零成本**部署。
+
+#### 第一步：建立 Upstash Serverless Redis
+
+1. 註冊並登入 [Upstash 控制台](https://console.upstash.com/)。
+2. 建立一個全新的 Redis 資料庫 (選擇靠近您目標用戶的地區，如 `ap-northeast-1` 東京)。
+3. 在資料庫詳情頁中，找到 `REST API` 區塊，複製以下兩個參數的值：
+   - `UPSTASH_REDIS_REST_URL` (對應專案環境變數 `UPSTASH_URL`)
+   - `UPSTASH_REDIS_REST_TOKEN` (對應專案環境變數 `UPSTASH_TOKEN`)
+
+#### 第二步：部署到 Vercel
+
+1. 將本專案 Fork 到您個人的 GitHub 帳號下。
+2. 登入 [Vercel 官網](https://vercel.com/)，點選 **Add New > Project**。
+3. 匯入您剛剛 Fork 的 `LunaTV` 專案。
+4. 在 **Environment Variables** 欄位中，依序新增以下環境變數：
+   - `STORAGE_TYPE`: 設定為 `upstash`
+   - `UPSTASH_URL`: 填入您複製的 Upstash REST URL (必須是 `https://...` 開頭)
+   - `UPSTASH_TOKEN`: 填入您複製的 Upstash REST Token
+   - `USERNAME`: 您的管理員帳號
+   - `PASSWORD`: 您的管理員密碼
+   - `SITE_BASE`: 您部署後的 Vercel 網址 (例如 `https://your-app.vercel.app`)
+5. 點選 **Deploy**，等待 1-2 分鐘編譯完成後即可直接上線使用！
+
+---
+
+### 💡 1C1G 小記憶體 VPS 部署與防 OOM 優化指引
+
+在 **1 核心 CPU / 1GB RAM (1C1G)** 的極低配置 VPS 上執行 Next.js 應用時，常會因為 Node.js 預設垃圾回收限制過高或打包編譯耗費過多記憶體，導致系統觸發 OOM Killer 強制關閉程序。以下為針對小機器的專業優化建議：
+
+#### 1. 啟用系統 Swap 虛擬記憶體 (至關重要)
+
+如果您的 VPS 預設沒有開啟 Swap，請務必手動建立至少 2GB 的 Swap 空間，這能有效吸收 Node.js 啟動與併發請求時產生的記憶體瞬時峰值：
+
+```bash
+# 建立 2GB Swap 檔案
+sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# 設定永久生效（開機自動掛載）
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+# 調整 swappiness，設為 10（避免過度頻繁讀寫磁碟損耗效能，但提供安全防護網）
+sudo sysctl vm.swappiness=10
+echo 'vm.swappiness=10' | sudo tee -a /etc/sysctl.conf
+```
+
+#### 2. 強烈建議：使用預編譯 Docker 映像檔
+
+**千萬不要在 1C1G VPS 上直接執行 `pnpm run build` 或 `npm run build`**！Next.js (Webpack) 的編譯階段會消耗 1.5GB 以上記憶體，直接在小機器編譯必會 OOM 崩潰。
+
+- 請直接拉取我們已經在 GitHub Action 中編譯好的映像檔 `ghcr.io/berserker8888/lunatv:latest` 進行部署。
+- 我們的 Dockerfile 內部已啟用 Next.js **`standalone` 獨立輸出模式**，能大幅縮減運行時所需的依賴套件，使啟動後的基本記憶體降至 80MB-120MB 左右。
+
+#### 3. 限制 Node.js 堆記憶體上限
+
+在啟動 Docker 容器或直接使用 Node.js 啟動服務時，請傳入 `NODE_OPTIONS="--max-old-space-size=450"`，強制垃圾回收器在記憶體達到 450MB 時即進行積極的記憶體回收，防範記憶體持續膨脹：
+
+- **Docker Compose 設定方式：**
+  ```yaml
+  moontv-core:
+    image: ghcr.io/berserker8888/lunatv:latest
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=450
+  ```
+- **Docker Run 指令方式：**
+  ```bash
+  docker run -d \
+    --name moontv-core \
+    -p 3000:3000 \
+    -e NODE_OPTIONS="--max-old-space-size=450" \
+    ghcr.io/berserker8888/lunatv:latest
+  ```
 
 ## 設定檔
 
@@ -198,22 +282,22 @@ MoonTV 支援標準的蘋果 CMS V10 API 格式。
 
 ## 環境變數
 
-| 變數                                  | 說明                                       | 可選值                             | 預設值                                                                                                                       |
-| ------------------------------------- | ------------------------------------------ | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| USERNAME                              | 站長帳號                                   | 任意字串                           | 無預設，必填                                                                                                                 |
-| PASSWORD                              | 站長密碼                                   | 任意字串                           | 無預設，必填                                                                                                                 |
-| SITE_BASE                             | 站點 URL                                   | 形如 https://example.com           | 空                                                                                                                           |
-| NEXT_PUBLIC_SITE_NAME                 | 站點名稱                                   | 任意字串                           | LunaTV                                                                                                                       |
-| ANNOUNCEMENT                          | 站點公告                                   | 任意字串                           | 本網站僅提供影視資訊搜尋服務，所有內容均來自第三方網站。本站不儲存任何影片資源，不對任何內容的準確性、合法性、完整性負責。 |
-| NEXT_PUBLIC_STORAGE_TYPE              | 播放記錄/收藏的儲存方式                     | redis、kvrocks                      | 無預設，必填                                                                                                                 |
-| KVROCKS_URL                           | Kvrocks 連線 URL                           | 連線 URL                           | 空                                                                                                                           |
-| REDIS_URL                             | Redis 連線 URL                             | 連線 URL                           | 空                                                                                                                           |
-| NEXT_PUBLIC_SEARCH_MAX_PAGE           | 搜尋介面可拉取的最大頁數                   | 1-50                               | 5                                                                                                                            |
-| NEXT_PUBLIC_DOUBAN_PROXY_TYPE          | 豆瓣資料來源請求方式                       | 見下方                             | direct                                                                                                                       |
-| NEXT_PUBLIC_DOUBAN_PROXY              | 自訂豆瓣代理 URL                           | URL prefix                         | 空                                                                                                                           |
-| NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE   | 豆瓣圖片代理類型                           | 見下方                             | direct                                                                                                                       |
-| NEXT_PUBLIC_DOUBAN_IMAGE_PROXY        | 自訂豆瓣圖片代理 URL                       | URL prefix                         | 空                                                                                                                           |
-| NEXT_PUBLIC_DISABLE_YELLOW_FILTER     | 關閉色情內容過濾                           | true/false                         | false                                                                                                                        |
+| 變數                                | 說明                     | 可選值                   | 預設值                                                                                                                     |
+| ----------------------------------- | ------------------------ | ------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| USERNAME                            | 站長帳號                 | 任意字串                 | 無預設，必填                                                                                                               |
+| PASSWORD                            | 站長密碼                 | 任意字串                 | 無預設，必填                                                                                                               |
+| SITE_BASE                           | 站點 URL                 | 形如 https://example.com | 空                                                                                                                         |
+| NEXT_PUBLIC_SITE_NAME               | 站點名稱                 | 任意字串                 | LunaTV                                                                                                                     |
+| ANNOUNCEMENT                        | 站點公告                 | 任意字串                 | 本網站僅提供影視資訊搜尋服務，所有內容均來自第三方網站。本站不儲存任何影片資源，不對任何內容的準確性、合法性、完整性負責。 |
+| NEXT_PUBLIC_STORAGE_TYPE            | 播放記錄/收藏的儲存方式  | redis、kvrocks           | 無預設，必填                                                                                                               |
+| KVROCKS_URL                         | Kvrocks 連線 URL         | 連線 URL                 | 空                                                                                                                         |
+| REDIS_URL                           | Redis 連線 URL           | 連線 URL                 | 空                                                                                                                         |
+| NEXT_PUBLIC_SEARCH_MAX_PAGE         | 搜尋介面可拉取的最大頁數 | 1-50                     | 5                                                                                                                          |
+| NEXT_PUBLIC_DOUBAN_PROXY_TYPE       | 豆瓣資料來源請求方式     | 見下方                   | direct                                                                                                                     |
+| NEXT_PUBLIC_DOUBAN_PROXY            | 自訂豆瓣代理 URL         | URL prefix               | 空                                                                                                                         |
+| NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE | 豆瓣圖片代理類型         | 見下方                   | direct                                                                                                                     |
+| NEXT_PUBLIC_DOUBAN_IMAGE_PROXY      | 自訂豆瓣圖片代理 URL     | URL prefix               | 空                                                                                                                         |
+| NEXT_PUBLIC_DISABLE_YELLOW_FILTER   | 關閉色情內容過濾         | true/false               | false                                                                                                                      |
 
 `NEXT_PUBLIC_DOUBAN_PROXY_TYPE` 選項說明：
 
