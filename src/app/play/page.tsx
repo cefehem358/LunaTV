@@ -91,6 +91,61 @@ function deduplicateResults(list: SearchResult[]): SearchResult[] {
   });
 }
 
+const DETAIL_CACHE_KEY = 'luna_detail_cache';
+const DETAIL_CACHE_LIMIT = 100;
+
+function getCachedDetail(source: string, id: string): SearchResult | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(DETAIL_CACHE_KEY);
+    if (!raw) return null;
+    const cache = JSON.parse(raw) as Record<
+      string,
+      { detail: SearchResult; timestamp: number }
+    >;
+    const entry = cache[`${source}_${id}`];
+    if (entry && entry.detail) {
+      return entry.detail;
+    }
+  } catch (e) {
+    console.error('Failed to get cached detail:', e);
+  }
+  return null;
+}
+
+function setCachedDetail(
+  source: string,
+  id: string,
+  detail: SearchResult
+): void {
+  if (typeof window === 'undefined' || !source || !id || !detail) return;
+  try {
+    const raw = localStorage.getItem(DETAIL_CACHE_KEY);
+    const cache = raw ? JSON.parse(raw) : {};
+    cache[`${source}_${id}`] = {
+      detail,
+      timestamp: Date.now(),
+    };
+
+    const keys = Object.keys(cache);
+    if (keys.length > DETAIL_CACHE_LIMIT) {
+      const entries = Object.entries(cache) as [
+        string,
+        { detail: SearchResult; timestamp: number }
+      ][];
+      entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+      const toDelete = entries.slice(0, keys.length - DETAIL_CACHE_LIMIT);
+      toDelete.forEach(([k]) => {
+        delete cache[k];
+      });
+    }
+
+    localStorage.setItem(DETAIL_CACHE_KEY, JSON.stringify(cache));
+  } catch (e) {
+    console.error('Failed to set cached detail:', e);
+  }
+}
+
 function PlayPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -904,48 +959,84 @@ function PlayPageClient() {
       setSourceSearchLoading(true);
       setSourceSearchError(null);
 
+      let isBgSearchStarted = false;
       try {
         let sourcesInfo: SearchResult[] = [];
-        if (searchTitle && videoTitle && searchTitle !== videoTitle) {
-          console.log(
-            `開始並行檢索中文名稱 [${videoTitle}] 與原始名稱 [${searchTitle}]`
-          );
-          const [resultsChinese, resultsOriginal] = await Promise.all([
-            fetchSourcesData(videoTitle).catch((err) => {
-              console.error('中文名稱檢索失敗:', err);
-              return [];
-            }),
-            fetchSourcesData(searchTitle).catch((err) => {
-              console.error('原始名稱檢索失敗:', err);
-              return [];
-            }),
-          ]);
-          sourcesInfo = deduplicateResults([
-            ...resultsChinese,
-            ...resultsOriginal,
-          ]);
-        } else {
-          sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
-        }
+        let detailData: SearchResult | null = null;
 
-        if (
-          currentSource &&
-          currentId &&
-          !sourcesInfo.some(
-            (source) =>
-              source.source === currentSource && source.id === currentId
-          )
-        ) {
-          const currentDetailList = await fetchSourceDetail(
-            currentSource,
-            currentId
+        const isDirectLoad =
+          currentSource && currentId && !needPreferRef.current;
+
+        if (isDirectLoad) {
+          console.log(
+            `Direct load path for source: ${currentSource}, id: ${currentId}`
           );
-          if (currentDetailList.length > 0) {
-            sourcesInfo = [...currentDetailList, ...sourcesInfo];
+          const cachedDetail = getCachedDetail(currentSource, currentId);
+          if (cachedDetail) {
+            console.log(
+              'Cache hit for direct load detail:',
+              cachedDetail.title
+            );
+            detailData = cachedDetail;
+            sourcesInfo = [detailData];
+          } else {
+            console.log('Cache miss for direct load detail, fetching...');
+            const currentDetailList = await fetchSourceDetail(
+              currentSource,
+              currentId
+            );
+            if (currentDetailList.length > 0) {
+              detailData = currentDetailList[0];
+              sourcesInfo = [detailData];
+              setCachedDetail(currentSource, currentId, detailData);
+            } else {
+              console.warn(
+                `Failed to fetch detail for direct load: ${currentSource}, ${currentId}`
+              );
+            }
           }
         }
 
-        setAvailableSources(sourcesInfo);
+        if (!detailData) {
+          if (searchTitle && videoTitle && searchTitle !== videoTitle) {
+            console.log(
+              `開始並行檢索中文名稱 [${videoTitle}] 與原始名稱 [${searchTitle}]`
+            );
+            const [resultsChinese, resultsOriginal] = await Promise.all([
+              fetchSourcesData(videoTitle).catch((err) => {
+                console.error('中文名稱檢索失敗:', err);
+                return [];
+              }),
+              fetchSourcesData(searchTitle).catch((err) => {
+                console.error('原始名稱檢索失敗:', err);
+                return [];
+              }),
+            ]);
+            sourcesInfo = deduplicateResults([
+              ...resultsChinese,
+              ...resultsOriginal,
+            ]);
+          } else {
+            sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
+          }
+
+          if (
+            currentSource &&
+            currentId &&
+            !sourcesInfo.some(
+              (source) =>
+                source.source === currentSource && source.id === currentId
+            )
+          ) {
+            const currentDetailList = await fetchSourceDetail(
+              currentSource,
+              currentId
+            );
+            if (currentDetailList.length > 0) {
+              sourcesInfo = [...currentDetailList, ...sourcesInfo];
+            }
+          }
+        }
 
         if (sourcesInfo.length === 0) {
           setError('未找到匹配結果');
@@ -953,38 +1044,45 @@ function PlayPageClient() {
           return;
         }
 
-        let detailData: SearchResult = sourcesInfo[0];
-        // 指定源和id且無需優選
-        if (currentSource && currentId && !needPreferRef.current) {
-          const target = sourcesInfo.find(
-            (source) =>
-              source.source === currentSource && source.id === currentId
-          );
-          if (target) {
-            detailData = target;
-          } else {
-            console.warn(
-              `未找到指定的源 ${currentSource} 和 ID ${currentId}，自動退回到優選其他可用片源`
+        if (!detailData) {
+          detailData = sourcesInfo[0];
+          // 指定源和id且無需優選
+          if (currentSource && currentId && !needPreferRef.current) {
+            const target = sourcesInfo.find(
+              (source) =>
+                source.source === currentSource && source.id === currentId
             );
-            if (optimizationEnabled) {
-              setLoadingStage('preferring');
-              setLoadingMessage('⚡ 正在優選最佳播放源...');
-              detailData = await preferBestSource(sourcesInfo);
+            if (target) {
+              detailData = target;
             } else {
-              detailData = sourcesInfo[0];
+              console.warn(
+                `未找到指定的源 ${currentSource} 和 ID ${currentId}，自動退回到優選其他可用片源`
+              );
+              if (optimizationEnabled) {
+                setLoadingStage('preferring');
+                setLoadingMessage('⚡ 正在優選最佳播放源...');
+                detailData = await preferBestSource(sourcesInfo);
+              } else {
+                detailData = sourcesInfo[0];
+              }
             }
+          }
+
+          // 未指定源和 id 或需要優選，且開啟優選開關
+          if (
+            (!currentSource || !currentId || needPreferRef.current) &&
+            optimizationEnabled
+          ) {
+            setLoadingStage('preferring');
+            setLoadingMessage('⚡ 正在優選最佳播放源...');
+
+            detailData = await preferBestSource(sourcesInfo);
           }
         }
 
-        // 未指定源和 id 或需要優選，且開啟優選開關
-        if (
-          (!currentSource || !currentId || needPreferRef.current) &&
-          optimizationEnabled
-        ) {
-          setLoadingStage('preferring');
-          setLoadingMessage('⚡ 正在優選最佳播放源...');
-
-          detailData = await preferBestSource(sourcesInfo);
+        setAvailableSources(sourcesInfo);
+        if (detailData) {
+          setCachedDetail(detailData.source, detailData.id, detailData);
         }
 
         console.log(detailData.source, detailData.id);
@@ -1014,16 +1112,106 @@ function PlayPageClient() {
         setLoadingMessage('✨ 準備就緒，即將開始播放...');
 
         // 短暫延遲讓用戶看到完成狀態
-        const loadingTimer = setTimeout(() => {
-          setLoading(false);
-        }, 1000);
+        const loadingTimer = setTimeout(
+          () => {
+            setLoading(false);
+          },
+          isDirectLoad ? 100 : 1000
+        );
         loadingTimerRef.current = loadingTimer;
+
+        // 如果是直接加載，背景非阻塞檢索其他可用片源與最新詳情
+        if (isDirectLoad && detailData) {
+          isBgSearchStarted = true;
+          const runBackgroundSearch = async () => {
+            try {
+              let currentDetail = detailData as SearchResult;
+
+              // 1. 背景非阻塞更新目前影片的最新詳情
+              try {
+                const freshDetailList = await fetchSourceDetail(
+                  currentSource,
+                  currentId
+                );
+                if (freshDetailList.length > 0) {
+                  const freshDetail = freshDetailList[0];
+                  setCachedDetail(currentSource, currentId, freshDetail);
+                  currentDetail = freshDetail;
+                  // 更新狀態以供 UI (如選集列表、描述) 重新渲染
+                  setDetail((prevDetail) => {
+                    if (
+                      prevDetail &&
+                      prevDetail.source === freshDetail.source &&
+                      prevDetail.id === freshDetail.id
+                    ) {
+                      return freshDetail;
+                    }
+                    return prevDetail;
+                  });
+                }
+              } catch (detailErr) {
+                console.error('背景重新整理詳情失敗:', detailErr);
+              }
+
+              // 2. 背景搜尋其他播放源 (維持原本邏輯，但使用最新的 currentDetail)
+              let bgSourcesInfo: SearchResult[] = [];
+              const targetQuery =
+                searchTitle || videoTitle || currentDetail.title;
+
+              if (searchTitle && videoTitle && searchTitle !== videoTitle) {
+                const [resultsChinese, resultsOriginal] = await Promise.all([
+                  fetchSourcesData(videoTitle).catch((err) => {
+                    console.error('中文名稱檢索失敗:', err);
+                    return [];
+                  }),
+                  fetchSourcesData(searchTitle).catch((err) => {
+                    console.error('原始名稱檢索失敗:', err);
+                    return [];
+                  }),
+                ]);
+                bgSourcesInfo = deduplicateResults([
+                  ...resultsChinese,
+                  ...resultsOriginal,
+                ]);
+              } else if (targetQuery) {
+                bgSourcesInfo = await fetchSourcesData(targetQuery);
+              }
+
+              if (
+                !bgSourcesInfo.some(
+                  (source) =>
+                    source.source === currentDetail.source &&
+                    source.id === currentDetail.id
+                )
+              ) {
+                bgSourcesInfo = [currentDetail, ...bgSourcesInfo];
+              } else {
+                const idx = bgSourcesInfo.findIndex(
+                  (source) =>
+                    source.source === currentDetail.source &&
+                    source.id === currentDetail.id
+                );
+                if (idx !== -1) {
+                  bgSourcesInfo[idx] = currentDetail;
+                }
+              }
+              setAvailableSources(bgSourcesInfo);
+            } catch (bgErr) {
+              console.error('背景搜索其他播放源失敗:', bgErr);
+            } finally {
+              setSourceSearchLoading(false);
+            }
+          };
+          runBackgroundSearch();
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : '加載失敗');
         setSourceSearchError(err instanceof Error ? err.message : '搜索失敗');
         setLoading(false);
       } finally {
-        setSourceSearchLoading(false);
+        if (!isBgSearchStarted) {
+          setSourceSearchLoading(false);
+        }
       }
     };
 
@@ -1157,6 +1345,8 @@ function PlayPageClient() {
         setError('未找到匹配結果');
         return;
       }
+
+      setCachedDetail(newSource, newId, newDetail);
 
       // 嘗試跳轉到當前正在播放的集數
       let targetIndex = currentEpisodeIndex;

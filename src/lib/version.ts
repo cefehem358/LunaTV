@@ -6,6 +6,23 @@ export interface ChangelogItem {
 
 export const CHANGELOGS: ChangelogItem[] = [
   {
+    version: 'v1.5.8',
+    date: '2026-05-22',
+    content: `
+- 新增播放詳情頁本地快取（luna_detail_cache）機制，直接載入路徑（點擊繼續觀看、收藏卡牌）時優先以快取開啟，達成播放器與劇名秒開體驗
+- 重新整理機制：在播放器開始播放的同時，於背景非阻塞更新目前片源的最新選集與描述資料，並動態更新可用的 alternative sources，不影響當前播放
+- 版本號提升至 1.5.8
+    `.trim(),
+  },
+  {
+    version: 'v1.5.7',
+    date: '2026-05-22',
+    content: `
+- 優化播放頁面（src/app/play/page.tsx）載入時效，針對已知來源及 ID 之連結（如繼續觀看、收藏卡牌）改採直接載入，繞過同步搜尋阻礙，達成即時撥放（載入延遲縮短至 100ms），並於背景非阻塞獲取其他可用片源以充實換源選單。
+- 版本號提升至 1.5.7
+    `.trim(),
+  },
+  {
     version: 'v1.5.6',
     date: '2026-05-22',
     content: `
